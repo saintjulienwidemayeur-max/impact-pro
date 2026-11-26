@@ -107,3 +107,15 @@ Permissions are strings of the form `resource:action`, for example `orders:read`
 - Dependency auditing (`pnpm audit`, Dependabot).
 - Container images are minimal (distroless/alpine), run as non-root, and are scanned in CI.
 - Structured logs carry the request id; PII is redacted from them.
+
+## 11. Customer accounts — as built (Phase 2a)
+
+This is what ships today; sections 1–2 describe the target design (JWT/refresh, staff roles), not yet built.
+
+- **Passwords:** Argon2id via `@node-rs/argon2` (19 MiB, t=2, p=1; `ARGON2_*` env, floors enforced). Policy: 10–128 chars, no common password, no single repeated character, not digits only, must not contain the e-mail local part. Unknown e-mails are verified against a dummy hash to equalise timing.
+- **Session:** opaque 256-bit token in the HTTP-only cookie `ip_session` (Secure in production, SameSite=Lax, Path=/, 30 d sliding, 90 d absolute). Only its SHA-256 is stored (`Session.refreshTokenHash`). Login rotates (the previous cookie session is revoked); logout and password change revoke (password change signs out every other device).
+- **CSRF:** signed double-submit. Readable cookie `ip_csrf` = HMAC(COOKIE_SECRET, token); header `x-csrf-token` is compared in constant time. `OriginGuard` also refuses a present `Origin` that is not in `CORS_ORIGINS`.
+- **Same-origin proxy:** the storefront proxies `/api/v1/auth`, `/api/v1/me` and `/api/v1/custom-orders` (Next `rewrites()`), so the cookie is first-party (third-party cookies are blocked on `*.onrender.com` / iOS Safari). The destination is resolved at build time from `API_URL` / `NEXT_PUBLIC_API_URL`.
+- **Abuse limits:** register 5/h/IP, login 10/15 min/IP, plus a per-e-mail lockout (5 failures / 15 min, then 30 s doubling to 15 min) that applies whether or not the e-mail exists. Audit actions: `auth.register|login|login_failed|login_blocked|logout|password_change|password_change_failed`.
+- **Order isolation:** `CustomOrder.userId` is nullable and never auto-claimed. `/me/orders*` returns 404 for orders of other users or guests. Claiming needs reference + order e-mail.
+- **Known gaps:** no e-mail verification or password reset yet (the page points to support); lockout and throttles are in memory, so they assume one API instance (move to Redis/DB when scaling); per-IP limits depend on `TRUST_PROXY_HOPS`; no 2FA.

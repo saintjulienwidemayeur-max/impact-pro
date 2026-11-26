@@ -366,6 +366,8 @@ const server = http.createServer(async (req, res) => {
   if (req.method === "OPTIONS") return send(res, 204, Buffer.alloc(0), { "Content-Type": "text/plain" });
   try {
     if (path === "/health") return ok(res, { status: "ok", mock: true });
+    // Accounts are covered against the REAL API (e2e-real/). The mock only answers « guest » so the AuthProvider stays quiet.
+    if (path === "/auth/me" && req.method === "GET") return ok(res, { user: null, csrfToken: null });
     if (req.method === "GET" && path === "/catalog/products") return ok(res, PRODUCTS);
     let m = /^\/catalog\/products\/([^/]+)$/.exec(path);
     if (req.method === "GET" && m) {

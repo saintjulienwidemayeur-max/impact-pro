@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, SearchX } from "lucide-react";
+import { ConfirmationAccountCta } from "@/components/account/confirmation-cta";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { nextSteps, OrderDetails } from "@/components/order-details";
 import { PageHeader } from "@/components/page-header";
@@ -69,6 +70,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
               </li>
             ))}
           </ol>
+          {order && <ConfirmationAccountCta reference={order.reference} email={first(sp.email)} />}
           <div className="mt-6 flex flex-col gap-2">
             <Link href="/suivi" className="inline-flex h-11 items-center justify-center rounded-xl bg-white/10 text-sm font-semibold hover:bg-white/20">
               Suivre ma commande

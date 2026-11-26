@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { Toaster } from "sonner";
+import { AuthProvider } from "@/components/auth-provider";
 import { CartProvider } from "@/components/cart-provider";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
@@ -64,14 +65,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <a href="#contenu" className="sr-only z-[100] rounded-lg bg-ip-sun px-4 py-2 font-semibold text-ip-ink focus:not-sr-only focus:fixed focus:left-4 focus:top-4">
           Aller au contenu
         </a>
-        <CartProvider>
-          <SiteHeader />
-          <main id="contenu" className="flex-1">
-            {children}
-          </main>
-          <SiteFooter />
-          <Toaster position="bottom-right" richColors closeButton />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <SiteHeader />
+            <main id="contenu" className="flex-1">
+              {children}
+            </main>
+            <SiteFooter />
+            <Toaster position="bottom-right" richColors closeButton />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

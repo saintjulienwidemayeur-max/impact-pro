@@ -18,6 +18,8 @@ const customerLinks = [
   { label: "Demander un devis", href: "/devis" },
   { label: "Mon panier", href: "/panier" },
   { label: "Espace client", href: "/compte" },
+  { label: "Créer un compte", href: "/inscription" },
+  { label: "Suivre une commande", href: "/suivi" },
   { label: "Comment ça marche", href: "/#comment-ca-marche" },
   { label: "Nous écrire", href: "/contact" },
 ];
