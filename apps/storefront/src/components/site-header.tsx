@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { ArrowRight, ChevronDown, Menu, Search, ShoppingCart, User, X } from "lucide-react";
 import { useCart } from "./cart-provider";
-import { categories } from "@/lib/catalog";
+import { navCategories as categories } from "@/config/navigation";
 import { mainNav, services, site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 

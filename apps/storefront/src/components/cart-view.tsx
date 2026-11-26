@@ -2,11 +2,36 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { ArrowRight, ShoppingCart, Trash2 } from "lucide-react";
-import { useCart } from "./cart-provider";
-import { ProductVisual } from "./product-visual";
+import { ArrowRight, Pencil, ShoppingCart, Trash2 } from "lucide-react";
+import { useCart, type ResolvedCartLine } from "./cart-provider";
+import { LogoPreview } from "./logo-preview";
 import { Button } from "./ui/button";
+import { previewFor } from "@/config/product-media";
+import { placementLabels } from "@/lib/api";
 import { formatHTG } from "@/lib/utils";
+
+export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
+  const target = previewFor(line.productSlug, line.placement, line.color);
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-24 shrink-0 overflow-hidden rounded-xl border border-ip-line bg-white sm:w-28">
+        {target ? (
+          <LogoPreview photo={target.photo} area={target.area} logo={line.logo} params={line.preview} sizes="112px" compact />
+        ) : (
+          <div className="aspect-square bg-ip-mist" />
+        )}
+      </div>
+      <div className="min-w-0 text-sm">
+        <p className="font-semibold">{line.productName}</p>
+        <p className="text-xs text-ip-muted">
+          {[placementLabels[line.placement], line.color, line.size].filter(Boolean).join(" · ")}
+        </p>
+        <p className="truncate text-xs text-ip-muted">Logo : {line.logo.originalName}</p>
+        {line.notes && <p className="mt-0.5 line-clamp-2 text-xs italic text-ip-muted">« {line.notes} »</p>}
+      </div>
+    </div>
+  );
+}
 
 export function CartView() {
   const { lines, total, ready, setQuantity, remove, clear } = useCart();
@@ -27,9 +52,9 @@ export function CartView() {
       <div className="flex flex-col items-center rounded-[var(--radius-card)] border border-dashed border-ip-line bg-ip-mist px-6 py-16 text-center">
         <ShoppingCart className="size-12 text-ip-teal" aria-hidden="true" />
         <h2 className="mt-4 text-2xl font-semibold">Votre panier est vide</h2>
-        <p className="mt-1 max-w-md text-sm text-ip-muted">Parcourez nos articles et ajoutez ceux que vous souhaitez personnaliser.</p>
-        <Link href="/produits" className="mt-6 inline-flex h-12 items-center gap-2 rounded-xl bg-ip-sun px-6 font-bold text-ip-ink hover:bg-ip-sun-600">
-          Voir les produits <ArrowRight className="size-4" aria-hidden="true" />
+        <p className="mt-1 max-w-md text-sm text-ip-muted">Choisissez un article, ajoutez votre logo et il apparaîtra ici.</p>
+        <Link href="/personnaliser" className="mt-6 inline-flex h-12 items-center gap-2 rounded-xl bg-ip-sun px-6 font-bold text-ip-ink hover:bg-ip-sun-600">
+          Personnaliser un article <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
       </div>
     );
@@ -39,43 +64,46 @@ export function CartView() {
     <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
       <ul className="divide-y divide-ip-line rounded-2xl border border-ip-line" aria-label="Articles du panier">
         {lines.map((l) => (
-          <li key={l.slug} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
-            <div className="h-24 w-28 shrink-0 rounded-xl bg-ip-mist p-1">
-              <ProductVisual product={l.product} />
-            </div>
+          <li key={l.id} className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center" data-testid="cart-line">
             <div className="flex-1">
-              <Link href={`/produits/${l.slug}`} className="font-semibold hover:text-ip-teal">
-                {l.product.name}
+              <CartLineSummary line={l} />
+              <Link href={`/personnaliser/${l.productSlug}`} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-ip-teal hover:underline">
+                <Pencil className="size-3" aria-hidden="true" /> Personnaliser à nouveau
               </Link>
-              <p className="text-xs text-ip-muted">
-                {formatHTG(l.product.priceHTG)} / {l.product.unit} · min. {l.product.minQuantity}
-              </p>
-              {l.quantity < l.product.minQuantity && (
-                <p className="mt-1 text-xs text-red-700">Quantité minimale de commande : {l.product.minQuantity}.</p>
-              )}
             </div>
             <div className="flex items-center gap-3">
-              <label htmlFor={`qty-${l.slug}`} className="sr-only">
-                Quantité pour {l.product.name}
-              </label>
-              <input
-                id={`qty-${l.slug}`}
-                type="number"
-                min={1}
-                inputMode="numeric"
-                defaultValue={l.quantity}
-                key={l.quantity}
-                onBlur={(e) => setQuantity(l.slug, Number.parseInt(e.target.value, 10))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") setQuantity(l.slug, Number.parseInt(e.currentTarget.value, 10));
-                }}
-                className="h-10 w-24 rounded-xl border border-ip-line text-center font-semibold focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
-              />
-              <span className="w-28 text-right font-bold">{formatHTG(l.lineTotal)}</span>
+              <div>
+                <label htmlFor={`qty-${l.id}`} className="sr-only">
+                  Quantité pour {l.productName}
+                </label>
+                <input
+                  id={`qty-${l.id}`}
+                  type="number"
+                  min={l.minQty}
+                  inputMode="numeric"
+                  defaultValue={l.quantity}
+                  key={l.quantity}
+                  onBlur={(e) => setQuantity(l.id, Number.parseInt(e.target.value, 10))}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") setQuantity(l.id, Number.parseInt(e.currentTarget.value, 10));
+                  }}
+                  aria-describedby={`qty-${l.id}-hint`}
+                  className="h-10 w-24 rounded-xl border border-ip-line text-center font-semibold focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+                />
+                <p id={`qty-${l.id}-hint`} className="mt-0.5 text-center text-[10px] text-ip-muted">
+                  min. {l.minQty}
+                </p>
+              </div>
+              <div className="w-32 text-right">
+                <p className="font-bold">{formatHTG(l.lineTotal)}</p>
+                <p className="text-[11px] text-ip-muted">
+                  {formatHTG(l.unitPrice)} / {l.unitLabel}
+                </p>
+              </div>
               <button
                 type="button"
-                onClick={() => remove(l.slug)}
-                aria-label={`Retirer ${l.product.name} du panier`}
+                onClick={() => remove(l.id)}
+                aria-label={`Retirer ${l.productName} du panier`}
                 className="inline-flex size-10 items-center justify-center rounded-xl text-ip-muted hover:bg-red-50 hover:text-red-700"
               >
                 <Trash2 className="size-4" aria-hidden="true" />
@@ -88,21 +116,23 @@ export function CartView() {
         <h2 className="text-lg font-semibold">Récapitulatif</h2>
         <dl className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt>Sous-total estimé</dt>
-            <dd className="font-semibold">{formatHTG(total)}</dd>
+            <dt>Sous-total (estimation)</dt>
+            <dd className="font-semibold" data-testid="cart-total">
+              {formatHTG(total)}
+            </dd>
           </div>
           <div className="flex justify-between text-ip-muted">
-            <dt>Personnalisation & livraison</dt>
-            <dd>Sur devis</dd>
+            <dt>Livraison</dt>
+            <dd>Calculée ensuite</dd>
           </div>
         </dl>
         <Link
-          href="/devis?depuis=panier"
+          href="/commande"
           className="mt-6 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-ip-sun font-bold text-ip-ink hover:bg-ip-sun-600"
         >
-          Demander un devis pour ce panier <ArrowRight className="size-4" aria-hidden="true" />
+          Passer la commande <ArrowRight className="size-4" aria-hidden="true" />
         </Link>
-        <p className="mt-3 text-xs text-ip-muted">Le paiement en ligne arrive bientôt. Un conseiller confirme votre devis sous 24 h ouvrées.</p>
+        <p className="mt-3 text-xs text-ip-muted">Prix estimés : le montant final est calculé par notre système à la validation, puis confirmé avec votre maquette.</p>
         <div className="mt-4 border-t border-ip-line pt-4">
           {confirmClear ? (
             <div role="alertdialog" aria-label="Confirmer" className="flex flex-col gap-2 text-sm">

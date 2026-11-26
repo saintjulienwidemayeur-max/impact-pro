@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import { categories } from "@/lib/catalog";
+import { navCategories as categories } from "@/config/navigation";
 import { site, socialLinks, whatsappHref } from "@/lib/site";
 import { SocialIcon } from "./social-icons";
 

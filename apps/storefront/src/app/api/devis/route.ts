@@ -1,32 +1,24 @@
 import { accepted, badRequest, isSameOrigin } from "@/lib/api-response";
-import { fieldErrors, quoteSchema, validateUpload } from "@/lib/schemas";
+import { fieldErrors, quoteSchema } from "@/lib/schemas";
 
 /**
- * Quote request (multipart/form-data, optional `logo` file).
- * TODO(Phase 3): forward to `POST /api/v1/crm/quote-requests` and upload the logo to S3-compatible
- * storage via the API. Until then the request is validated and acknowledged only.
+ * Quote request (JSON). The optional logo is already stored by the API (`logoUploadId` from
+ * `POST /api/v1/uploads/logos`).
+ * TODO(Phase 3): forward to `POST /api/v1/crm/quote-requests`. Until then the request is validated and acknowledged only.
  */
 export async function POST(req: Request) {
   if (!isSameOrigin(req)) return badRequest("Origine non autorisée.");
 
-  let form: FormData;
+  let body: unknown;
   try {
-    form = await req.formData();
+    body = await req.json();
   } catch {
     return badRequest("Formulaire invalide.");
   }
 
-  const raw = Object.fromEntries(
-    ["name", "company", "phone", "email", "products", "quantity", "message"].map((k) => [k, form.get(k)?.toString() ?? ""]),
-  );
-  const parsed = quoteSchema.safeParse(raw);
+  const parsed = quoteSchema.safeParse(body);
   if (!parsed.success) return badRequest("Certains champs sont invalides.", fieldErrors(parsed.error));
 
-  const logo = form.get("logo");
-  const file = logo instanceof File ? logo : null;
-  const uploadError = validateUpload(file);
-  if (uploadError) return badRequest(uploadError, { logo: uploadError });
-
   const reference = `DV-${Date.now().toString(36).toUpperCase()}`;
-  return accepted({ reference, status: "received", hasLogo: Boolean(file && file.size > 0) });
+  return accepted({ reference, status: "received", hasLogo: Boolean(parsed.data.logoUploadId) });
 }

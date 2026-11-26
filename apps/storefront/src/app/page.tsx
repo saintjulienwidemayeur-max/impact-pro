@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -23,21 +24,29 @@ import {
   HardHat,
   Mail,
 } from "lucide-react";
-import { HeroArt } from "@/components/hero-art";
+import { ApiUnavailable } from "@/components/api-unavailable";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { ProductCard } from "@/components/product-card";
-import { categories, popularProducts, type CategorySlug } from "@/lib/catalog";
+import { navCategories, type NavCategorySlug } from "@/config/navigation";
+import { photos } from "@/config/product-media";
+import { listProducts, type Product } from "@/lib/api";
 import { site } from "@/lib/site";
 import { formatHTG } from "@/lib/utils";
 
-const categoryIcons: Record<CategorySlug, LucideIcon> = {
+export const revalidate = 60;
+
+/** Service strip: line icons (UI), 8 main categories. */
+const stripSlugs: NavCategorySlug[] = ["tasses", "t-shirts-polos", "casquettes", "banderoles", "drapeaux-plume", "cartes-papeterie", "carnets", "photocall"];
+const categories = navCategories.filter((c) => stripSlugs.includes(c.slug));
+
+const categoryIcons: Partial<Record<NavCategorySlug, LucideIcon>> = {
   tasses: Coffee,
   "t-shirts-polos": Shirt,
   casquettes: HardHat,
   banderoles: RectangleHorizontal,
   "drapeaux-plume": Flag,
-  "cartes-de-visite": CreditCard,
-  "carnets-stylos": BookOpen,
+  "cartes-papeterie": CreditCard,
+  carnets: BookOpen,
   photocall: Camera,
 };
 
@@ -79,7 +88,16 @@ function Arcs({ className }: { className?: string }) {
   );
 }
 
-export default function HomePage() {
+export default async function HomePage() {
+  let popular: Product[] | null = null;
+  try {
+    const all = await listProducts();
+    const discounted = all.filter((p) => p.compareAtPrice);
+    popular = [...discounted, ...all.filter((p) => !p.compareAtPrice)].slice(0, 6);
+  } catch {
+    popular = null;
+  }
+
   return (
     <>
       {/* HERO */}
@@ -112,7 +130,7 @@ export default function HomePage() {
             </ul>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
-                href="/produits"
+                href="/personnaliser"
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-ip-sun px-6 text-sm font-bold uppercase tracking-wide text-ip-ink hover:bg-ip-sun-600"
               >
                 Commander <ArrowRight className="size-4" aria-hidden="true" />
@@ -125,8 +143,28 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
-          <div className="relative">
-            <HeroArt />
+          <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+            <div className="relative grid grid-cols-[1.35fr_1fr] gap-3 sm:gap-4">
+              <div className="relative row-span-2 overflow-hidden rounded-[1.5rem] bg-white shadow-offset">
+                <Image
+                  src={photos.kit.src}
+                  alt={photos.kit.alt}
+                  fill
+                  priority
+                  sizes="(min-width: 1024px) 30vw, 55vw"
+                  className="object-contain p-2"
+                />
+              </div>
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-white">
+                <Image src={photos.tasses.src} alt={photos.tasses.alt} fill priority sizes="(min-width: 1024px) 20vw, 40vw" className="object-cover" />
+              </div>
+              <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-white">
+                <Image src={photos.casquette.src} alt={photos.casquette.alt} fill sizes="(min-width: 1024px) 20vw, 40vw" className="object-cover" />
+              </div>
+              <div className="relative col-span-2 aspect-[16/7] overflow-hidden rounded-[1.25rem] bg-black">
+                <Image src={photos.poloTeal.src} alt={photos.poloTeal.alt} fill sizes="(min-width: 1024px) 45vw, 95vw" className="object-cover" />
+              </div>
+            </div>
             <Link
               href="/offres"
               className="absolute -top-4 right-0 flex size-28 rotate-6 flex-col items-center justify-center rounded-full border-4 border-ip-teal bg-ip-sun text-center font-heading text-ip-ink shadow-lg ring-4 ring-ip-sun/40 transition-transform hover:rotate-0 sm:size-32 lg:-right-4"
@@ -148,7 +186,7 @@ export default function HomePage() {
             </h2>
             <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-9">
               {categories.map((c) => {
-                const Icon = categoryIcons[c.slug];
+                const Icon = categoryIcons[c.slug] ?? LayoutGrid;
                 return (
                   <li key={c.slug}>
                     <Link
@@ -192,10 +230,60 @@ export default function HomePage() {
               Tous les produits <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-6">
-            {popularProducts.map((p) => (
-              <ProductCard key={p.slug} product={p} />
-            ))}
+          {popular === null ? (
+            <ApiUnavailable compact />
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-6">
+              {popular.map((p) => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* CORPORATE KITS */}
+      <section aria-labelledby="kits-title" className="pb-16">
+        <div className="container-ip">
+          <div className="grid items-center gap-8 overflow-hidden rounded-[1.5rem] border border-ip-line bg-white p-5 sm:p-8 lg:grid-cols-2 lg:gap-12">
+            <div className="relative aspect-square overflow-hidden rounded-[1.25rem] bg-white">
+              <Image src={photos.kit.src} alt={photos.kit.alt} fill sizes="(min-width: 1024px) 40vw, 90vw" className="object-contain" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-wide text-ip-teal">Kits d&apos;entreprise</p>
+              <h2 id="kits-title" className="mt-1 text-3xl font-bold leading-tight sm:text-4xl">
+                Votre logo sur tout votre kit
+              </h2>
+              <span className="mt-3 block h-1 w-14 rounded bg-ip-sun" aria-hidden="true" />
+              <p className="mt-4 text-ip-muted">
+                Parapluie, polo, sac, gourde, casquette, clé USB, porte-clés… Composez un kit cohérent pour vos équipes, vos clients ou vos
+                événements : un seul interlocuteur, une seule maquette, une livraison groupée.
+              </p>
+              <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+                {["Accueil des nouveaux employés", "Cadeaux clients & partenaires", "Séminaires et conférences", "Lancements de produits"].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-ip-teal text-white">
+                      <Check className="size-3" aria-hidden="true" />
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/personnaliser/kit-entreprise"
+                  className="inline-flex h-12 items-center gap-2 rounded-xl bg-ip-sun px-6 text-sm font-bold uppercase tracking-wide text-ip-ink hover:bg-ip-sun-600"
+                >
+                  Composer mon kit <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/devis"
+                  className="inline-flex h-12 items-center rounded-xl border-2 border-ip-teal px-6 text-sm font-bold uppercase tracking-wide text-ip-teal hover:bg-ip-teal hover:text-white"
+                >
+                  Devis sur mesure
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
