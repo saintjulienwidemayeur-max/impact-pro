@@ -357,13 +357,13 @@ export default async function HomePage() {
                 </Link>
               </div>
             </div>
-            <div className="relative aspect-[1472/1370] w-full">
+            <div className="relative aspect-[1472/1370] w-full overflow-hidden rounded-[1.25rem] bg-white shadow-offset">
               <Image
                 src={photos.equipements.src}
                 alt={photos.equipements.alt}
                 fill
                 sizes="(min-width: 1024px) 50vw, 92vw"
-                className="object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.25)]"
+                className="object-cover"
               />
             </div>
           </div>
