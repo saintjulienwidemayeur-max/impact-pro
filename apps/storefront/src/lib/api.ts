@@ -3,6 +3,7 @@
  * Server components use `API_URL` (internal), browsers use `NEXT_PUBLIC_API_URL`.
  */
 
+import { isHiddenProduct } from "@/config/catalog-visibility";
 import type { FontId, OrderElementPayload } from "./design";
 
 export const PLACEMENTS = ["FRONT", "BACK", "CHEST_LEFT", "SLEEVE", "WRAP", "FULL", "SIDE", "TOP"] as const;
@@ -217,7 +218,7 @@ async function request<T>(path: string, init: RequestInit & { next?: { revalidat
 
 export async function listProducts(): Promise<Product[]> {
   const data = await request<Product[]>("/catalog/products?pageSize=100", { next: { revalidate: 60 } });
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(data) ? data.filter((p) => !isHiddenProduct(p.slug)) : [];
 }
 
 /** slug → option labels (« Modèle du téléphone »…), so order pages can label colors / sizes. Never throws. */
@@ -233,6 +234,7 @@ export async function optionLabelsBySlug(): Promise<Record<string, { colorLabel?
 
 /** Returns null when the product does not exist (404); throws on other failures. */
 export async function getProduct(slug: string): Promise<Product | null> {
+  if (isHiddenProduct(slug)) return null;
   try {
     return await request<Product>(`/catalog/products/${encodeURIComponent(slug)}`, { next: { revalidate: 60 } });
   } catch (e) {

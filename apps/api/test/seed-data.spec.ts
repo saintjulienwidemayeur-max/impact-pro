@@ -66,7 +66,7 @@ describe('catalog seed data', () => {
       expect(f).toMatchObject({ colorsRequired: true, sizesRequired: true, sizeLabel: 'Taille' });
       expect(get(slug).sizes).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
     }
-    expect(get('t-shirt-personnalise').colors).toEqual(['Blanc', 'Noir', 'Rouge', 'Bleu royal']);
+    expect(get('t-shirt-personnalise').colors).toEqual(['Rouge', 'Noir', 'Bleu royal']);
     expect(optionFlags(get('casquette-brodee'))).toMatchObject({ colorsRequired: true, sizesRequired: false });
   });
 

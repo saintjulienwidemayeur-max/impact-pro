@@ -90,7 +90,8 @@ export function Customizer({ product }: { product: Product }) {
   const [zone, setZone] = React.useState<Placement>(caps.zones[0].placement);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
   const [color, setColor] = React.useState<string | undefined>(options.color?.required !== false ? options.color?.values[0] : undefined);
-  const [size, setSize] = React.useState<string | undefined>(undefined);
+  // The standard (first) size is pre-selected when the product has a short list of sizes (roll-up, tent, bottle…).
+  const [size, setSize] = React.useState<string | undefined>(product.sizes.length > 0 && product.sizes.length <= 4 && product.sizesRequired !== false && !product.customSize ? product.sizes[0] : undefined);
   const [qtyInput, setQtyInput] = React.useState(String(product.minQty));
   const [wInput, setWInput] = React.useState(String(caps.customSize?.defaultWidthCm ?? ""));
   const [hInput, setHInput] = React.useState(String(caps.customSize?.defaultHeightCm ?? ""));

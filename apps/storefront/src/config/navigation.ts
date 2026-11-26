@@ -1,3 +1,4 @@
+import { isHiddenProduct } from "@/config/catalog-visibility";
 /**
  * Category navigation (information architecture). Slugs match the API's catalog categories;
  * product data itself always comes from the API.
@@ -22,7 +23,7 @@ export type NavCategorySlug = (typeof navCategories)[number]["slug"];
  * Customizable product families added with the studio. They link straight to the customizer of a catalog product
  * (slug = API product slug), so the destination always exists once the catalog is seeded.
  */
-export const navFamilies = [
+const allNavFamilies = [
   { slug: "ballon-football", name: "Ballons de foot", tagline: "Votre logo sur le ballon" },
   { slug: "ballon-personnalise", name: "Ballons de fête", tagline: "Latex imprimé, 1 ou 2 faces" },
   { slug: "t-shirt-personnalise", name: "T-shirts", tagline: "Devant, dos, plusieurs couleurs" },
@@ -42,3 +43,6 @@ export const navFamilies = [
   { slug: "flyers-brochures", name: "Flyers & brochures", tagline: "Importez votre fichier" },
   { slug: "autocollants", name: "Autocollants", tagline: "Stickers sur mesure" },
 ] as const;
+
+/** Families whose product is hidden (see catalog-visibility.ts) are not advertised. */
+export const navFamilies = allNavFamilies.filter((f) => !isHiddenProduct(f.slug));
