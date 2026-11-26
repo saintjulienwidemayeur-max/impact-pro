@@ -1,1115 +1,962 @@
 {
- "parapluie": {
-  "gallery": [
-   {
-    "file": "parapluie.webp",
-    "alt": "Parapluie pliant bleu royal, doublure argent, avec logo imprimé sur un pan",
-    "width": 1314,
-    "height": 726,
-    "blank": "parapluie-blank.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "parapluie.webp",
-   "TOP": "parapluie.webp"
-  },
-  "areas": {
-   "parapluie.webp": {
-    "FRONT": {
-     "cx": 0.4269,
-     "cy": 0.3168,
-     "w": 0.2192,
-     "h": 0.1324,
-     "rot": -22,
-     "patch": "#354cab"
+  "parapluie": {
+    "gallery": [
+      {
+        "file": "parapluie.webp",
+        "alt": "Parapluie pliant bleu royal, doublure argent, avec logo imprimé sur un pan",
+        "width": 1314,
+        "height": 726,
+        "blank": "parapluie-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "parapluie.webp",
+      "TOP": "parapluie.webp"
     },
-    "TOP": {
-     "cx": 0.4269,
-     "cy": 0.3168,
-     "w": 0.2192,
-     "h": 0.1324,
-     "rot": -22,
-     "patch": "#354cab"
+    "areas": {
+      "parapluie.webp": {
+        "FRONT": {
+          "cx": 0.4269,
+          "cy": 0.3168,
+          "w": 0.2192,
+          "h": 0.1324,
+          "rot": -22,
+          "patch": "#354cab"
+        },
+        "TOP": {
+          "cx": 0.4269,
+          "cy": 0.3168,
+          "w": 0.2192,
+          "h": 0.1324,
+          "rot": -22,
+          "patch": "#354cab"
+        }
+      }
     }
-   }
+  },
+  "sac-tote": {
+    "gallery": [
+      {
+        "file": "sac-tote-blanc.webp",
+        "alt": "Sac tote blanc, sans impression",
+        "width": 1036,
+        "height": 1856,
+        "blank": "sac-tote-blanc.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "sac-tote-blanc.webp",
+      "BACK": "sac-tote-blanc.webp"
+    },
+    "areas": {
+      "sac-tote-blanc.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.64,
+          "w": 0.6,
+          "h": 0.6,
+          "rot": 0,
+          "patch": "#eeeeec"
+        },
+        "BACK": {
+          "cx": 0.5,
+          "cy": 0.64,
+          "w": 0.6,
+          "h": 0.6,
+          "rot": 0,
+          "patch": "#eeeeec"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "sac-a-cordon": {
+    "gallery": [
+      {
+        "file": "sac-a-cordon.webp",
+        "alt": "Sac à cordon bleu royal avec poche filet et logo imprimé",
+        "width": 694,
+        "height": 775,
+        "blank": "sac-a-cordon-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "sac-a-cordon.webp",
+      "BACK": "sac-a-cordon.webp"
+    },
+    "areas": {
+      "sac-a-cordon.webp": {
+        "FRONT": {
+          "cx": 0.4366,
+          "cy": 0.5639,
+          "w": 0.4496,
+          "h": 0.2939,
+          "rot": 0,
+          "patch": "#2945ac"
+        },
+        "BACK": {
+          "cx": 0.4366,
+          "cy": 0.5639,
+          "w": 0.4496,
+          "h": 0.2939,
+          "rot": 0,
+          "patch": "#2945ac"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "gourde-isotherme": {
+    "gallery": [
+      {
+        "file": "gourde-isotherme.webp",
+        "alt": "Gourde isotherme bleu royal avec logo imprimé",
+        "width": 216,
+        "height": 745,
+        "blank": "gourde-isotherme-blank.webp"
+      }
+    ],
+    "previews": {
+      "WRAP": "gourde-isotherme.webp",
+      "FRONT": "gourde-isotherme.webp"
+    },
+    "areas": {
+      "gourde-isotherme.webp": {
+        "WRAP": {
+          "cx": 0.4977,
+          "cy": 0.3893,
+          "w": 0.8333,
+          "h": 0.6667,
+          "rot": 0,
+          "patch": "#4161bf",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        },
+        "FRONT": {
+          "cx": 0.4977,
+          "cy": 0.3893,
+          "w": 0.7222,
+          "h": 0.5833,
+          "rot": 0,
+          "patch": "#3656b4",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        }
+      }
+    }
+  },
+  "gobelet-isotherme": {
+    "gallery": [
+      {
+        "file": "gobelet-isotherme.webp",
+        "alt": "Gobelet isotherme de voyage bleu et gris avec logo imprimé",
+        "width": 235,
+        "height": 579,
+        "blank": "gobelet-isotherme-blank.webp"
+      }
+    ],
+    "previews": {
+      "WRAP": "gobelet-isotherme.webp",
+      "FRONT": "gobelet-isotherme.webp"
+    },
+    "areas": {
+      "gobelet-isotherme.webp": {
+        "WRAP": {
+          "cx": 0.4936,
+          "cy": 0.4076,
+          "w": 0.7915,
+          "h": 0.6383,
+          "rot": 0,
+          "patch": "#2847a4",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        },
+        "FRONT": {
+          "cx": 0.4936,
+          "cy": 0.4076,
+          "w": 0.6894,
+          "h": 0.5617,
+          "rot": 0,
+          "patch": "#2845a2",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        }
+      }
+    }
+  },
+  "cle-usb": {
+    "gallery": [
+      {
+        "file": "cle-usb.webp",
+        "alt": "Clé USB pivotante en métal argenté et bleu, avec logo imprimé",
+        "width": 451,
+        "height": 350,
+        "blank": "cle-usb-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "cle-usb.webp"
+    },
+    "areas": {
+      "cle-usb.webp": {
+        "FRONT": {
+          "cx": 0.3149,
+          "cy": 0.2029,
+          "w": 0.3858,
+          "h": 0.1863,
+          "rot": -12,
+          "patch": "#dfe5e3"
+        }
+      }
+    }
+  },
+  "porte-cles": {
+    "gallery": [
+      {
+        "file": "porte-cles.webp",
+        "alt": "Porte-clés rectangulaire bleu royal avec logo imprimé",
+        "width": 357,
+        "height": 376,
+        "blank": "porte-cles-blank.webp"
+      },
+      {
+        "file": "porte-cles-ouvre.webp",
+        "alt": "Porte-clés décapsuleur bleu royal avec logo imprimé",
+        "width": 176,
+        "height": 459,
+        "blank": "porte-cles-ouvre-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "porte-cles.webp",
+      "BACK": "porte-cles.webp"
+    },
+    "areas": {
+      "porte-cles.webp": {
+        "FRONT": {
+          "cx": 0.6134,
+          "cy": 0.6516,
+          "w": 0.5378,
+          "h": 0.3361,
+          "rot": 38,
+          "patch": "#234496"
+        },
+        "BACK": {
+          "cx": 0.6134,
+          "cy": 0.6516,
+          "w": 0.5378,
+          "h": 0.3361,
+          "rot": 38,
+          "patch": "#234496"
+        }
+      },
+      "porte-cles-ouvre.webp": {
+        "FRONT": {
+          "cx": 0.6364,
+          "cy": 0.5207,
+          "w": 0.8864,
+          "h": 0.375,
+          "rot": 90,
+          "patch": "#264698"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "protege-passeport": {
+    "gallery": [
+      {
+        "file": "protege-passeport.webp",
+        "alt": "Protège-passeport en simili cuir bleu royal avec logo imprimé",
+        "width": 440,
+        "height": 496,
+        "blank": "protege-passeport-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "protege-passeport.webp"
+    },
+    "areas": {
+      "protege-passeport.webp": {
+        "FRONT": {
+          "cx": 0.4659,
+          "cy": 0.3972,
+          "w": 0.4227,
+          "h": 0.2864,
+          "rot": -20,
+          "patch": "#1a3492"
+        }
+      }
+    }
+  },
+  "t-shirt-personnalise": {
+    "merge": false,
+    "note": "T-shirts rouge, bleu et noir : photos réelles, face et dos (le blanc recoloré a été retiré).",
+    "gallery": [
+      {
+        "file": "tshirt-rouge-face.webp",
+        "alt": "T-shirt rouge, vue de face, sans impression",
+        "width": 902,
+        "height": 1100,
+        "blank": "tshirt-rouge-face.webp"
+      },
+      {
+        "file": "tshirt-rouge-dos.webp",
+        "alt": "T-shirt rouge, vue de dos, sans impression",
+        "width": 908,
+        "height": 1100,
+        "blank": "tshirt-rouge-dos.webp"
+      },
+      {
+        "file": "tshirt-bleu-face.webp",
+        "alt": "T-shirt bleu royal, vue de face, sans impression",
+        "width": 873,
+        "height": 1100,
+        "blank": "tshirt-bleu-face.webp"
+      },
+      {
+        "file": "tshirt-bleu-dos.webp",
+        "alt": "T-shirt bleu royal, vue de dos, sans impression",
+        "width": 885,
+        "height": 1100,
+        "blank": "tshirt-bleu-dos.webp"
+      },
+      {
+        "file": "tshirt-noir-face.webp",
+        "alt": "T-shirt noir, vue de face, sans impression",
+        "width": 915,
+        "height": 1100,
+        "blank": "tshirt-noir-face.webp"
+      },
+      {
+        "file": "tshirt-noir-dos.webp",
+        "alt": "T-shirt noir, vue de dos, sans impression",
+        "width": 909,
+        "height": 1100,
+        "blank": "tshirt-noir-dos.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "tshirt-rouge-face.webp",
+      "CHEST_LEFT": "tshirt-rouge-face.webp",
+      "SLEEVE": "tshirt-rouge-face.webp",
+      "BACK": "tshirt-rouge-dos.webp"
+    },
+    "colorPreviews": {
+      "rouge": {
+        "FRONT": "tshirt-rouge-face.webp",
+        "CHEST_LEFT": "tshirt-rouge-face.webp",
+        "SLEEVE": "tshirt-rouge-face.webp",
+        "BACK": "tshirt-rouge-dos.webp"
+      },
+      "bleu": {
+        "FRONT": "tshirt-bleu-face.webp",
+        "CHEST_LEFT": "tshirt-bleu-face.webp",
+        "SLEEVE": "tshirt-bleu-face.webp",
+        "BACK": "tshirt-bleu-dos.webp"
+      },
+      "noir": {
+        "FRONT": "tshirt-noir-face.webp",
+        "CHEST_LEFT": "tshirt-noir-face.webp",
+        "SLEEVE": "tshirt-noir-face.webp",
+        "BACK": "tshirt-noir-dos.webp"
+      }
+    },
+    "areas": {
+      "tshirt-rouge-face.webp": {
+        "FRONT": {
+          "cx": 0.5078,
+          "cy": 0.4246,
+          "w": 0.4219,
+          "h": 0.3161,
+          "rot": 0,
+          "patch": "#d62f2f"
+        },
+        "CHEST_LEFT": {
+          "cx": 0.6713,
+          "cy": 0.3024,
+          "w": 0.1582,
+          "h": 0.1054,
+          "rot": 0,
+          "patch": "#d62f2f"
+        },
+        "SLEEVE": {
+          "cx": 0.9139,
+          "cy": 0.2566,
+          "w": 0.1055,
+          "h": 0.079,
+          "rot": 30,
+          "patch": "#d62f2f"
+        }
+      },
+      "tshirt-rouge-dos.webp": {
+        "BACK": {
+          "cx": 0.5044,
+          "cy": 0.3673,
+          "w": 0.4284,
+          "h": 0.3475,
+          "rot": 0,
+          "patch": "#d62f2f"
+        }
+      },
+      "tshirt-bleu-face.webp": {
+        "FRONT": {
+          "cx": 0.5143,
+          "cy": 0.4292,
+          "w": 0.4173,
+          "h": 0.3119,
+          "rot": 0,
+          "patch": "#1f43b8"
+        },
+        "CHEST_LEFT": {
+          "cx": 0.676,
+          "cy": 0.3078,
+          "w": 0.1565,
+          "h": 0.104,
+          "rot": 0,
+          "patch": "#1f43b8"
+        },
+        "SLEEVE": {
+          "cx": 0.916,
+          "cy": 0.2623,
+          "w": 0.1043,
+          "h": 0.078,
+          "rot": 30,
+          "patch": "#1f43b8"
+        }
+      },
+      "tshirt-bleu-dos.webp": {
+        "BACK": {
+          "cx": 0.4853,
+          "cy": 0.3688,
+          "w": 0.4375,
+          "h": 0.3524,
+          "rot": 0,
+          "patch": "#1f43b8"
+        }
+      },
+      "tshirt-noir-face.webp": {
+        "FRONT": {
+          "cx": 0.5082,
+          "cy": 0.4296,
+          "w": 0.4091,
+          "h": 0.3066,
+          "rot": 0,
+          "patch": "#1b1b1d"
+        },
+        "CHEST_LEFT": {
+          "cx": 0.6667,
+          "cy": 0.309,
+          "w": 0.1534,
+          "h": 0.1022,
+          "rot": 0,
+          "patch": "#1b1b1d"
+        },
+        "SLEEVE": {
+          "cx": 0.902,
+          "cy": 0.2638,
+          "w": 0.1023,
+          "h": 0.0766,
+          "rot": 30,
+          "patch": "#1b1b1d"
+        }
+      },
+      "tshirt-noir-dos.webp": {
+        "BACK": {
+          "cx": 0.4978,
+          "cy": 0.3685,
+          "w": 0.4268,
+          "h": 0.3458,
+          "rot": 0,
+          "patch": "#1b1b1d"
+        }
+      }
+    }
+  },
+  "casquette-brodee": {
+    "merge": true,
+    "gallery": [
+      {
+        "file": "casquette-profil.webp",
+        "alt": "Casquette blanche vue de profil, sans impression",
+        "width": 1376,
+        "height": 730,
+        "blank": "casquette-profil.webp"
+      }
+    ],
+    "previews": {
+      "SIDE": "casquette-profil.webp"
+    },
+    "areas": {
+      "casquette-profil.webp": {
+        "SIDE": {
+          "cx": 0.56,
+          "cy": 0.45,
+          "w": 0.26,
+          "h": 0.13,
+          "rot": -3,
+          "patch": "#f1f1f2",
+          "curve": {
+            "phi": 0.5,
+            "arch": 0.03
+          }
+        }
+      }
+    }
+  },
+  "coque-telephone": {
+    "gallery": [
+      {
+        "file": "coque-telephone.webp",
+        "alt": "Coque de téléphone blanche, vue de dos, sans impression",
+        "width": 1032,
+        "height": 1900,
+        "blank": "coque-telephone.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "coque-telephone.webp",
+      "FULL": "coque-telephone.webp"
+    },
+    "areas": {
+      "coque-telephone.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.62,
+          "w": 0.64,
+          "h": 0.8,
+          "rot": 0,
+          "patch": "#f3f3f3"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.62,
+          "w": 0.64,
+          "h": 0.8,
+          "rot": 0,
+          "patch": "#f3f3f3"
+        }
+      }
+    }
+  },
+  "gourde-aluminium": {
+    "gallery": [
+      {
+        "file": "gourde-aluminium.webp",
+        "alt": "Gourde aluminium blanche avec mousqueton, sans impression",
+        "width": 704,
+        "height": 1924,
+        "blank": "gourde-aluminium.webp"
+      }
+    ],
+    "previews": {
+      "WRAP": "gourde-aluminium.webp",
+      "FRONT": "gourde-aluminium.webp"
+    },
+    "areas": {
+      "gourde-aluminium.webp": {
+        "WRAP": {
+          "cx": 0.45,
+          "cy": 0.62,
+          "w": 0.56,
+          "h": 1.15,
+          "rot": 0,
+          "patch": "#f2f4f6",
+          "curve": {
+            "phi": 0.95,
+            "arch": 0.0
+          }
+        },
+        "FRONT": {
+          "cx": 0.45,
+          "cy": 0.62,
+          "w": 0.56,
+          "h": 1.15,
+          "rot": 0,
+          "patch": "#f2f4f6",
+          "curve": {
+            "phi": 0.95,
+            "arch": 0.0
+          }
+        }
+      }
+    }
+  },
+  "gobelet-cafe": {
+    "gallery": [
+      {
+        "file": "gobelet-cafe-blanc-duo.webp",
+        "alt": "Deux gobelets à café blancs avec couvercle blanc, sans impression",
+        "width": 1040,
+        "height": 1012,
+        "blank": "gobelet-cafe-blanc-duo.webp"
+      },
+      {
+        "file": "gobelet-cafe-noir-duo.webp",
+        "alt": "Deux gobelets à café blancs avec couvercle noir, sans impression",
+        "width": 978,
+        "height": 1090,
+        "blank": "gobelet-cafe-noir-duo.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "gobelet-cafe-blanc-duo.webp",
+      "WRAP": "gobelet-cafe-blanc-duo.webp"
+    },
+    "colorPreviews": {
+      "blanc": {
+        "FRONT": "gobelet-cafe-blanc-duo.webp",
+        "WRAP": "gobelet-cafe-blanc-duo.webp"
+      },
+      "noir": {
+        "FRONT": "gobelet-cafe-noir-duo.webp",
+        "WRAP": "gobelet-cafe-noir-duo.webp"
+      }
+    },
+    "note": "Deux gobelets par photo : le logo est calé sur le gobelet du premier plan.",
+    "areas": {
+      "gobelet-cafe-blanc-duo.webp": {
+        "FRONT": {
+          "cx": 0.445,
+          "cy": 0.665,
+          "w": 0.21,
+          "h": 0.21,
+          "rot": -37,
+          "patch": "#f2f2f2",
+          "curve": {
+            "phi": 0.9,
+            "arch": 0.05
+          }
+        },
+        "WRAP": {
+          "cx": 0.445,
+          "cy": 0.665,
+          "w": 0.21,
+          "h": 0.21,
+          "rot": -37,
+          "patch": "#f2f2f2",
+          "curve": {
+            "phi": 0.9,
+            "arch": 0.05
+          }
+        }
+      },
+      "gobelet-cafe-noir-duo.webp": {
+        "FRONT": {
+          "cx": 0.585,
+          "cy": 0.6,
+          "w": 0.23,
+          "h": 0.26,
+          "rot": 16,
+          "patch": "#f4f4f4",
+          "curve": {
+            "phi": 0.9,
+            "arch": 0.05
+          }
+        },
+        "WRAP": {
+          "cx": 0.585,
+          "cy": 0.6,
+          "w": 0.23,
+          "h": 0.26,
+          "rot": 16,
+          "patch": "#f4f4f4",
+          "curve": {
+            "phi": 0.9,
+            "arch": 0.05
+          }
+        }
+      }
+    }
+  },
+  "badge-lanyard": {
+    "gallery": [
+      {
+        "file": "badge-lanyard.webp",
+        "alt": "Badge vierge avec lanyard blanc (deux formats)",
+        "width": 1400,
+        "height": 1400,
+        "blank": "badge-lanyard.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "badge-lanyard.webp",
+      "BACK": "badge-lanyard.webp"
+    },
+    "approxPlacements": [
+      "BACK"
+    ],
+    "areas": {
+      "badge-lanyard.webp": {
+        "FRONT": {
+          "cx": 0.66,
+          "cy": 0.659,
+          "w": 0.291,
+          "h": 0.455,
+          "rot": 0,
+          "patch": "#ececec"
+        },
+        "BACK": {
+          "cx": 0.66,
+          "cy": 0.659,
+          "w": 0.291,
+          "h": 0.455,
+          "rot": 0,
+          "patch": "#ececec"
+        }
+      }
+    }
+  },
+  "ballon-football": {
+    "gallery": [
+      {
+        "file": "ballon-football.webp",
+        "alt": "Ballon de football noir et blanc",
+        "width": 1432,
+        "height": 1424,
+        "blank": "ballon-football.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "ballon-football.webp",
+      "BACK": "ballon-football.webp"
+    },
+    "approxPlacements": [
+      "BACK"
+    ],
+    "areas": {
+      "ballon-football.webp": {
+        "FRONT": {
+          "cx": 0.48,
+          "cy": 0.46,
+          "w": 0.25,
+          "h": 0.24,
+          "rot": 0,
+          "patch": "#f0f0f0",
+          "curve": {
+            "phi": 0.7,
+            "arch": 0.0
+          }
+        },
+        "BACK": {
+          "cx": 0.48,
+          "cy": 0.46,
+          "w": 0.25,
+          "h": 0.24,
+          "rot": 0,
+          "patch": "#f0f0f0",
+          "curve": {
+            "phi": 0.7,
+            "arch": 0.0
+          }
+        }
+      }
+    }
+  },
+  "roll-up": {
+    "gallery": [
+      {
+        "file": "roll-up-face.webp",
+        "alt": "Roll-up avec bâche blanche, vue de face",
+        "width": 1472,
+        "height": 2570,
+        "blank": "roll-up-face.webp"
+      },
+      {
+        "file": "roll-up-3-4.webp",
+        "alt": "Roll-up avec bâche blanche, vue trois quarts",
+        "width": 1472,
+        "height": 2574,
+        "blank": "roll-up-3-4.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "roll-up-face.webp"
+    },
+    "areas": {
+      "roll-up-face.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.487,
+          "w": 0.554,
+          "h": 1.303,
+          "rot": 0,
+          "patch": "#fbfbfb"
+        }
+      }
+    }
+  },
+  "tente-pliante-3x3": {
+    "gallery": [
+      {
+        "file": "tente-pliante.webp",
+        "alt": "Tente pliante blanche avec un côté, sans impression",
+        "width": 1470,
+        "height": 1398,
+        "blank": "tente-pliante.webp"
+      },
+      {
+        "file": "tente-stand-complet.webp",
+        "alt": "Stand complet : tente, drapeaux, roll-ups et comptoir (illustration)",
+        "width": 1036,
+        "height": 786,
+        "blank": "tente-stand-complet.webp"
+      }
+    ],
+    "previews": {
+      "TOP": "tente-pliante.webp",
+      "FRONT": "tente-pliante.webp",
+      "SIDE": "tente-pliante.webp"
+    },
+    "areas": {
+      "tente-pliante.webp": {
+        "FRONT": {
+          "quad": [
+            [
+              0.0602,
+              0.2773
+            ],
+            [
+              0.67,
+              0.2321
+            ],
+            [
+              0.67,
+              0.3217
+            ],
+            [
+              0.0602,
+              0.3532
+            ]
+          ],
+          "aspect": 12,
+          "patch": "#eeeeee"
+        },
+        "TOP": {
+          "quad": [
+            [
+              0.3235,
+              0.21
+            ],
+            [
+              0.5452,
+              0.1801
+            ],
+            [
+              0.6515,
+              0.2398
+            ],
+            [
+              0.1757,
+              0.2696
+            ]
+          ],
+          "aspect": 1.1,
+          "patch": "#f4f4f4"
+        },
+        "SIDE": {
+          "quad": [
+            [
+              0.4066,
+              0.3848
+            ],
+            [
+              0.9102,
+              0.3762
+            ],
+            [
+              0.9102,
+              0.8069
+            ],
+            [
+              0.4066,
+              0.7856
+            ]
+          ],
+          "aspect": 1.5,
+          "patch": "#e2e2e3"
+        }
+      }
+    }
+  },
+  "flyers-brochures": {
+    "gallery": [
+      {
+        "file": "brochure-trois-volets.webp",
+        "alt": "Brochure trois volets vierge, vue en perspective",
+        "width": 1218,
+        "height": 896,
+        "blank": "brochure-trois-volets.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "brochure-trois-volets.webp",
+      "BACK": "brochure-trois-volets.webp"
+    },
+    "approxPlacements": [
+      "BACK"
+    ],
+    "areas": {
+      "brochure-trois-volets.webp": {
+        "FRONT": {
+          "quad": [
+            [
+              0.239,
+              0.232
+            ],
+            [
+              0.463,
+              0.205
+            ],
+            [
+              0.736,
+              0.705
+            ],
+            [
+              0.502,
+              0.75
+            ]
+          ],
+          "aspect": 0.47,
+          "patch": "#f6f6f6"
+        },
+        "BACK": {
+          "quad": [
+            [
+              0.463,
+              0.205
+            ],
+            [
+              0.679,
+              0.045
+            ],
+            [
+              0.962,
+              0.527
+            ],
+            [
+              0.736,
+              0.705
+            ]
+          ],
+          "aspect": 0.47,
+          "patch": "#ececec"
+        }
+      }
+    }
   }
- },
- "sac-tote": {
-  "gallery": [
-   {
-    "file": "sac-tote.webp",
-    "alt": "Sac shopping bleu royal en tissu non tissé, avec logo imprimé",
-    "width": 529,
-    "height": 908,
-    "blank": "sac-tote-blank.webp"
-   },
-   {
-    "file": "sac-tote-blanc.webp",
-    "alt": "Sac tote blanc, sans impression",
-    "width": 1036,
-    "height": 1856,
-    "blank": "sac-tote-blanc.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "sac-tote.webp",
-   "BACK": "sac-tote.webp"
-  },
-  "areas": {
-   "sac-tote.webp": {
-    "FRONT": {
-     "cx": 0.4745,
-     "cy": 0.5914,
-     "w": 0.7259,
-     "h": 0.465,
-     "rot": 0,
-     "patch": "#1e4db8"
-    },
-    "BACK": {
-     "cx": 0.4745,
-     "cy": 0.5914,
-     "w": 0.7259,
-     "h": 0.465,
-     "rot": 0,
-     "patch": "#1e4db8"
-    }
-   },
-   "sac-tote-blanc.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.64,
-     "w": 0.6,
-     "h": 0.6,
-     "rot": 0,
-     "patch": "#eeeeec"
-    },
-    "BACK": {
-     "cx": 0.5,
-     "cy": 0.64,
-     "w": 0.6,
-     "h": 0.6,
-     "rot": 0,
-     "patch": "#eeeeec"
-    }
-   }
-  },
-  "approxPlacements": [
-   "BACK"
-  ],
-  "colorPreviews": {
-   "blanc": {
-    "FRONT": "sac-tote-blanc.webp",
-    "BACK": "sac-tote-blanc.webp"
-   }
-  },
-  "approxPlacementsByColor": {
-   "blanc": [
-    "BACK"
-   ]
-  }
- },
- "sac-a-cordon": {
-  "gallery": [
-   {
-    "file": "sac-a-cordon.webp",
-    "alt": "Sac à cordon bleu royal avec poche filet et logo imprimé",
-    "width": 694,
-    "height": 775,
-    "blank": "sac-a-cordon-blank.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "sac-a-cordon.webp",
-   "BACK": "sac-a-cordon.webp"
-  },
-  "areas": {
-   "sac-a-cordon.webp": {
-    "FRONT": {
-     "cx": 0.4366,
-     "cy": 0.5639,
-     "w": 0.4496,
-     "h": 0.2939,
-     "rot": 0,
-     "patch": "#2945ac"
-    },
-    "BACK": {
-     "cx": 0.4366,
-     "cy": 0.5639,
-     "w": 0.4496,
-     "h": 0.2939,
-     "rot": 0,
-     "patch": "#2945ac"
-    }
-   }
-  },
-  "approxPlacements": [
-   "BACK"
-  ]
- },
- "gourde-isotherme": {
-  "gallery": [
-   {
-    "file": "gourde-isotherme.webp",
-    "alt": "Gourde isotherme bleu royal avec logo imprimé",
-    "width": 216,
-    "height": 745,
-    "blank": "gourde-isotherme-blank.webp"
-   }
-  ],
-  "previews": {
-   "WRAP": "gourde-isotherme.webp",
-   "FRONT": "gourde-isotherme.webp"
-  },
-  "areas": {
-   "gourde-isotherme.webp": {
-    "WRAP": {
-     "cx": 0.4977,
-     "cy": 0.3893,
-     "w": 0.8333,
-     "h": 0.6667,
-     "rot": 0,
-     "patch": "#4161bf",
-     "curve": {
-      "phi": 1.0,
-      "arch": 0.02
-     }
-    },
-    "FRONT": {
-     "cx": 0.4977,
-     "cy": 0.3893,
-     "w": 0.7222,
-     "h": 0.5833,
-     "rot": 0,
-     "patch": "#3656b4",
-     "curve": {
-      "phi": 1.0,
-      "arch": 0.02
-     }
-    }
-   }
-  }
- },
- "gobelet-isotherme": {
-  "gallery": [
-   {
-    "file": "gobelet-isotherme.webp",
-    "alt": "Gobelet isotherme de voyage bleu et gris avec logo imprimé",
-    "width": 235,
-    "height": 579,
-    "blank": "gobelet-isotherme-blank.webp"
-   }
-  ],
-  "previews": {
-   "WRAP": "gobelet-isotherme.webp",
-   "FRONT": "gobelet-isotherme.webp"
-  },
-  "areas": {
-   "gobelet-isotherme.webp": {
-    "WRAP": {
-     "cx": 0.4936,
-     "cy": 0.4076,
-     "w": 0.7915,
-     "h": 0.6383,
-     "rot": 0,
-     "patch": "#2847a4",
-     "curve": {
-      "phi": 1.0,
-      "arch": 0.02
-     }
-    },
-    "FRONT": {
-     "cx": 0.4936,
-     "cy": 0.4076,
-     "w": 0.6894,
-     "h": 0.5617,
-     "rot": 0,
-     "patch": "#2845a2",
-     "curve": {
-      "phi": 1.0,
-      "arch": 0.02
-     }
-    }
-   }
-  }
- },
- "cle-usb": {
-  "gallery": [
-   {
-    "file": "cle-usb.webp",
-    "alt": "Clé USB pivotante en métal argenté et bleu, avec logo imprimé",
-    "width": 451,
-    "height": 350,
-    "blank": "cle-usb-blank.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "cle-usb.webp"
-  },
-  "areas": {
-   "cle-usb.webp": {
-    "FRONT": {
-     "cx": 0.3149,
-     "cy": 0.2029,
-     "w": 0.3858,
-     "h": 0.1863,
-     "rot": -12,
-     "patch": "#dfe5e3"
-    }
-   }
-  }
- },
- "porte-cles": {
-  "gallery": [
-   {
-    "file": "porte-cles.webp",
-    "alt": "Porte-clés rectangulaire bleu royal avec logo imprimé",
-    "width": 357,
-    "height": 376,
-    "blank": "porte-cles-blank.webp"
-   },
-   {
-    "file": "porte-cles-ouvre.webp",
-    "alt": "Porte-clés décapsuleur bleu royal avec logo imprimé",
-    "width": 176,
-    "height": 459,
-    "blank": "porte-cles-ouvre-blank.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "porte-cles.webp",
-   "BACK": "porte-cles.webp"
-  },
-  "areas": {
-   "porte-cles.webp": {
-    "FRONT": {
-     "cx": 0.6134,
-     "cy": 0.6516,
-     "w": 0.5378,
-     "h": 0.3361,
-     "rot": 38,
-     "patch": "#234496"
-    },
-    "BACK": {
-     "cx": 0.6134,
-     "cy": 0.6516,
-     "w": 0.5378,
-     "h": 0.3361,
-     "rot": 38,
-     "patch": "#234496"
-    }
-   },
-   "porte-cles-ouvre.webp": {
-    "FRONT": {
-     "cx": 0.6364,
-     "cy": 0.5207,
-     "w": 0.8864,
-     "h": 0.375,
-     "rot": 90,
-     "patch": "#264698"
-    }
-   }
-  },
-  "approxPlacements": [
-   "BACK"
-  ]
- },
- "protege-passeport": {
-  "gallery": [
-   {
-    "file": "protege-passeport.webp",
-    "alt": "Protège-passeport en simili cuir bleu royal avec logo imprimé",
-    "width": 440,
-    "height": 496,
-    "blank": "protege-passeport-blank.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "protege-passeport.webp"
-  },
-  "areas": {
-   "protege-passeport.webp": {
-    "FRONT": {
-     "cx": 0.4659,
-     "cy": 0.3972,
-     "w": 0.4227,
-     "h": 0.2864,
-     "rot": -20,
-     "patch": "#1a3492"
-    }
-   }
-  }
- },
- "t-shirt-personnalise": {
-  "merge": false,
-  "note": "blanc = rendu (recoloration claire du modèle rouge) ; rouge/bleu/noir = photos fournies",
-  "gallery": [
-   {
-    "file": "tshirt-blanc-face.webp",
-    "alt": "T-shirt blanc (rendu à partir d'un modèle clair), vue de face, sans impression",
-    "width": 660,
-    "height": 778,
-    "blank": "tshirt-blanc-face.webp"
-   },
-   {
-    "file": "tshirt-blanc-dos.webp",
-    "alt": "T-shirt blanc (rendu à partir d'un modèle clair), vue de dos, sans impression",
-    "width": 638,
-    "height": 764,
-    "blank": "tshirt-blanc-dos.webp"
-   },
-   {
-    "file": "tshirt-rouge-face.webp",
-    "alt": "T-shirt rouge, vue de face, sans impression",
-    "width": 660,
-    "height": 778,
-    "blank": "tshirt-rouge-face.webp"
-   },
-   {
-    "file": "tshirt-rouge-dos.webp",
-    "alt": "T-shirt rouge, vue de dos, sans impression",
-    "width": 638,
-    "height": 764,
-    "blank": "tshirt-rouge-dos.webp"
-   },
-   {
-    "file": "tshirt-bleu-face.webp",
-    "alt": "T-shirt bleu royal, vue de face, sans impression",
-    "width": 638,
-    "height": 782,
-    "blank": "tshirt-bleu-face.webp"
-   },
-   {
-    "file": "tshirt-bleu-dos.webp",
-    "alt": "T-shirt bleu royal, vue de dos, sans impression",
-    "width": 646,
-    "height": 782,
-    "blank": "tshirt-bleu-dos.webp"
-   },
-   {
-    "file": "tshirt-noir-face.webp",
-    "alt": "T-shirt noir, vue de face, sans impression",
-    "width": 712,
-    "height": 842,
-    "blank": "tshirt-noir-face.webp"
-   },
-   {
-    "file": "tshirt-noir-dos.webp",
-    "alt": "T-shirt noir, vue de dos, sans impression",
-    "width": 708,
-    "height": 852,
-    "blank": "tshirt-noir-dos.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "tshirt-blanc-face.webp",
-   "CHEST_LEFT": "tshirt-blanc-face.webp",
-   "SLEEVE": "tshirt-blanc-face.webp",
-   "BACK": "tshirt-blanc-dos.webp"
-  },
-  "colorPreviews": {
-   "blanc": {
-    "FRONT": "tshirt-blanc-face.webp",
-    "CHEST_LEFT": "tshirt-blanc-face.webp",
-    "SLEEVE": "tshirt-blanc-face.webp",
-    "BACK": "tshirt-blanc-dos.webp"
-   },
-   "rouge": {
-    "FRONT": "tshirt-rouge-face.webp",
-    "CHEST_LEFT": "tshirt-rouge-face.webp",
-    "SLEEVE": "tshirt-rouge-face.webp",
-    "BACK": "tshirt-rouge-dos.webp"
-   },
-   "bleu": {
-    "FRONT": "tshirt-bleu-face.webp",
-    "CHEST_LEFT": "tshirt-bleu-face.webp",
-    "SLEEVE": "tshirt-bleu-face.webp",
-    "BACK": "tshirt-bleu-dos.webp"
-   },
-   "noir": {
-    "FRONT": "tshirt-noir-face.webp",
-    "CHEST_LEFT": "tshirt-noir-face.webp",
-    "SLEEVE": "tshirt-noir-face.webp",
-    "BACK": "tshirt-noir-dos.webp"
-   }
-  },
-  "areas": {
-   "tshirt-rouge-face.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.43,
-     "w": 0.4,
-     "h": 0.3,
-     "rot": 0,
-     "patch": "#d62f2f"
-    },
-    "CHEST_LEFT": {
-     "cx": 0.655,
-     "cy": 0.31,
-     "w": 0.15,
-     "h": 0.1,
-     "rot": 0,
-     "patch": "#d62f2f"
-    },
-    "SLEEVE": {
-     "cx": 0.885,
-     "cy": 0.265,
-     "w": 0.1,
-     "h": 0.075,
-     "rot": 30,
-     "patch": "#d62f2f"
-    }
-   },
-   "tshirt-rouge-dos.webp": {
-    "BACK": {
-     "cx": 0.5,
-     "cy": 0.37,
-     "w": 0.42,
-     "h": 0.34,
-     "rot": 0,
-     "patch": "#d62f2f"
-    }
-   },
-   "tshirt-bleu-face.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.43,
-     "w": 0.4,
-     "h": 0.3,
-     "rot": 0,
-     "patch": "#1f43b8"
-    },
-    "CHEST_LEFT": {
-     "cx": 0.655,
-     "cy": 0.31,
-     "w": 0.15,
-     "h": 0.1,
-     "rot": 0,
-     "patch": "#1f43b8"
-    },
-    "SLEEVE": {
-     "cx": 0.885,
-     "cy": 0.265,
-     "w": 0.1,
-     "h": 0.075,
-     "rot": 30,
-     "patch": "#1f43b8"
-    }
-   },
-   "tshirt-bleu-dos.webp": {
-    "BACK": {
-     "cx": 0.5,
-     "cy": 0.37,
-     "w": 0.42,
-     "h": 0.34,
-     "rot": 0,
-     "patch": "#1f43b8"
-    }
-   },
-   "tshirt-noir-face.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.43,
-     "w": 0.4,
-     "h": 0.3,
-     "rot": 0,
-     "patch": "#1b1b1d"
-    },
-    "CHEST_LEFT": {
-     "cx": 0.655,
-     "cy": 0.31,
-     "w": 0.15,
-     "h": 0.1,
-     "rot": 0,
-     "patch": "#1b1b1d"
-    },
-    "SLEEVE": {
-     "cx": 0.885,
-     "cy": 0.265,
-     "w": 0.1,
-     "h": 0.075,
-     "rot": 30,
-     "patch": "#1b1b1d"
-    }
-   },
-   "tshirt-noir-dos.webp": {
-    "BACK": {
-     "cx": 0.5,
-     "cy": 0.37,
-     "w": 0.42,
-     "h": 0.34,
-     "rot": 0,
-     "patch": "#1b1b1d"
-    }
-   },
-   "tshirt-blanc-face.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.43,
-     "w": 0.4,
-     "h": 0.3,
-     "rot": 0,
-     "patch": "#e9e9ea"
-    },
-    "CHEST_LEFT": {
-     "cx": 0.655,
-     "cy": 0.31,
-     "w": 0.15,
-     "h": 0.1,
-     "rot": 0,
-     "patch": "#e9e9ea"
-    },
-    "SLEEVE": {
-     "cx": 0.885,
-     "cy": 0.265,
-     "w": 0.1,
-     "h": 0.075,
-     "rot": 30,
-     "patch": "#e9e9ea"
-    }
-   },
-   "tshirt-blanc-dos.webp": {
-    "BACK": {
-     "cx": 0.5,
-     "cy": 0.37,
-     "w": 0.42,
-     "h": 0.34,
-     "rot": 0,
-     "patch": "#e9e9ea"
-    }
-   }
-  }
- },
- "casquette-brodee": {
-  "merge": true,
-  "gallery": [
-   {
-    "file": "casquette-profil.webp",
-    "alt": "Casquette blanche vue de profil, sans impression",
-    "width": 1376,
-    "height": 730,
-    "blank": "casquette-profil.webp"
-   }
-  ],
-  "previews": {
-   "SIDE": "casquette-profil.webp"
-  },
-  "areas": {
-   "casquette-profil.webp": {
-    "SIDE": {
-     "cx": 0.56,
-     "cy": 0.45,
-     "w": 0.26,
-     "h": 0.13,
-     "rot": -3,
-     "patch": "#f1f1f2",
-     "curve": {
-      "phi": 0.5,
-      "arch": 0.03
-     }
-    }
-   }
-  }
- },
- "coque-telephone": {
-  "gallery": [
-   {
-    "file": "coque-telephone.webp",
-    "alt": "Coque de téléphone blanche, vue de dos, sans impression",
-    "width": 1032,
-    "height": 1900,
-    "blank": "coque-telephone.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "coque-telephone.webp",
-   "FULL": "coque-telephone.webp"
-  },
-  "areas": {
-   "coque-telephone.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.62,
-     "w": 0.64,
-     "h": 0.8,
-     "rot": 0,
-     "patch": "#f3f3f3"
-    },
-    "FULL": {
-     "cx": 0.5,
-     "cy": 0.62,
-     "w": 0.64,
-     "h": 0.8,
-     "rot": 0,
-     "patch": "#f3f3f3"
-    }
-   }
-  }
- },
- "gourde-aluminium": {
-  "gallery": [
-   {
-    "file": "gourde-aluminium.webp",
-    "alt": "Gourde aluminium blanche avec mousqueton, sans impression",
-    "width": 704,
-    "height": 1924,
-    "blank": "gourde-aluminium.webp"
-   }
-  ],
-  "previews": {
-   "WRAP": "gourde-aluminium.webp",
-   "FRONT": "gourde-aluminium.webp"
-  },
-  "areas": {
-   "gourde-aluminium.webp": {
-    "WRAP": {
-     "cx": 0.45,
-     "cy": 0.62,
-     "w": 0.56,
-     "h": 1.15,
-     "rot": 0,
-     "patch": "#f2f4f6",
-     "curve": {
-      "phi": 0.95,
-      "arch": 0.0
-     }
-    },
-    "FRONT": {
-     "cx": 0.45,
-     "cy": 0.62,
-     "w": 0.56,
-     "h": 1.15,
-     "rot": 0,
-     "patch": "#f2f4f6",
-     "curve": {
-      "phi": 0.95,
-      "arch": 0.0
-     }
-    }
-   }
-  }
- },
- "gobelet-cafe": {
-  "gallery": [
-   {
-    "file": "gobelet-cafe-blanc-duo.webp",
-    "alt": "Deux gobelets à café blancs avec couvercle blanc, sans impression",
-    "width": 1040,
-    "height": 1012,
-    "blank": "gobelet-cafe-blanc-duo.webp"
-   },
-   {
-    "file": "gobelet-cafe-noir-duo.webp",
-    "alt": "Deux gobelets à café blancs avec couvercle noir, sans impression",
-    "width": 978,
-    "height": 1090,
-    "blank": "gobelet-cafe-noir-duo.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "gobelet-cafe-blanc-duo.webp",
-   "WRAP": "gobelet-cafe-blanc-duo.webp"
-  },
-  "colorPreviews": {
-   "blanc": {
-    "FRONT": "gobelet-cafe-blanc-duo.webp",
-    "WRAP": "gobelet-cafe-blanc-duo.webp"
-   },
-   "noir": {
-    "FRONT": "gobelet-cafe-noir-duo.webp",
-    "WRAP": "gobelet-cafe-noir-duo.webp"
-   }
-  },
-  "note": "Deux gobelets par photo : le logo est calé sur le gobelet du premier plan.",
-  "areas": {
-   "gobelet-cafe-blanc-duo.webp": {
-    "FRONT": {
-     "cx": 0.445,
-     "cy": 0.665,
-     "w": 0.21,
-     "h": 0.21,
-     "rot": -37,
-     "patch": "#f2f2f2",
-     "curve": {
-      "phi": 0.9,
-      "arch": 0.05
-     }
-    },
-    "WRAP": {
-     "cx": 0.445,
-     "cy": 0.665,
-     "w": 0.21,
-     "h": 0.21,
-     "rot": -37,
-     "patch": "#f2f2f2",
-     "curve": {
-      "phi": 0.9,
-      "arch": 0.05
-     }
-    }
-   },
-   "gobelet-cafe-noir-duo.webp": {
-    "FRONT": {
-     "cx": 0.585,
-     "cy": 0.6,
-     "w": 0.23,
-     "h": 0.26,
-     "rot": 16,
-     "patch": "#f4f4f4",
-     "curve": {
-      "phi": 0.9,
-      "arch": 0.05
-     }
-    },
-    "WRAP": {
-     "cx": 0.585,
-     "cy": 0.6,
-     "w": 0.23,
-     "h": 0.26,
-     "rot": 16,
-     "patch": "#f4f4f4",
-     "curve": {
-      "phi": 0.9,
-      "arch": 0.05
-     }
-    }
-   }
-  }
- },
- "badge-lanyard": {
-  "gallery": [
-   {
-    "file": "badge-lanyard.webp",
-    "alt": "Badge vierge avec lanyard blanc, deux formats",
-    "width": 878,
-    "height": 1192,
-    "blank": "badge-lanyard.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "badge-lanyard.webp",
-   "BACK": "badge-lanyard.webp"
-  },
-  "approxPlacements": [
-   "BACK"
-  ],
-  "areas": {
-   "badge-lanyard.webp": {
-    "FRONT": {
-     "cx": 0.725,
-     "cy": 0.705,
-     "w": 0.4,
-     "h": 0.62,
-     "rot": 0,
-     "patch": "#e6e6e8"
-    },
-    "BACK": {
-     "cx": 0.725,
-     "cy": 0.705,
-     "w": 0.4,
-     "h": 0.62,
-     "rot": 0,
-     "patch": "#e6e6e8"
-    }
-   }
-  }
- },
- "ballon-football": {
-  "gallery": [
-   {
-    "file": "ballon-football.webp",
-    "alt": "Ballon de football noir et blanc",
-    "width": 1432,
-    "height": 1424,
-    "blank": "ballon-football.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "ballon-football.webp",
-   "BACK": "ballon-football.webp"
-  },
-  "approxPlacements": [
-   "BACK"
-  ],
-  "areas": {
-   "ballon-football.webp": {
-    "FRONT": {
-     "cx": 0.48,
-     "cy": 0.46,
-     "w": 0.25,
-     "h": 0.24,
-     "rot": 0,
-     "patch": "#f0f0f0",
-     "curve": {
-      "phi": 0.7,
-      "arch": 0.0
-     }
-    },
-    "BACK": {
-     "cx": 0.48,
-     "cy": 0.46,
-     "w": 0.25,
-     "h": 0.24,
-     "rot": 0,
-     "patch": "#f0f0f0",
-     "curve": {
-      "phi": 0.7,
-      "arch": 0.0
-     }
-    }
-   }
-  }
- },
- "roll-up": {
-  "gallery": [
-   {
-    "file": "roll-up-face.webp",
-    "alt": "Roll-up avec bâche blanche, vue de face",
-    "width": 519,
-    "height": 1122,
-    "blank": "roll-up-face.webp"
-   },
-   {
-    "file": "roll-up-3-4.webp",
-    "alt": "Roll-up avec bâche blanche, vue trois quarts",
-    "width": 467,
-    "height": 1188,
-    "blank": "roll-up-3-4.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "roll-up-face.webp"
-  },
-  "areas": {
-   "roll-up-face.webp": {
-    "FRONT": {
-     "cx": 0.48,
-     "cy": 0.46,
-     "w": 0.88,
-     "h": 1.8,
-     "rot": 0,
-     "patch": "#ffffff"
-    }
-   },
-   "roll-up-3-4.webp": {
-    "FRONT": {
-     "quad": [
-      [
-       0.125,
-       0.09
-      ],
-      [
-       0.855,
-       0.055
-      ],
-      [
-       0.875,
-       0.905
-      ],
-      [
-       0.135,
-       0.885
-      ]
-     ],
-     "aspect": 0.42,
-     "patch": "#e4e5e6"
-    }
-   }
-  },
-  "note": "roll-up-3-4.webp a une zone FRONT en perspective (quad) : utilisable pour un aperçu en situation."
- },
- "tente-pliante-3x3": {
-  "gallery": [
-   {
-    "file": "tente-pliante.webp",
-    "alt": "Tente pliante blanche avec un côté, sans impression",
-    "width": 1356,
-    "height": 1190,
-    "blank": "tente-pliante.webp"
-   },
-   {
-    "file": "tente-stand-complet.webp",
-    "alt": "Stand complet : tente, drapeaux, roll-ups et comptoir (illustration)",
-    "width": 1036,
-    "height": 786,
-    "blank": "tente-stand-complet.webp"
-   }
-  ],
-  "previews": {
-   "TOP": "tente-pliante.webp",
-   "FRONT": "tente-pliante.webp",
-   "SIDE": "tente-pliante.webp"
-  },
-  "areas": {
-   "tente-pliante.webp": {
-    "FRONT": {
-     "quad": [
-      [
-       0.035,
-       0.259
-      ],
-      [
-       0.695,
-       0.206
-      ],
-      [
-       0.695,
-       0.311
-      ],
-      [
-       0.035,
-       0.348
-      ]
-     ],
-     "aspect": 12,
-     "patch": "#eeeeee"
-    },
-    "TOP": {
-     "quad": [
-      [
-       0.32,
-       0.18
-      ],
-      [
-       0.56,
-       0.145
-      ],
-      [
-       0.675,
-       0.215
-      ],
-      [
-       0.16,
-       0.25
-      ]
-     ],
-     "aspect": 1.1,
-     "patch": "#f4f4f4"
-    },
-    "SIDE": {
-     "quad": [
-      [
-       0.41,
-       0.385
-      ],
-      [
-       0.955,
-       0.375
-      ],
-      [
-       0.955,
-       0.88
-      ],
-      [
-       0.41,
-       0.855
-      ]
-     ],
-     "aspect": 1.5,
-     "patch": "#e2e2e3"
-    }
-   }
-  }
- },
- "flyers-brochures": {
-  "gallery": [
-   {
-    "file": "brochure-trois-volets.webp",
-    "alt": "Brochure trois volets vierge, vue en perspective",
-    "width": 1218,
-    "height": 896,
-    "blank": "brochure-trois-volets.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "brochure-trois-volets.webp",
-   "BACK": "brochure-trois-volets.webp"
-  },
-  "approxPlacements": [
-   "BACK"
-  ],
-  "areas": {
-   "brochure-trois-volets.webp": {
-    "FRONT": {
-     "quad": [
-      [
-       0.239,
-       0.232
-      ],
-      [
-       0.463,
-       0.205
-      ],
-      [
-       0.736,
-       0.705
-      ],
-      [
-       0.502,
-       0.75
-      ]
-     ],
-     "aspect": 0.47,
-     "patch": "#f6f6f6"
-    },
-    "BACK": {
-     "quad": [
-      [
-       0.463,
-       0.205
-      ],
-      [
-       0.679,
-       0.045
-      ],
-      [
-       0.962,
-       0.527
-      ],
-      [
-       0.736,
-       0.705
-      ]
-     ],
-     "aspect": 0.47,
-     "patch": "#ececec"
-    }
-   }
-  }
- },
- "banderole-pvc": {
-  "merge": true,
-  "gallery": [
-   {
-    "file": "banderole-vierge.webp",
-    "alt": "Banderole textile vierge suspendue",
-    "width": 891,
-    "height": 468,
-    "blank": "banderole-vierge.webp"
-   }
-  ],
-  "previews": {
-   "FRONT": "banderole-vierge.webp",
-   "FULL": "banderole-vierge.webp"
-  },
-  "areas": {
-   "banderole-vierge.webp": {
-    "FRONT": {
-     "cx": 0.5,
-     "cy": 0.5,
-     "w": 0.9,
-     "h": 0.38,
-     "rot": 0,
-     "patch": "#e6e6e6"
-    },
-    "FULL": {
-     "cx": 0.5,
-     "cy": 0.5,
-     "w": 0.9,
-     "h": 0.38,
-     "rot": 0,
-     "patch": "#e6e6e6"
-    }
-   }
-  }
- }
 }

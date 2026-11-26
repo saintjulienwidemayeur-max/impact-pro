@@ -79,7 +79,7 @@ describe('catalog seed data', () => {
     expect(optionFlags(get('gourde-aluminium'))).toMatchObject({ sizeLabel: 'Capacité', sizesRequired: true });
     expect(optionFlags(get('tente-pliante-3x3'))).toMatchObject({ sizeLabel: 'Dimensions', colorLabel: 'Couleur du toit', sizesRequired: true });
     expect(get('tente-pliante-3x3').sizes).toEqual(['3 × 3 m', '3 × 4,5 m', '3 × 6 m']);
-    expect(optionFlags(get('roll-up'))).toMatchObject({ sizeLabel: 'Format', sizesRequired: true });
+    expect(optionFlags(get('roll-up'))).toMatchObject({ sizeLabel: 'Taille', sizesRequired: true });
     expect(get('roll-up').sizes).toEqual(['85 × 200 cm', '100 × 200 cm', '120 × 200 cm']);
     expect(optionFlags(get('drapeau-plume'))).toMatchObject({ sizeLabel: 'Hauteur', sizesRequired: true });
     expect(optionFlags(get('cartes-de-visite'))).toMatchObject({ sizeLabel: 'Finition', sizesRequired: true });
