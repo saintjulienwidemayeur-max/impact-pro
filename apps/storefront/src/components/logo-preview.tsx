@@ -104,6 +104,23 @@ export function LogoPreview({ photo, area, logo, params = DEFAULT_PREVIEW, onCha
       style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
     >
       <Image src={photo.src} alt={photo.alt} fill sizes={sizes ?? "(min-width: 1024px) 50vw, 100vw"} priority={priority} className="object-contain" />
+      {logo &&
+        box &&
+        area?.masks?.map((m, i) => (
+          <div
+            key={i}
+            aria-hidden="true"
+            className="absolute rounded-[18%]"
+            style={{
+              left: m.cx * width - (m.w * width) / 2,
+              top: m.cy * height - (m.h * width) / 2,
+              width: m.w * width,
+              height: m.h * width,
+              background: m.patch,
+              boxShadow: `0 0 ${Math.max(3, m.h * width * 0.15)}px ${Math.max(1, m.h * width * 0.05)}px ${m.patch}`,
+            }}
+          />
+        ))}
       {logo && box && area && (
         <div
           className="absolute"
@@ -113,7 +130,7 @@ export function LogoPreview({ photo, area, logo, params = DEFAULT_PREVIEW, onCha
           {area.patch && (
             <div
               className="absolute inset-0 rounded-[18%]"
-              style={{ background: area.patch, boxShadow: `0 0 ${Math.max(4, box.h * 0.25)}px ${Math.max(2, box.h * 0.12)}px ${area.patch}` }}
+              style={{ background: area.patch, boxShadow: `0 0 ${Math.max(3, box.h * 0.15)}px ${Math.max(1, box.h * 0.05)}px ${area.patch}` }}
               aria-hidden="true"
             />
           )}

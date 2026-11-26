@@ -13,6 +13,7 @@ export const navCategories = [
   { slug: "stylos", name: "Stylos", tagline: "Tampographie" },
   { slug: "etiquettes-sceaux", name: "Étiquettes & sceaux", tagline: "Colis et emballages" },
   { slug: "photocall", name: "Photocall", tagline: "Panneaux d'événement" },
+  { slug: "kits", name: "Kits d'entreprise", tagline: "Votre logo sur tout le kit" },
 ] as const;
 
 export type NavCategorySlug = (typeof navCategories)[number]["slug"];

@@ -40,8 +40,8 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
               <div className="mb-6 flex items-start gap-3 rounded-2xl bg-ip-teal/10 p-4 text-ip-ink">
                 <CheckCircle2 className="mt-0.5 size-6 shrink-0 text-ip-teal" aria-hidden="true" />
                 <p className="text-sm">
-                  Votre commande est bien reçue. Un courriel de confirmation sera envoyé à <strong>{first(sp.email)}</strong>. Conservez votre
-                  référence pour suivre l&apos;avancement.
+                  Votre commande est bien reçue. Notre équipe vous contacte à <strong>{first(sp.email)}</strong> avec votre maquette. Conservez
+                  votre référence pour suivre l&apos;avancement.
                 </p>
               </div>
               <OrderDetails order={order} />

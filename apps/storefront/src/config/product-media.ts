@@ -15,6 +15,8 @@ export interface PrintArea {
   rot: number;
   /** Surface color used to mask the sample logo already printed on the photo (null = no mask). */
   patch: string | null;
+  /** Extra masks for sample logos elsewhere on the photo (same units, unrotated). */
+  masks?: { cx: number; cy: number; w: number; h: number; patch: string }[];
 }
 
 export interface Photo {
