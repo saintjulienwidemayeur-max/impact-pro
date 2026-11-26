@@ -8,7 +8,6 @@ import { CustomOrdersModule } from './custom-orders/custom-orders.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { RedisModule } from './redis/redis.module';
 import { StorageModule } from './storage/storage.module';
 import { UploadsModule } from './uploads/uploads.module';
 
@@ -20,7 +19,6 @@ import { UploadsModule } from './uploads/uploads.module';
       useFactory: (env: Env) => [{ ttl: env.THROTTLE_TTL_MS, limit: env.THROTTLE_LIMIT }],
     }),
     PrismaModule,
-    RedisModule,
     HealthModule,
     InventoryModule,
     StorageModule,

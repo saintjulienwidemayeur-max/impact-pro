@@ -14,10 +14,9 @@ flowchart LR
   subgraph API["apps/api — NestJS modular monolith (:4000, /api/v1)"]
     HTTP[HTTP layer<br/>guards · pipes · interceptors]
     MOD[Domain modules]
-    WK[BullMQ workers]
+    WK[Postgres-backed workers (pg-boss)]
   end
   PG[(PostgreSQL)]
-  RD[(Redis)]
   MS[(Meilisearch)]
   S3[(MinIO / S3)]
   PSP[Payment providers<br/>card · MonCash · NatCash]
@@ -25,8 +24,8 @@ flowchart LR
 
   SF & AD & PO -->|HTTPS + cookies| HTTP --> MOD
   MOD --> PG
-  MOD -->|cache, rate limit, sessions| RD
-  MOD -->|enqueue| RD --> WK
+  MOD -->|rate limit in memory, ISR cache in Next.js| MOD
+  MOD -->|enqueue (Postgres queue)| PG --> WK
   WK --> PG & MS & S3 & CAR
   MOD -->|search queries| MS
   MOD -->|presigned URLs| S3
@@ -40,18 +39,18 @@ flowchart LR
 | `apps/portal` | Next.js | Enterprise customers: programs, orders, inventory visibility, production progress, shipments |
 | `apps/api` | NestJS, Prisma | All business logic; the single source of truth |
 | PostgreSQL 16 | Prisma ORM | Transactional data, inventory ledger |
-| Redis 7 | ioredis | BullMQ queues, rate-limit counters, cache, refresh-token denylist |
+| _(no Redis)_ | — | **Decision 2026-11-26:** Redis was removed. Background jobs will use a Postgres queue (`pg-boss`) when first needed; rate limiting is in memory (single API instance); refresh-token denylist lives in Postgres. Redis can be added back if the API ever runs on several instances. |
 | Meilisearch | — | Product/catalog full-text search and faceting |
 | MinIO (dev) / S3 (prod) | AWS SDK v3 | Product images, production media, inspection attachments, documents |
 
-Frontends never talk to Postgres, Redis or S3 directly. The only exception is fetching objects from S3 through **presigned URLs** issued by the API.
+Frontends never talk to Postgres or S3 directly. The only exception is fetching objects from S3 through **presigned URLs** issued by the API.
 
 ## 2. Module boundaries and dependency rules
 
 Modules live in `apps/api/src/modules/<name>/` and are grouped by domain:
 
 ```
-core/        config, prisma, redis, queue, storage, search, audit, health
+core/        config, prisma, queue (pg-boss, later), storage, search, audit, health
 identity/    auth, users, roles, organizations
 catalog/     catalog, categories, attributes, variants, pricing
 commerce/    carts, checkout, orders, payments
@@ -66,7 +65,7 @@ insights/    analytics, reporting
 
 Rules:
 1. **Public surface only.** A module exports only its *service facade* (for example `InventoryService.reserve()`). Other modules never import its repositories, DTOs or Prisma models directly.
-2. **Dependencies flow one way:** `core ← identity ← catalog ← (commerce | supply | inventory) ← (programs | production) ← fulfillment ← insights`. Lower layers never import higher ones. Upward notifications go through **domain events** (`@nestjs/event-emitter` in-process; BullMQ when the work is async).
+2. **Dependencies flow one way:** `core ← identity ← catalog ← (commerce | supply | inventory) ← (programs | production) ← fulfillment ← insights`. Lower layers never import higher ones. Upward notifications go through **domain events** (`@nestjs/event-emitter` in-process; a Postgres queue when the work is async).
 3. **One owner per table.** Only the owning module writes its tables. For example, only `inventory` writes `InventoryMovement`. Any other module that needs a change calls `inventory`.
 4. **Cross-module transactions** use a shared `Prisma.TransactionClient` passed explicitly (`tx`) into facade methods. This is how `checkout` reserves stock and creates the order atomically.
 5. An ESLint `import/no-restricted-paths` rule plus a `dependency-cruiser` check in CI enforce rules 1–2.
@@ -107,7 +106,7 @@ sequenceDiagram
 - **Prisma client extension** (`prisma.$extends`). On models listed in `TENANT_MODELS`, it injects `where: { organizationId }` into `findMany/findFirst/count/updateMany/deleteMany` and injects `data.organizationId` on `create`. `findUnique` is rewritten to `findFirst` with the tenant filter. Staff roles get an unscoped client, explicitly via `prisma.unscoped()`, and that call is audit-logged.
 - **Defense in depth.** Guards check that route params belong to the org. Integration tests assert that org A gets **404 (not 403)** on org B's resources. Postgres Row-Level Security is a Phase 12 hardening option.
 
-## 5. Background jobs (BullMQ)
+## 5. Background jobs (Postgres queue — `pg-boss`, added with the first async feature)
 
 | Queue | Producers | Jobs |
 |---|---|---|
@@ -137,11 +136,11 @@ Jobs are idempotent: each carries an idempotency key, and the worker checks it b
 
 | Env | Purpose | Infra |
 |---|---|---|
-| `local` | Development | `infra/docker-compose.yml` (postgres, redis, meilisearch, minio, mailpit) |
+| `local` | Development | `infra/docker-compose.yml` (postgres, meilisearch, minio, mailpit) |
 | `test` | CI | Ephemeral service containers; `prisma migrate deploy` + seed |
 | `staging` | QA / UAT | Same images as prod; anonymized data |
-| `production` | Live | Managed Postgres (PITR), managed Redis, S3 + CDN, containers behind a TLS load balancer |
+| `production` | Live | Managed Postgres (PITR), S3 + CDN, containers behind a TLS load balancer |
 
 Configuration comes **only** from environment variables, validated at boot by a Zod schema (`ConfigModule`). Each app commits an `.env.example`; real `.env` files are git-ignored. Production secrets come from the platform's secret manager.
 
-CI (GitHub Actions) runs install → lint → typecheck → unit tests → API integration tests (with Postgres/Redis services) → build → Playwright E2E (on main/PR).
+CI (GitHub Actions) runs install → lint → typecheck → unit tests → API integration tests (with a Postgres service) → build → Playwright E2E (on main/PR).

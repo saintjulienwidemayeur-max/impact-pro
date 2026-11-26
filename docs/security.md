@@ -20,7 +20,7 @@
 
 ## 3. Rate limiting
 
-`@nestjs/throttler` uses Redis storage:
+`@nestjs/throttler` uses in-memory storage (single API instance; switch to a shared store if the API is scaled out):
 
 | Scope | Limit |
 |---|---|

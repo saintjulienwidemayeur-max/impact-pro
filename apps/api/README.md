@@ -6,7 +6,7 @@ NestJS modular monolith. REST under `/api/v1`, Swagger UI at `/api/docs` (JSON a
 
 ```bash
 cp apps/api/.env.example apps/api/.env      # then edit values
-docker compose -f infra/docker-compose.yml --env-file infra/.env up -d   # or local postgres + redis
+docker compose -f infra/docker-compose.yml --env-file infra/.env up -d   # or a local postgres
 pnpm --filter @impact-pro/api prisma:migrate
 pnpm --filter @impact-pro/api prisma:seed    # dev data only
 pnpm --filter @impact-pro/api dev            # http://localhost:4000/api/v1 · docs at /api/docs

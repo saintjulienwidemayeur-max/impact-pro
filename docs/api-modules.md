@@ -9,7 +9,7 @@ AppModule
 ├── core/
 │   ├── ConfigModule (Zod-validated env)
 │   ├── PrismaModule (tenant-scoped client extension)
-│   ├── RedisModule · QueueModule (BullMQ) · StorageModule (S3) · SearchModule (Meilisearch)
+│   ├── QueueModule (Postgres queue, later) · StorageModule (S3) · SearchModule (Meilisearch)
 │   ├── AuditModule · HealthModule
 │   └── common/ (guards, decorators, filters, interceptors, pipes, pagination)
 ├── identity/   AuthModule · UsersModule · RolesModule · OrganizationsModule

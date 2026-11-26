@@ -3,7 +3,6 @@ import { loadEnv } from './env';
 describe('loadEnv', () => {
   const base = {
     DATABASE_URL: 'postgresql://u:p@localhost:5432/db',
-    REDIS_URL: 'redis://localhost:6379',
     COOKIE_SECRET: 'x'.repeat(32),
   };
 
@@ -14,7 +13,7 @@ describe('loadEnv', () => {
   });
 
   it('fails fast listing every invalid variable', () => {
-    expect(() => loadEnv({ COOKIE_SECRET: 'short' })).toThrow(/DATABASE_URL[\s\S]*REDIS_URL[\s\S]*COOKIE_SECRET/);
+    expect(() => loadEnv({ COOKIE_SECRET: 'short' })).toThrow(/DATABASE_URL[\s\S]*COOKIE_SECRET/);
   });
 
   it('treats empty optional variables as unset (hosting dashboards / .env.example)', () => {

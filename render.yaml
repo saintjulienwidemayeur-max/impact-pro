@@ -1,13 +1,8 @@
-# Render Blueprint — Impact Pro (API + storefront + Key Value/Redis; Postgres on Supabase)
+# Render Blueprint — Impact Pro (API + storefront; Postgres on Supabase)
 # Deploy: Render dashboard → New → Blueprint → select this repo/branch. See docs/deploy-render.md.
 # Database: Supabase Postgres (not created here). Use its *Session pooler* URL (port 5432, IPv4) as DATABASE_URL.
 
 services:
-  - type: keyvalue
-    name: impact-pro-redis
-    plan: free
-    ipAllowList: []       # internal connections only
-
   - type: web
     name: impact-pro-api
     runtime: node
@@ -23,8 +18,6 @@ services:
         value: production
       - key: DATABASE_URL
         sync: false       # Supabase → Connect → Session pooler URL (postgres.<ref>@...pooler.supabase.com:5432)
-      - key: REDIS_URL
-        fromService: { type: keyvalue, name: impact-pro-redis, property: connectionString }
       - key: COOKIE_SECRET
         generateValue: true
       - key: CORS_ORIGINS

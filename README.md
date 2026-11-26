@@ -31,7 +31,7 @@ Prerequisites: Node 22, pnpm 10, and Docker.
    ```bash
    pnpm install
    ```
-2. Start Postgres, Redis, Meilisearch and MinIO:
+2. Start Postgres, Meilisearch and MinIO:
    ```bash
    docker compose -f infra/docker-compose.yml up -d
    ```

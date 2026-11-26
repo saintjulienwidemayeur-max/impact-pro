@@ -23,16 +23,9 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U impact -d impact_pro_test"
           --health-interval 5s --health-timeout 5s --health-retries 10
-      redis:
-        image: redis:7-alpine
-        ports: ["6379:6379"]
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       DATABASE_URL: postgresql://impact:impact_ci@localhost:5432/impact_pro_test?schema=public
       TEST_DATABASE_URL: postgresql://impact:impact_ci@localhost:5432/impact_pro_test?schema=public
-      REDIS_URL: redis://localhost:6379
       COOKIE_SECRET: ci-only-cookie-secret-0123456789abcdef
     steps:
       - uses: actions/checkout@v4

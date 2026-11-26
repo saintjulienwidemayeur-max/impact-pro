@@ -51,7 +51,7 @@ The platform combines:
 - Frontend: Next.js (App Router), React, TypeScript, Tailwind CSS, shadcn/ui
 - Backend: NestJS, TypeScript, REST, OpenAPI/Swagger
 - Data: PostgreSQL, Prisma ORM, Redis
-- Jobs: BullMQ · Search: Meilisearch · Storage: S3-compatible (MinIO in dev)
+- Jobs: Postgres queue (pg-boss, when needed — **Redis/BullMQ removed 2026-11-26**) · Search: Meilisearch · Storage: S3-compatible (MinIO in dev)
 - Tests: Vitest/Jest, Playwright, API integration tests
 - Infra: Docker, Docker Compose, CI/CD (GitHub Actions), env-based config
 - Monorepo: pnpm workspaces + Turborepo
@@ -139,3 +139,4 @@ At the end of each phase: run tests, verify migrations, verify API, fix errors, 
 - Customizer v2 (2026-11-26, see docs/customizer-v2-contract.md): multi-zone designs with logo/text/artwork elements, client-side background removal, artwork uploads (≤25 MB), PER_AREA pricing with custom sizes, 14 new products (balloons, tent, roll-up, bags, umbrella, bottle, USB, keyring…); photos only for kit-derived items (docs/photos-needed.md lists the missing ones — balloons, tent, roll-up, stickers, flyers, apron show « Photo à venir »). Cart key `impactpro.cart.v3`. Storefront e2e runs on a mock API by default (`E2E_REAL_API=1` for the real one).
 - Round 2 (2026-11-26): per-product option parameters (colorLabel/sizeLabel/required flags; no size for ball etc.), « Voir le rendu final » modal + PNG download, rendered mock-up thumbnails in cart/checkout/confirmation/suivi, previews uploaded with the order (`/uploads/previews`), perspective `quad` print areas, owner photos (t-shirts, cap side, tote, phone case, bottle, cups, badge, football, roll-up, tent, brochure) + football product (`balon` = ball). Owner originals in packages/brand/photos/incoming (reference-only: 03, 16, 18, 22; Freepik-watermarked: 02, 11).
 - Round 3 (2026-11-26): photo quality pass — t-shirts (red/blue/black, EDSR x4 + rembg), badge, roll-up, tent rebuilt from the owner originals; low-quality kit-derived products hidden via `src/config/catalog-visibility.ts` (sac-a-cordon, gobelet-isotherme, gourde-isotherme, porte-cles, protege-passeport, cle-usb, parapluie); products without photo show the Impact Pro mark tile; roll-up size label « Taille » (85×200 preselected); t-shirt colors Rouge/Noir/Bleu royal; tote = white only. Render storefront was OOM-killed at 512 MB → `images.unoptimized` + NODE_OPTIONS=--max-old-space-size=360.
+- Redis removed (2026-11-26, owner decision): no Redis in API, CI, docker-compose or Render; health checks Postgres only; rate limiting in memory; background jobs later via pg-boss on Postgres.

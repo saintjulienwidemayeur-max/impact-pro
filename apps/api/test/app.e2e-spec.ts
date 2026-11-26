@@ -33,9 +33,9 @@ describe('API (e2e)', () => {
     await app.close();
   });
 
-  it('GET /api/v1/health reports database and redis up inside the data envelope', async () => {
+  it('GET /api/v1/health reports the database up inside the data envelope', async () => {
     const res = await request(app.getHttpServer()).get('/api/v1/health').expect(200);
-    expect(res.body.data).toMatchObject({ status: 'ok', checks: { database: 'up', redis: 'up' } });
+    expect(res.body.data).toMatchObject({ status: 'ok', checks: { database: 'up' } });
     expect(res.headers['x-request-id']).toBeDefined();
   });
 

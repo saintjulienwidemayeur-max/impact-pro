@@ -1,6 +1,6 @@
 # Deploying Impact Pro on Render
 
-`render.yaml` (repo root) is a Render Blueprint that creates: Key Value (Redis), the API (`impact-pro-api`) and the storefront (`impact-pro-storefront`).
+`render.yaml` (repo root) is a Render Blueprint that creates: the API (`impact-pro-api`) and the storefront (`impact-pro-storefront`).
 
 ## Database on Supabase
 Use Supabase → Connect → **Session pooler** URL (`postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`) as `DATABASE_URL`.
@@ -14,7 +14,7 @@ Supabase Storage is S3-compatible and can hold customer logos (`S3_ENDPOINT=http
    - `impact-pro-api` → `CORS_ORIGINS` = `https://<storefront>.onrender.com`
    - `impact-pro-storefront` → `NEXT_PUBLIC_API_URL` = `https://<api>.onrender.com`, `NEXT_PUBLIC_SITE_URL` = `https://<storefront>.onrender.com`, optionally `NEXT_PUBLIC_WHATSAPP_NUMBER` (e.g. `509XXXXXXXX`).
 4. `NEXT_PUBLIC_API_URL` is **inlined at build time**: after setting it, trigger **Manual Deploy → Clear build cache & deploy** on the storefront.
-5. Check `https://<api>.onrender.com/api/v1/health` (→ database up, redis up) and `/api/docs`, then open the storefront URL.
+5. Check `https://<api>.onrender.com/api/v1/health` (→ `database: up`) and `/api/docs`, then open the storefront URL.
 6. After the first successful deploy set `AUTO_SEED=false` on the API (the seed only loads the placeholder catalog; it upserts by slug, so keeping it on would reset catalog edits).
 
 ## Limits of the free plan (read before going live)
