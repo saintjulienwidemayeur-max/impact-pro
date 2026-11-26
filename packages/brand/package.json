@@ -1,0 +1,8 @@
+{
+  "name": "@impact-pro/brand",
+  "version": "0.1.0",
+  "private": true,
+  "main": "tokens.js",
+  "types": "tokens.d.ts",
+  "files": ["assets", "tokens.js", "tokens.d.ts"]
+}
