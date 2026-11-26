@@ -31,6 +31,8 @@ services:
         value: https://impact-pro-storefront.onrender.com   # change if Render assigns a different URL (e.g. custom domain)
       - key: AUTO_SEED
         value: "true"     # first deploy only: loads the catalog. Set to "false" afterwards.
+      - key: ALLOW_DEMO_SEED
+        value: "true"     # explicit opt-in so the placeholder catalog can be seeded in this demo deployment
       - key: UPLOAD_DIR
         value: /tmp/uploads   # ephemeral! On a paid plan add a disk and point this to its mount path (e.g. /var/data/uploads)
 

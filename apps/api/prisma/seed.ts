@@ -8,8 +8,10 @@
  */
 import { PrintPlacement, PrismaClient, ProductStatus } from '@prisma/client';
 
-if (process.env.NODE_ENV === 'production') {
-  throw new Error('Refusing to run the development seed in production');
+// Guard: this loads placeholder catalog data and a dev warehouse. In production it needs an explicit opt-in
+// (ALLOW_DEMO_SEED=true), meant only for demo/staging deployments.
+if (process.env.NODE_ENV === 'production' && process.env.ALLOW_DEMO_SEED !== 'true') {
+  throw new Error('Refusing to run the development seed in production (set ALLOW_DEMO_SEED=true for a demo deployment)');
 }
 
 const prisma = new PrismaClient();
