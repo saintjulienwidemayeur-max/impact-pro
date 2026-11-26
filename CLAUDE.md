@@ -128,5 +128,6 @@ At the end of each phase: run tests, verify migrations, verify API, fix errors, 
 ## 17. Status
 - **Phase 1 — done** (2026-11-26): monorepo (pnpm + Turbo), docs/ (architecture, ERD, API map, roadmap, security, brand), API foundation (`apps/api`, port 4000: env validation, health, Swagger, envelope, throttling, Prisma schema v1 + init migration + seed, concurrency-safe inventory reserve with tests), infra/docker-compose.yml, CI workflow, storefront (`apps/storefront`, port 3000) homepage + pages in brand with Playwright smoke tests. Screenshots in docs/screenshots/.
 - Not yet verified: Docker stack boot, API Docker image build, CI run on GitHub.
-- Storefront catalog (`src/lib/catalog.ts`) and form endpoints are dev placeholders until Phase 3 wires them to the API. Phone/email/prices are placeholders.
+- Customize & order (2026-11-26): real product photos (packages/brand/photos), logo upload API (`/api/v1/uploads/logos`), public catalog API (`/api/v1/catalog/products`), custom orders + tracking (`/api/v1/custom-orders`), storefront customizer `/personnaliser/[slug]` with live logo preview, cart, `/commande`, confirmation, `/suivi`. Validation errors are 422 everywhere.
+- Placeholders: HTG prices/tiers in seed, phone, email. No T-shirt photo yet (uses polo photos). S3/MinIO upload path untested; newsletter/contact endpoints still don't persist.
 - **Next: Phase 2** — authentication & organizations.
