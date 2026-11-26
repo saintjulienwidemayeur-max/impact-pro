@@ -13,6 +13,11 @@ import type { Env } from './config/env';
 export function setupApp(app: INestApplication): INestApplication {
   const env = app.get<Env>(ENV);
 
+  // Behind a reverse proxy (Render) req.ip must come from X-Forwarded-For, otherwise every request looks like the proxy.
+  if (env.TRUST_PROXY_HOPS > 0) {
+    (app.getHttpAdapter().getInstance() as { set: (key: string, value: unknown) => void }).set('trust proxy', env.TRUST_PROXY_HOPS);
+  }
+
   app.use(requestIdMiddleware);
   app.use(helmet());
   app.use(cookieParser(env.COOKIE_SECRET));

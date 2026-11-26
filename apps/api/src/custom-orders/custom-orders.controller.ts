@@ -10,6 +10,7 @@ import {
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import type { Request } from 'express';
+import { SessionService } from '../auth/session.service';
 import { orderThrottle } from '../common/throttle-limits';
 import { CustomOrdersService, type CustomOrderView } from './custom-orders.service';
 import { CreateCustomOrderDto, TrackCustomOrderQuery } from './dto/create-custom-order.dto';
@@ -17,7 +18,10 @@ import { CreateCustomOrderDto, TrackCustomOrderQuery } from './dto/create-custom
 @ApiTags('custom-orders')
 @Controller({ path: 'custom-orders', version: '1' })
 export class CustomOrdersController {
-  constructor(private readonly orders: CustomOrdersService) {}
+  constructor(
+    private readonly orders: CustomOrdersService,
+    private readonly sessions: SessionService,
+  ) {}
 
   @Post()
   @HttpCode(201)
@@ -33,8 +37,10 @@ export class CustomOrdersController {
   })
   @ApiNotFoundResponse({ description: 'PRODUCT_NOT_FOUND' })
   @ApiTooManyRequestsResponse({ description: 'Rate limited' })
-  create(@Body() dto: CreateCustomOrderDto, @Req() req: Request & { id?: string }): Promise<CustomOrderView> {
-    return this.orders.create(dto, { ipAddress: req.ip, requestId: req.id });
+  async create(@Body() dto: CreateCustomOrderDto, @Req() req: Request & { id?: string }): Promise<CustomOrderView> {
+    // Guests keep ordering as before. The order is attached to an account only when the session cookie AND the CSRF header are valid.
+    const auth = await this.sessions.userForRequest(req);
+    return this.orders.create(dto, { ipAddress: req.ip, requestId: req.id, userId: auth?.user.id });
   }
 
   @Get(':reference')

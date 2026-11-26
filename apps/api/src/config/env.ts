@@ -38,6 +38,19 @@ export const envSchema = z.object({
   UPLOAD_THROTTLE_LIMIT: z.coerce.number().int().positive().default(20),
   /** Preview uploads happen in bursts at checkout (one per print zone), so they get a more generous limit. */
   PREVIEW_THROTTLE_LIMIT: z.coerce.number().int().positive().default(60),
+  /** Customer accounts. Sliding session lifetime (idle) and hard limit, in days. */
+  SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
+  SESSION_ABSOLUTE_TTL_DAYS: z.coerce.number().int().positive().default(90),
+  /** Account endpoints rate limits per IP: sign-ups per hour, logins per 15 minutes. */
+  REGISTER_THROTTLE_LIMIT: z.coerce.number().int().positive().default(5),
+  LOGIN_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
+  /** Failed logins per email (15 min window) before an increasing lockout starts. In-memory: single API instance. */
+  LOGIN_LOCKOUT_THRESHOLD: z.coerce.number().int().positive().default(5),
+  /** Argon2id cost. Defaults follow OWASP (>= 19 MiB, t = 2, p = 1) and cannot be lowered. */
+  ARGON2_MEMORY_KIB: z.coerce.number().int().min(19456).default(19456),
+  ARGON2_TIME_COST: z.coerce.number().int().min(2).default(2),
+  /** Number of reverse-proxy hops to trust for req.ip (Render load balancer = 1). 0 disables. */
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
 });
 
 export type Env = z.infer<typeof envSchema>;

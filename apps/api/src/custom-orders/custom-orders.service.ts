@@ -58,6 +58,19 @@ export interface CustomOrderView {
   createdAt: string;
 }
 
+/** Row of « Mes commandes ». */
+export interface CustomOrderSummary {
+  reference: string;
+  status: CustomOrderStatus;
+  currency: string;
+  subtotal: string;
+  createdAt: string;
+  itemCount: number;
+  firstProductName: string | null;
+  /** First rendered mock-up uploaded with the order, when there is one. */
+  previewUrl: string | null;
+}
+
 const orderInclude = {
   items: {
     orderBy: { lineNo: 'asc' as const },
@@ -133,7 +146,7 @@ export class CustomOrdersService {
     private readonly catalog: CatalogService,
   ) {}
 
-  async create(dto: CreateCustomOrderDto, ctx: { ipAddress?: string; requestId?: string }): Promise<CustomOrderView> {
+  async create(dto: CreateCustomOrderDto, ctx: { ipAddress?: string; requestId?: string; userId?: string }): Promise<CustomOrderView> {
     const order = await this.prisma.$transaction(async (tx) => {
       const uploadCutoff = new Date(Date.now() - UPLOAD_MAX_AGE_MS);
       const lines: Prisma.CustomOrderItemCreateWithoutOrderInput[] = [];
@@ -221,6 +234,7 @@ export class CustomOrdersService {
           deliveryMethod: dto.deliveryMethod,
           notes: dto.notes ?? null,
           ipAddress: ctx.ipAddress ?? null,
+          userId: ctx.userId ?? null,
           items: { create: lines },
         },
         include: orderInclude,
@@ -231,7 +245,8 @@ export class CustomOrdersService {
           action: 'custom_order.create',
           entityType: 'CustomOrder',
           entityId: created.id,
-          metadata: { reference, itemCount: lines.length, elementCount, subtotal: money(subtotal), currency: 'HTG' },
+          actorId: ctx.userId ?? null,
+          metadata: { reference, itemCount: lines.length, elementCount, subtotal: money(subtotal), currency: 'HTG', signedIn: Boolean(ctx.userId) },
           ipAddress: ctx.ipAddress ?? null,
           requestId: ctx.requestId ?? null,
         },
@@ -248,6 +263,74 @@ export class CustomOrdersService {
       throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: 'Order not found' });
     }
     return this.toView(order);
+  }
+
+  /** Orders of a signed-in customer, newest first. */
+  async listForUser(userId: string, page: number, pageSize: number): Promise<{ items: CustomOrderSummary[]; total: number }> {
+    const where = { userId };
+    const [total, rows] = await Promise.all([
+      this.prisma.customOrder.count({ where }),
+      this.prisma.customOrder.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        include: {
+          items: {
+            orderBy: { lineNo: 'asc' },
+            select: { productName: true, quantity: true, previews: { orderBy: { createdAt: 'asc' }, take: 1, select: { uploadId: true } } },
+          },
+        },
+      }),
+    ]);
+    return {
+      total,
+      items: rows.map((o) => {
+        const firstPreview = o.items.flatMap((i) => i.previews)[0];
+        return {
+          reference: o.reference,
+          status: o.status,
+          currency: o.currency,
+          subtotal: money(o.subtotal),
+          createdAt: o.createdAt.toISOString(),
+          itemCount: o.items.length,
+          firstProductName: o.items[0]?.productName ?? null,
+          previewUrl: firstPreview ? previewUrl(firstPreview.uploadId) : null,
+        };
+      }),
+    };
+  }
+
+  /** One of the user's own orders; anything else (unknown, a guest order, someone else's) is a 404. */
+  async getForUser(userId: string, reference: string): Promise<CustomOrderView> {
+    const order = await this.prisma.customOrder.findFirst({ where: { reference, userId }, include: orderInclude });
+    if (!order) throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: 'Order not found' });
+    return this.toView(order);
+  }
+
+  /**
+   * Attaches a guest order to the account. Needs the same proof as tracking (reference + the e-mail used to place it);
+   * an order that already belongs to somebody else answers like an unknown one.
+   */
+  async claim(userId: string, reference: string, email: string, ctx: { ipAddress?: string; requestId?: string }): Promise<CustomOrderView> {
+    const order = await this.prisma.customOrder.findUnique({ where: { reference }, include: orderInclude });
+    if (!order || order.email !== email.trim().toLowerCase() || (order.userId && order.userId !== userId)) {
+      throw new NotFoundException({ code: 'ORDER_NOT_FOUND', message: 'Order not found' });
+    }
+    if (order.userId === userId) return this.toView(order);
+    const updated = await this.prisma.customOrder.update({ where: { id: order.id }, data: { userId }, include: orderInclude });
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'custom_order.claim',
+        actorId: userId,
+        entityType: 'CustomOrder',
+        entityId: order.id,
+        metadata: { reference },
+        ipAddress: ctx.ipAddress ?? null,
+        requestId: ctx.requestId ?? null,
+      },
+    });
+    return this.toView(updated);
   }
 
   /**

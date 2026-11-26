@@ -13,6 +13,10 @@ process.env.THROTTLE_LIMIT ??= '1000';
 process.env.ORDER_THROTTLE_LIMIT ??= '1000';
 process.env.UPLOAD_THROTTLE_LIMIT ??= '1000';
 process.env.PREVIEW_THROTTLE_LIMIT ??= '1000';
+// Account endpoints: generous limits so the suites can sign up / in freely; the throttling test lowers them at runtime.
+process.env.REGISTER_THROTTLE_LIMIT ??= '1000';
+process.env.LOGIN_THROTTLE_LIMIT ??= '1000';
+process.env.LOGIN_LOCKOUT_THRESHOLD ??= '5';
 // Uploads go to a throw-away directory, never the dev upload folder.
 process.env.UPLOAD_DIR ??= join(tmpdir(), `impact-pro-test-uploads-${process.pid}`);
 delete process.env.S3_ENDPOINT;
