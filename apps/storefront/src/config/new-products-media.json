@@ -1,0 +1,306 @@
+{
+  "parapluie": {
+    "gallery": [
+      {
+        "file": "parapluie.webp",
+        "alt": "Parapluie pliant bleu royal, doublure argent, avec logo imprimé sur un pan",
+        "width": 1314,
+        "height": 726,
+        "blank": "parapluie-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "parapluie.webp",
+      "TOP": "parapluie.webp"
+    },
+    "areas": {
+      "parapluie.webp": {
+        "FRONT": {
+          "cx": 0.4269,
+          "cy": 0.3168,
+          "w": 0.2192,
+          "h": 0.1324,
+          "rot": -22,
+          "patch": "#354cab"
+        },
+        "TOP": {
+          "cx": 0.4269,
+          "cy": 0.3168,
+          "w": 0.2192,
+          "h": 0.1324,
+          "rot": -22,
+          "patch": "#354cab"
+        }
+      }
+    }
+  },
+  "sac-tote": {
+    "gallery": [
+      {
+        "file": "sac-tote.webp",
+        "alt": "Sac shopping bleu royal en tissu non tissé, avec logo imprimé",
+        "width": 529,
+        "height": 908,
+        "blank": "sac-tote-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "sac-tote.webp",
+      "BACK": "sac-tote.webp"
+    },
+    "areas": {
+      "sac-tote.webp": {
+        "FRONT": {
+          "cx": 0.4745,
+          "cy": 0.5914,
+          "w": 0.7259,
+          "h": 0.465,
+          "rot": 0,
+          "patch": "#1e4db8"
+        },
+        "BACK": {
+          "cx": 0.4745,
+          "cy": 0.5914,
+          "w": 0.7259,
+          "h": 0.465,
+          "rot": 0,
+          "patch": "#1e4db8"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "sac-a-cordon": {
+    "gallery": [
+      {
+        "file": "sac-a-cordon.webp",
+        "alt": "Sac à cordon bleu royal avec poche filet et logo imprimé",
+        "width": 694,
+        "height": 775,
+        "blank": "sac-a-cordon-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "sac-a-cordon.webp",
+      "BACK": "sac-a-cordon.webp"
+    },
+    "areas": {
+      "sac-a-cordon.webp": {
+        "FRONT": {
+          "cx": 0.4366,
+          "cy": 0.5639,
+          "w": 0.4496,
+          "h": 0.2939,
+          "rot": 0,
+          "patch": "#2945ac"
+        },
+        "BACK": {
+          "cx": 0.4366,
+          "cy": 0.5639,
+          "w": 0.4496,
+          "h": 0.2939,
+          "rot": 0,
+          "patch": "#2945ac"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "gourde-isotherme": {
+    "gallery": [
+      {
+        "file": "gourde-isotherme.webp",
+        "alt": "Gourde isotherme bleu royal avec logo imprimé",
+        "width": 216,
+        "height": 745,
+        "blank": "gourde-isotherme-blank.webp"
+      }
+    ],
+    "previews": {
+      "WRAP": "gourde-isotherme.webp",
+      "FRONT": "gourde-isotherme.webp"
+    },
+    "areas": {
+      "gourde-isotherme.webp": {
+        "WRAP": {
+          "cx": 0.4977,
+          "cy": 0.3893,
+          "w": 0.8333,
+          "h": 0.6667,
+          "rot": 0,
+          "patch": "#4161bf",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        },
+        "FRONT": {
+          "cx": 0.4977,
+          "cy": 0.3893,
+          "w": 0.7222,
+          "h": 0.5833,
+          "rot": 0,
+          "patch": "#3656b4",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        }
+      }
+    }
+  },
+  "gobelet-isotherme": {
+    "gallery": [
+      {
+        "file": "gobelet-isotherme.webp",
+        "alt": "Gobelet isotherme de voyage bleu et gris avec logo imprimé",
+        "width": 235,
+        "height": 579,
+        "blank": "gobelet-isotherme-blank.webp"
+      }
+    ],
+    "previews": {
+      "WRAP": "gobelet-isotherme.webp",
+      "FRONT": "gobelet-isotherme.webp"
+    },
+    "areas": {
+      "gobelet-isotherme.webp": {
+        "WRAP": {
+          "cx": 0.4936,
+          "cy": 0.4076,
+          "w": 0.7915,
+          "h": 0.6383,
+          "rot": 0,
+          "patch": "#2847a4",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        },
+        "FRONT": {
+          "cx": 0.4936,
+          "cy": 0.4076,
+          "w": 0.6894,
+          "h": 0.5617,
+          "rot": 0,
+          "patch": "#2845a2",
+          "curve": {
+            "phi": 1.0,
+            "arch": 0.02
+          }
+        }
+      }
+    }
+  },
+  "cle-usb": {
+    "gallery": [
+      {
+        "file": "cle-usb.webp",
+        "alt": "Clé USB pivotante en métal argenté et bleu, avec logo imprimé",
+        "width": 451,
+        "height": 350,
+        "blank": "cle-usb-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "cle-usb.webp"
+    },
+    "areas": {
+      "cle-usb.webp": {
+        "FRONT": {
+          "cx": 0.3149,
+          "cy": 0.2029,
+          "w": 0.3858,
+          "h": 0.1863,
+          "rot": -12,
+          "patch": "#dfe5e3"
+        }
+      }
+    }
+  },
+  "porte-cles": {
+    "gallery": [
+      {
+        "file": "porte-cles.webp",
+        "alt": "Porte-clés rectangulaire bleu royal avec logo imprimé",
+        "width": 357,
+        "height": 376,
+        "blank": "porte-cles-blank.webp"
+      },
+      {
+        "file": "porte-cles-ouvre.webp",
+        "alt": "Porte-clés décapsuleur bleu royal avec logo imprimé",
+        "width": 176,
+        "height": 459,
+        "blank": "porte-cles-ouvre-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "porte-cles.webp",
+      "BACK": "porte-cles.webp"
+    },
+    "areas": {
+      "porte-cles.webp": {
+        "FRONT": {
+          "cx": 0.6134,
+          "cy": 0.6516,
+          "w": 0.5378,
+          "h": 0.3361,
+          "rot": 38,
+          "patch": "#234496"
+        },
+        "BACK": {
+          "cx": 0.6134,
+          "cy": 0.6516,
+          "w": 0.5378,
+          "h": 0.3361,
+          "rot": 38,
+          "patch": "#234496"
+        }
+      },
+      "porte-cles-ouvre.webp": {
+        "FRONT": {
+          "cx": 0.6364,
+          "cy": 0.5207,
+          "w": 0.8864,
+          "h": 0.375,
+          "rot": 90,
+          "patch": "#264698"
+        }
+      }
+    },
+    "approxPlacements": [
+      "BACK"
+    ]
+  },
+  "protege-passeport": {
+    "gallery": [
+      {
+        "file": "protege-passeport.webp",
+        "alt": "Protège-passeport en simili cuir bleu royal avec logo imprimé",
+        "width": 440,
+        "height": 496,
+        "blank": "protege-passeport-blank.webp"
+      }
+    ],
+    "previews": {
+      "FRONT": "protege-passeport.webp"
+    },
+    "areas": {
+      "protege-passeport.webp": {
+        "FRONT": {
+          "cx": 0.4659,
+          "cy": 0.3972,
+          "w": 0.4227,
+          "h": 0.2864,
+          "rot": -20,
+          "patch": "#1a3492"
+        }
+      }
+    }
+  }
+}
