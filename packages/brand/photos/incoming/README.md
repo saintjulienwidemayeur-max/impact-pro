@@ -30,3 +30,15 @@ watermark (Freepik free licence requires attribution; remove the watermark only 
 | 24 | Folding tent 3x3 with side wall, blank, white bg (3D render) | tente-pliante-3x3 (roof / valance / side wall quads) |
 | 23 | Tent stand set (tent, flags, roll-ups, table), blank, vector | gallery / « stand complet » |
 | 22 | Tent with a printed third-party design (TentCraft) | reference only — do not publish |
+
+## Batch 3 (photos with designs already printed)
+
+| File | What | Use |
+|---|---|---|
+| 28 | **White apron, blank**, plain blue-grey background (505×575, small) | new: tablier photo (cut-out + EDSR, then a showcase with the Impact Pro logo) |
+| 25 | Tri-fold brochure mock-up with a third-party design (Essengo POS) | reference only — third-party brand |
+| 26 | Tent + feather flag + table in a park, « State Farm » branding, people | reference only — third-party trademark, identifiable people |
+| 27 | Apron with the « Kay's Korner » logo, kitchen scene | reference only — third-party logo |
+| 29 | Phone case with a printed photo of two people (small « Magvision » watermark) | reference only — identifiable people; shows « photo printing » as a feature |
+
+Rule: photos showing another company's brand or identifiable people are never published on the storefront.
