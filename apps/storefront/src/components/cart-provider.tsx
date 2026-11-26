@@ -2,21 +2,12 @@
 
 import * as React from "react";
 import { toast } from "sonner";
-import type { Placement, PriceTier, UploadedLogo } from "@/lib/api";
-import { unitPriceFor } from "@/lib/pricing";
-
-/** Live-preview adjustments chosen in the customizer. */
-export interface PreviewParams {
-  /** Logo scale relative to the print area (0.4 – 1.4). */
-  scale: number;
-  /** Offset from the print-area center, as a fraction of the area size (-0.5 – 0.5). */
-  dx: number;
-  dy: number;
-}
+import type { PriceTier } from "@/lib/api";
+import { estimateUnit, newId, summarizeZones, describeZone, type CustomSize, type DesignElement } from "@/lib/design";
 
 /**
- * A customized cart line. Product facts (name, prices) are a snapshot used for estimates only —
- * the API recomputes every price when the order is placed.
+ * A customized cart line (design = flat list of elements, docs/customizer-v2-contract.md §5).
+ * Product facts (name, prices) are a snapshot used for estimates only — the API recomputes every price at order time.
  */
 export interface CartLine {
   id: string;
@@ -26,12 +17,14 @@ export interface CartLine {
   minQty: number;
   basePrice: string;
   priceTiers: PriceTier[];
+  pricingMode: "PER_PIECE" | "PER_AREA";
+  customSize: CustomSize | null;
   quantity: number;
   color?: string;
   size?: string;
-  placement: Placement;
-  logo: Pick<UploadedLogo, "id" | "url" | "mimeType" | "originalName">;
-  preview: PreviewParams;
+  widthCm?: number;
+  heightCm?: number;
+  elements: DesignElement[];
   notes?: string;
 }
 
@@ -52,25 +45,29 @@ interface CartContextValue {
   clear: () => void;
 }
 
-const STORAGE_KEY = "impactpro.cart.v2";
+const STORAGE_KEY = "impactpro.cart.v3";
 const CartContext = React.createContext<CartContextValue | null>(null);
+
+function isElement(e: unknown): e is DesignElement {
+  if (typeof e !== "object" || e === null) return false;
+  const r = e as Record<string, unknown>;
+  return typeof r.id === "string" && typeof r.placement === "string" && (r.kind === "LOGO" || r.kind === "TEXT" || r.kind === "ARTWORK") && typeof r.x === "number" && typeof r.y === "number" && typeof r.scale === "number";
+}
 
 function isLine(l: unknown): l is CartLine {
   if (typeof l !== "object" || l === null) return false;
   const r = l as Record<string, unknown>;
-  const logo = r.logo as Record<string, unknown> | undefined;
   return (
     typeof r.id === "string" &&
     typeof r.productSlug === "string" &&
     typeof r.productName === "string" &&
     Number.isInteger(r.quantity) &&
     (r.quantity as number) > 0 &&
-    typeof r.placement === "string" &&
     typeof r.basePrice === "string" &&
     Array.isArray(r.priceTiers) &&
-    !!logo &&
-    typeof logo.id === "string" &&
-    typeof logo.url === "string"
+    Array.isArray(r.elements) &&
+    (r.elements as unknown[]).length > 0 &&
+    (r.elements as unknown[]).every(isElement)
   );
 }
 
@@ -93,19 +90,16 @@ function writeStorage(lines: CartLine[]) {
   }
 }
 
-function newId() {
-  try {
-    return crypto.randomUUID();
-  } catch {
-    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-  }
-}
-
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [raw, setRaw] = React.useState<CartLine[]>([]);
   const [ready, setReady] = React.useState(false);
 
   React.useEffect(() => {
+    try {
+      window.localStorage.removeItem("impactpro.cart.v2"); // v2 (single logo) carts are dropped
+    } catch {
+      // ignore
+    }
     setRaw(readStorage());
     setReady(true);
     const onStorage = (e: StorageEvent) => {
@@ -127,7 +121,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     (line: Omit<CartLine, "id">) => {
       const qty = Math.max(line.minQty, Math.floor(line.quantity));
       update((prev) => [...prev, { ...line, quantity: qty, id: newId() }]);
-      toast.success(`${line.productName} ajouté au panier`, { description: `Quantité : ${qty} · logo « ${line.logo.originalName} »` });
+      const zones = summarizeZones(line.elements).map(describeZone).filter(Boolean).join(" · ");
+      toast.success(`${line.productName} ajouté au panier`, { description: `Quantité : ${qty}${zones ? ` · ${zones}` : ""}` });
     },
     [update],
   );
@@ -146,7 +141,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const value = React.useMemo<CartContextValue>(() => {
     const lines = raw.map((l) => {
-      const unitPrice = unitPriceFor(l.quantity, l.basePrice, l.priceTiers);
+      const unitPrice = estimateUnit({
+        quantity: l.quantity,
+        basePrice: l.basePrice,
+        priceTiers: l.priceTiers,
+        pricingMode: l.pricingMode,
+        customSize: l.customSize,
+        widthCm: l.widthCm,
+        heightCm: l.heightCm,
+      });
       return { ...l, unitPrice, lineTotal: unitPrice * l.quantity };
     });
     return {

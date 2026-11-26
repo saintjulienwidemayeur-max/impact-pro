@@ -1,0 +1,4 @@
+{
+  "_comment": "Photos and print areas for the products added in customizer v2 (balloons, tents, roll-ups, bags...). Products missing here use the neutral 'Photo a venir' tile and a plain print-area frame. Schema: products[slug] = { gallery: [{file, alt, width, height, blank?}], previews: { PLACEMENT: file }, areas: { file: { PLACEMENT: {cx,cy,w,h,rot,patch,curve?,masks?} } }, frame?: { aspect } }",
+  "products": {}
+}

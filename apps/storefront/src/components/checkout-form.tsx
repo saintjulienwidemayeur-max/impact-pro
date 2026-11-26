@@ -10,6 +10,7 @@ import { CartLineSummary } from "./cart-view";
 import { Button } from "./ui/button";
 import { Field, Input, Textarea } from "./ui/field";
 import { ApiError, createCustomOrder, detailsToFields, friendlyError, type DeliveryMethod } from "@/lib/api";
+import { toOrderElements } from "@/lib/design";
 import { checkoutSchema, fieldErrors } from "@/lib/schemas";
 import { cn, formatHTG } from "@/lib/utils";
 
@@ -84,9 +85,10 @@ export function CheckoutForm() {
           quantity: l.quantity,
           color: l.color,
           size: l.size,
-          placement: l.placement,
-          logoUploadId: l.logo.id,
+          widthCm: l.widthCm,
+          heightCm: l.heightCm,
           notes: l.notes,
+          elements: toOrderElements(l.elements),
         })),
         deliveryMethod: v.deliveryMethod,
         notes: v.notes || undefined,

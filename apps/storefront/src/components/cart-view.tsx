@@ -4,29 +4,32 @@ import Link from "next/link";
 import * as React from "react";
 import { ArrowRight, Pencil, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart, type ResolvedCartLine } from "./cart-provider";
-import { LogoPreview } from "./logo-preview";
+import { DesignPreview } from "./studio/design-preview";
 import { Button } from "./ui/button";
 import { previewFor } from "@/config/product-media";
-import { placementLabels } from "@/lib/api";
+import { describeZone, placementLabelsFr, summarizeZones } from "@/lib/design";
 import { formatHTG } from "@/lib/utils";
 
 export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
-  const target = previewFor(line.productSlug, line.placement, line.color);
+  const zones = summarizeZones(line.elements);
+  const first = zones[0]?.placement ?? "FRONT";
+  const target = previewFor(line.productSlug, first, line.color);
+  const dims = line.widthCm && line.heightCm ? `${line.widthCm} × ${line.heightCm} cm` : null;
   return (
     <div className="flex items-start gap-3">
       <div className="w-24 shrink-0 overflow-hidden rounded-xl border border-ip-line bg-white sm:w-28">
-        {target ? (
-          <LogoPreview photo={target.photo} area={target.area} logo={line.logo} params={line.preview} sizes="112px" compact />
-        ) : (
-          <div className="aspect-square bg-ip-mist" />
-        )}
+        <DesignPreview preview={target} elements={line.elements.filter((e) => e.placement === first)} sizes="112px" compact />
       </div>
       <div className="min-w-0 text-sm">
         <p className="font-semibold">{line.productName}</p>
-        <p className="text-xs text-ip-muted">
-          {[placementLabels[line.placement], line.color, line.size].filter(Boolean).join(" · ")}
-        </p>
-        <p className="truncate text-xs text-ip-muted">Logo : {line.logo.originalName}</p>
+        <p className="text-xs text-ip-muted">{[line.color, line.size, dims].filter(Boolean).join(" · ")}</p>
+        <ul className="mt-1 space-y-0.5 text-xs text-ip-muted" aria-label="Design par emplacement">
+          {zones.map((z) => (
+            <li key={z.placement}>
+              <span className="font-semibold text-ip-ink">{placementLabelsFr[z.placement]}</span> : {describeZone(z)}
+            </li>
+          ))}
+        </ul>
         {line.notes && <p className="mt-0.5 line-clamp-2 text-xs italic text-ip-muted">« {line.notes} »</p>}
       </div>
     </div>

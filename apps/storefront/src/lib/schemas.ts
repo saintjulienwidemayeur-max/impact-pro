@@ -1,18 +1,19 @@
 import { z } from "zod";
 
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+export const MAX_ARTWORK_BYTES = 25 * 1024 * 1024;
 /** Logo formats accepted by the API (`POST /api/v1/uploads/logos`; SVG is rejected server-side). */
 export const LOGO_MIME_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf"] as const;
 export const LOGO_ACCEPT = ".png,.jpg,.jpeg,.webp,.pdf,image/png,image/jpeg,image/webp,application/pdf";
 
 /** Client-side logo check (the API re-verifies type from file contents). Returns an error message or null. */
-export function validateLogoFile(file: { size: number; type: string; name?: string } | null | undefined): string | null {
+export function validateLogoFile(file: { size: number; type: string; name?: string } | null | undefined, maxBytes = MAX_UPLOAD_BYTES): string | null {
   if (!file || file.size === 0) return "Le fichier est vide.";
   const byExt = /\.(png|jpe?g|webp|pdf)$/i.test(file.name ?? "");
   if (!(LOGO_MIME_TYPES as readonly string[]).includes(file.type) && !(file.type === "" && byExt)) {
     return "Format accepté : PNG, JPG, WEBP ou PDF.";
   }
-  if (file.size > MAX_UPLOAD_BYTES) return "Le fichier dépasse 10 Mo.";
+  if (file.size > maxBytes) return `Le fichier dépasse ${Math.round(maxBytes / 1024 / 1024)} Mo.`;
   return null;
 }
 

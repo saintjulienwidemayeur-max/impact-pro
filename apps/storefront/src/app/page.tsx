@@ -27,7 +27,7 @@ import {
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { NewsletterForm } from "@/components/newsletter-form";
 import { ProductCard } from "@/components/product-card";
-import { navCategories, type NavCategorySlug } from "@/config/navigation";
+import { navCategories, navFamilies, type NavCategorySlug } from "@/config/navigation";
 import { photos } from "@/config/product-media";
 import { listProducts, type Product } from "@/lib/api";
 import { site } from "@/lib/site";
@@ -239,6 +239,35 @@ export default async function HomePage() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+
+      {/* CUSTOMIZE EVERYTHING */}
+      <section aria-labelledby="everything-title" className="pb-16">
+        <div className="container-ip">
+          <h2 id="everything-title" className="text-2xl font-bold uppercase sm:text-3xl">
+            Personnalisez tout
+          </h2>
+          <span className="mt-2 block h-1 w-14 rounded bg-ip-sun" aria-hidden="true" />
+          <p className="mt-3 max-w-2xl text-ip-muted">
+            Logo devant, texte au dos, ou votre propre fichier prêt à imprimer : choisissez l&apos;article, créez votre design et voyez l&apos;aperçu tout de suite.
+          </p>
+          <ul className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            {navFamilies.map((f) => (
+              <li key={f.slug}>
+                <Link
+                  href={`/personnaliser/${f.slug}`}
+                  className="group flex h-full flex-col rounded-2xl border border-ip-line bg-white p-4 transition-shadow hover:shadow-lg"
+                >
+                  <span className="font-semibold leading-tight group-hover:text-ip-teal">{f.name}</span>
+                  <span className="mt-1 text-xs text-ip-muted">{f.tagline}</span>
+                  <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-bold uppercase tracking-wide text-ip-teal">
+                    Personnaliser <ArrowRight className="size-3.5" aria-hidden="true" />
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 

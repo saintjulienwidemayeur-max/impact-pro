@@ -2,8 +2,9 @@
  * Product photography (from the Impact Pro brand book and promo kit) and live-preview print areas.
  * This is presentation config, not catalog data: names, prices and options come from the API.
  */
-import type { Placement, Product } from "@/lib/api";
+import { placementLabels, type Placement, type Product } from "@/lib/api";
 import printAreasJson from "./print-areas.json";
+import newMediaJson from "./new-products-media.json";
 
 export interface PrintArea {
   /** Center, as a fraction of the photo width / height. */
@@ -28,6 +29,8 @@ export interface Photo {
   height: number;
   /** Same photo without the sample logo printed on it (used as the base of the live preview). */
   blank?: string;
+  /** Not a photo: a neutral print-area frame (products without photography yet). */
+  plain?: boolean;
 }
 
 const p = (file: string, alt: string, width: number, height: number, blank?: string): Photo => ({
@@ -74,7 +77,7 @@ const media: Record<string, ProductMedia> = {
   },
   "polo-brode": {
     gallery: [photos.poloBlanc, photos.poloTeal],
-    previews: { CHEST_LEFT: photos.poloBlanc, FRONT: photos.poloBlanc, BACK: photos.poloTeal, SLEEVE: photos.poloTeal },
+    previews: { CHEST_LEFT: photos.poloBlanc, FRONT: photos.poloBlanc }, // BACK / SLEEVE on white: indicative
     colorPreviews: { teal: { CHEST_LEFT: photos.poloTeal, FRONT: photos.poloTeal, BACK: photos.poloTeal, SLEEVE: photos.poloTeal } },
   },
   "t-shirt-personnalise": {
@@ -82,7 +85,7 @@ const media: Record<string, ProductMedia> = {
     previews: { FRONT: photos.poloTeal, BACK: photos.poloTeal, CHEST_LEFT: photos.poloTeal, SLEEVE: photos.poloTeal },
     colorPreviews: { blanc: { FRONT: photos.poloBlanc, CHEST_LEFT: photos.poloBlanc } },
   },
-  "casquette-brodee": { gallery: [photos.casquette], previews: { FRONT: photos.casquette } },
+  "casquette-brodee": { gallery: [photos.casquette], previews: { FRONT: photos.casquette } }, // SIDE / BACK: indicative (front photo)
   "banderole-pvc": { gallery: [photos.banderole], previews: { FRONT: photos.banderole, FULL: photos.banderole } },
   "drapeau-plume": { gallery: [photos.drapeaux], previews: { FRONT: photos.drapeaux, FULL: photos.drapeaux } },
   "cartes-de-visite": {
@@ -101,6 +104,65 @@ const media: Record<string, ProductMedia> = {
 };
 
 const printAreas = printAreasJson as Record<string, Partial<Record<Placement, PrintArea>>>;
+
+/* ---------- Products added in customizer v2: photos + print areas come from new-products-media.json ---------- */
+
+interface ManifestPhoto {
+  file: string;
+  alt: string;
+  width: number;
+  height: number;
+  blank?: string;
+}
+interface ManifestProduct {
+  gallery?: ManifestPhoto[];
+  previews?: Partial<Record<Placement, string>>;
+  areas?: Record<string, Partial<Record<Placement, PrintArea>>>;
+  frame?: { aspect: number };
+}
+
+const frames: Record<string, number> = {};
+
+function registerManifest(products: Record<string, ManifestProduct>) {
+  for (const [slug, m] of Object.entries(products)) {
+    const toPhoto = (mp: ManifestPhoto): Photo => p(mp.file, mp.alt, mp.width, mp.height, mp.blank);
+    const gallery = (m.gallery ?? []).map(toPhoto);
+    const byFile = new Map(gallery.map((g) => [fileOf(g), g]));
+    if (gallery.length) {
+      const previews: Partial<Record<Placement, Photo>> = {};
+      for (const [pl, file] of Object.entries(m.previews ?? {})) {
+        const ph = byFile.get(file);
+        if (ph) previews[pl as Placement] = ph;
+      }
+      media[slug] = { gallery, previews };
+    }
+    for (const [file, areas] of Object.entries(m.areas ?? {})) printAreas[file] = { ...(printAreas[file] ?? {}), ...areas };
+    if (m.frame?.aspect) frames[slug] = m.frame.aspect;
+  }
+}
+registerManifest((newMediaJson as { products: Record<string, ManifestProduct> }).products ?? {});
+
+/** Aspect ratios (width / height) of the plain print-area frame for products without photography. */
+Object.assign(frames, {
+  "roll-up": 0.425,
+  "tente-pliante-3x3": 1,
+  "ballon-personnalise": 0.8,
+  "banderole-pvc": 2.5,
+  photocall: 1.33,
+  "drapeau-plume": 0.3,
+  autocollants: 1,
+  "flyers-brochures": 0.707,
+  "sac-tote": 0.85,
+  "sac-a-cordon": 0.85,
+  parapluie: 1,
+  "gourde-isotherme": 0.5,
+  "gobelet-isotherme": 0.6,
+  "cle-usb": 1.8,
+  "porte-cles": 1.4,
+  "protege-passeport": 0.72,
+  tablier: 0.8,
+  ...frames,
+});
 
 function fileOf(photo: Photo) {
   return photo.src.split("/").pop() ?? "";
@@ -124,19 +186,42 @@ export function primaryPhoto(product: Pick<Product, "slug" | "name" | "images">)
   return productPhotos(product)[0] ?? null;
 }
 
-/** Photo + print area for a product/placement/color, falling back to any photo that has an area for the placement. */
-export function previewFor(slug: string, placement: Placement, color?: string): { photo: Photo; area: PrintArea | null } | null {
+export interface Preview {
+  photo: Photo;
+  area: PrintArea;
+  /** The zone has no dedicated photo: the preview only shows where the design goes. */
+  indicative: boolean;
+}
+
+/** Neutral print-area frame (no photography): the whole frame is the print area. */
+function plainPreview(slug: string, placement: Placement): Preview {
+  const aspect = frames[slug] ?? 1;
+  const width = 1000;
+  const height = Math.round(width / aspect);
+  const photo: Photo = { src: "", alt: `Zone d'impression : ${placementLabels[placement] ?? placement}`, width, height, plain: true };
+  return { photo, area: { cx: 0.5, cy: 0.5, w: 0.9, h: 0.9 / aspect, rot: 0, patch: "#ffffff" }, indicative: true };
+}
+
+/**
+ * Photo + print area for a product / zone / color. Zones without a dedicated photo fall back to the base photo and
+ * its main print area (flagged `indicative`); products without any photo get a plain print-area frame.
+ */
+export function previewFor(slug: string, placement: Placement, color?: string): Preview {
   const m = media[slug];
-  if (!m) return null;
-  let photo: Photo | undefined;
-  if (color && m.colorPreviews) {
-    const c = normalize(color);
-    const key = Object.keys(m.colorPreviews).find((k) => c.includes(k));
-    if (key) photo = m.colorPreviews[key][placement];
+  if (!m) return plainPreview(slug, placement);
+  let dedicated: Photo | undefined;
+  let fallback: Photo | undefined = m.gallery[0];
+  const byColor = color && m.colorPreviews ? Object.entries(m.colorPreviews).find(([k]) => normalize(color).includes(k))?.[1] : undefined;
+  if (byColor) {
+    dedicated = byColor[placement];
+    fallback = byColor.FRONT ?? Object.values(byColor)[0] ?? fallback;
+  } else {
+    dedicated = m.previews[placement];
   }
-  photo ??= m.previews[placement] ?? m.gallery[0];
-  if (!photo) return null;
+  const photo = dedicated ?? fallback;
+  if (!photo) return plainPreview(slug, placement);
   const areas = printAreas[fileOf(photo)] ?? {};
-  const area = areas[placement] ?? areas.FRONT ?? Object.values(areas)[0] ?? null;
-  return { photo, area };
+  const own = areas[placement];
+  const area = own ?? areas.FRONT ?? Object.values(areas)[0] ?? plainPreview(slug, placement).area;
+  return { photo, area, indicative: !dedicated || !own };
 }

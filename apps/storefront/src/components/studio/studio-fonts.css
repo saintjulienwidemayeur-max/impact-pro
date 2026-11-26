@@ -1,0 +1,13 @@
+/* Fonts for the studio text tool + canvas preview. Files live in /public/fonts (SIL OFL 1.1, from @fontsource). */
+@font-face { font-family: "IP Inter"; src: url("/fonts/inter-latin-var.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "IP Fredoka"; src: url("/fonts/fredoka-latin-var.woff2") format("woff2"); font-weight: 300 700; font-display: swap; }
+@font-face { font-family: "IP Montserrat"; src: url("/fonts/montserrat-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IP Montserrat"; src: url("/fonts/montserrat-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "IP Oswald"; src: url("/fonts/oswald-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IP Oswald"; src: url("/fonts/oswald-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "IP Playfair"; src: url("/fonts/playfair-display-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IP Playfair"; src: url("/fonts/playfair-display-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "IP Dancing Script"; src: url("/fonts/dancing-script-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IP Dancing Script"; src: url("/fonts/dancing-script-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-display: swap; }
+@font-face { font-family: "IP Pacifico"; src: url("/fonts/pacifico-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "IP Bebas Neue"; src: url("/fonts/bebas-neue-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
