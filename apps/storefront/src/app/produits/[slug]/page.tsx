@@ -6,7 +6,7 @@ import { ArrowRight, Check, FileText, Paintbrush } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { PageHeader } from "@/components/page-header";
 import { ProductCard } from "@/components/product-card";
-import { productPhotos } from "@/config/product-media";
+import { showcaseGallery } from "@/config/product-media";
 import { getProduct, listProducts, placementLabels, type Product } from "@/lib/api";
 import { sortedTiers, toNumber } from "@/lib/pricing";
 import { site } from "@/lib/site";
@@ -27,7 +27,7 @@ async function load(slug: string): Promise<{ product: Product | null; failed: bo
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { product } = await load((await params).slug);
   if (!product) return { title: "Produit" };
-  const photo = productPhotos(product)[0];
+  const photo = showcaseGallery(product)[0];
   return {
     title: product.name,
     description: `${product.name} personnalisé avec votre logo. À partir de ${formatHTG(toNumber(product.basePrice))} par ${product.unitLabel}.`,
@@ -51,7 +51,7 @@ export default async function ProductPage({ params }: { params: Params }) {
   }
   if (!product) notFound();
 
-  const gallery = productPhotos(product);
+  const gallery = showcaseGallery(product);
   const price = toNumber(product.basePrice);
   const compare = product.compareAtPrice ? toNumber(product.compareAtPrice) : undefined;
   const pct = discountPercent(price, compare);
@@ -100,7 +100,9 @@ export default async function ProductPage({ params }: { params: Params }) {
               </div>
             ))
           ) : (
-            <div className="flex aspect-[4/3] items-center justify-center rounded-[1.5rem] bg-ip-mist text-sm text-ip-muted">Photo à venir</div>
+            <div className="flex aspect-[4/3] items-center justify-center rounded-[1.5rem] bg-gradient-to-br from-ip-teal to-ip-teal-deep">
+              <Image src="/brand/icon-ip-192.png" alt="" width={96} height={96} className="size-24 rounded-3xl shadow-lg" />
+            </div>
           )}
         </div>
         <div className="lg:sticky lg:top-28 lg:self-start">

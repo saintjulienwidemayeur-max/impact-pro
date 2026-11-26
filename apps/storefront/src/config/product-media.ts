@@ -4,6 +4,7 @@
  */
 import { placementLabels, type Placement, type Product } from "@/lib/api";
 import printAreasJson from "./print-areas.json";
+import showcaseJson from "./showcase.json";
 import newMediaJson from "./new-products-media.json";
 import { quadBox, type Quad } from "@/lib/quad";
 
@@ -297,4 +298,35 @@ export function previewFor(slug: string, placement: Placement, color?: string): 
   const own = areas[placement];
   const area = own ?? areas.FRONT ?? Object.values(areas)[0] ?? plainPreview(slug, placement).area;
   return { photo, area, indicative: !dedicated || !own || Boolean(approx?.includes(placement)) };
+}
+
+/* ---------- Showcase images (listings, cards, product pages) ---------- */
+
+interface ShowcaseEntry {
+  file: string;
+  width: number;
+  height: number;
+  alt: string;
+}
+const showcase = showcaseJson as Record<string, ShowcaseEntry>;
+
+/**
+ * The product WITH a sample design (Impact Pro logo / artwork) — what visitors see while browsing.
+ * The blank photo is only used inside the studio, where the customer puts their own design on it.
+ */
+export function showcasePhoto(slug: string): Photo | null {
+  const e = showcase[slug];
+  return e ? { src: `/photos/showcase/${e.file}`, alt: e.alt, width: e.width, height: e.height } : null;
+}
+
+/** Card / list image: showcase first, then the main photo (which already carries a design for most products). */
+export function showcaseFor(product: Pick<Product, "slug" | "name" | "images">): Photo | null {
+  return showcasePhoto(product.slug) ?? primaryPhoto(product);
+}
+
+/** Product page gallery: showcase first, then the regular photos. */
+export function showcaseGallery(product: Pick<Product, "slug" | "name" | "images">): Photo[] {
+  const s = showcasePhoto(product.slug);
+  const g = productPhotos(product);
+  return s ? [s, ...g] : g;
 }

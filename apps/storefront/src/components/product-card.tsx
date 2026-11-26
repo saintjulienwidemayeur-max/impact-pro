@@ -1,13 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Paintbrush } from "lucide-react";
-import { primaryPhoto } from "@/config/product-media";
+import { showcaseFor } from "@/config/product-media";
 import type { Product } from "@/lib/api";
 import { lowestPrice, toNumber } from "@/lib/pricing";
 import { discountPercent, formatHTG } from "@/lib/utils";
 
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
-  const photo = primaryPhoto(product);
+  const photo = showcaseFor(product);
   const price = toNumber(product.basePrice);
   const compare = product.compareAtPrice ? toNumber(product.compareAtPrice) : undefined;
   const pct = discountPercent(price, compare);

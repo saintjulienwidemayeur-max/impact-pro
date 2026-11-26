@@ -523,8 +523,8 @@
       {
         "file": "coque-telephone.webp",
         "alt": "Coque de téléphone blanche, vue de dos, sans impression",
-        "width": 1032,
-        "height": 1900,
+        "width": 785,
+        "height": 1500,
         "blank": "coque-telephone.webp"
       }
     ],
@@ -536,17 +536,17 @@
       "coque-telephone.webp": {
         "FRONT": {
           "cx": 0.5,
-          "cy": 0.62,
-          "w": 0.64,
-          "h": 0.8,
+          "cy": 0.64,
+          "w": 0.72,
+          "h": 1.1847,
           "rot": 0,
           "patch": "#f3f3f3"
         },
         "FULL": {
           "cx": 0.5,
-          "cy": 0.62,
-          "w": 0.64,
-          "h": 0.8,
+          "cy": 0.64,
+          "w": 0.72,
+          "h": 1.1847,
           "rot": 0,
           "patch": "#f3f3f3"
         }
@@ -558,8 +558,8 @@
       {
         "file": "gourde-aluminium.webp",
         "alt": "Gourde aluminium blanche avec mousqueton, sans impression",
-        "width": 704,
-        "height": 1924,
+        "width": 510,
+        "height": 1500,
         "blank": "gourde-aluminium.webp"
       }
     ],
@@ -570,10 +570,10 @@
     "areas": {
       "gourde-aluminium.webp": {
         "WRAP": {
-          "cx": 0.45,
-          "cy": 0.62,
-          "w": 0.56,
-          "h": 1.15,
+          "cx": 0.4442,
+          "cy": 0.6248,
+          "w": 0.6252,
+          "h": 1.2867,
           "rot": 0,
           "patch": "#f2f4f6",
           "curve": {
@@ -582,10 +582,10 @@
           }
         },
         "FRONT": {
-          "cx": 0.45,
-          "cy": 0.62,
-          "w": 0.56,
-          "h": 1.15,
+          "cx": 0.4442,
+          "cy": 0.6248,
+          "w": 0.6252,
+          "h": 1.2867,
           "rot": 0,
           "patch": "#f2f4f6",
           "curve": {

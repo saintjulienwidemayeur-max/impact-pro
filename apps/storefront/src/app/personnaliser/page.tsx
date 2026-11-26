@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Brush, Layers, Printer, Scissors, Sparkles, Stamp, type LucideIcon } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { PageHeader } from "@/components/page-header";
-import { primaryPhoto } from "@/config/product-media";
+import { showcaseFor } from "@/config/product-media";
 import { listProducts, type Product } from "@/lib/api";
 import { lowestPrice } from "@/lib/pricing";
 import { services } from "@/lib/site";
@@ -51,7 +51,7 @@ export default async function CustomizePage() {
           ) : (
             <ul className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {products.map((p) => {
-                const photo = primaryPhoto(p);
+                const photo = showcaseFor(p);
                 return (
                   <li key={p.slug}>
                     <Link
@@ -62,7 +62,9 @@ export default async function CustomizePage() {
                         {photo ? (
                           <Image src={photo.src} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition-transform duration-300 group-hover:scale-105" />
                         ) : (
-                          <span className="flex h-full items-center justify-center bg-ip-mist text-xs font-semibold text-ip-muted">Photo à venir</span>
+                          <span className="flex h-full items-center justify-center bg-gradient-to-br from-ip-teal to-ip-teal-deep">
+                            <Image src="/brand/icon-ip-192.png" alt="" width={72} height={72} className="size-16 rounded-2xl opacity-95 shadow-lg" />
+                          </span>
                         )}
                       </span>
                       <span className="flex flex-1 flex-col p-3 sm:p-4">

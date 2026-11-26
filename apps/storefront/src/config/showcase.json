@@ -1,0 +1,62 @@
+{
+  "gourde-aluminium": {
+    "file": "gourde-aluminium.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Gourde aluminium blanche avec un exemple de logo imprimé"
+  },
+  "coque-telephone": {
+    "file": "coque-telephone.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Coque de téléphone blanche avec un exemple de logo"
+  },
+  "sac-tote": {
+    "file": "sac-tote.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Sac tote blanc avec un exemple de logo imprimé"
+  },
+  "t-shirt-personnalise": {
+    "file": "t-shirt-personnalise.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "T-shirt rouge avec un exemple de logo imprimé"
+  },
+  "ballon-football": {
+    "file": "ballon-football.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Ballon de football avec un exemple de logo"
+  },
+  "gobelet-cafe": {
+    "file": "gobelet-cafe.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Gobelets café blancs avec un exemple de logo"
+  },
+  "flyers-brochures": {
+    "file": "flyers-brochures.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Brochure trois volets avec un exemple de logo"
+  },
+  "tente-pliante-3x3": {
+    "file": "tente-pliante-3x3.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Tente pliante 3×3 m avec un exemple de logo sur le côté"
+  },
+  "roll-up": {
+    "file": "roll-up.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Roll-up avec un exemple de visuel Impact Pro"
+  },
+  "badge-lanyard": {
+    "file": "badge-lanyard.webp",
+    "width": 1600,
+    "height": 1200,
+    "alt": "Badge avec lanyard et un exemple de logo"
+  }
+}
