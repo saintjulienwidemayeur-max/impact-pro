@@ -145,6 +145,18 @@ export function elementBox(el: DesignElement, bw: number, bh: number, img?: HTML
   return { w: side, h: side };
 }
 
+/**
+ * Scale (≤ 1) that makes a text element fit inside a print area (`area.w × area.h`, any consistent unit).
+ * Fonts must be loaded first (see `ensureFonts`) or the measure uses the fallback font.
+ */
+export function fitTextScale(el: DesignElement, area: { w: number; h: number }): number {
+  const bw = area.w * 1000;
+  const bh = area.h * 1000;
+  const b = elementBox({ ...el, scale: 1 }, bw, bh);
+  const s = Math.min(1, (bw * 0.88) / Math.max(1, b.w), (bh * 0.9) / Math.max(1, b.h));
+  return Math.max(0.05, Math.round(s * 100) / 100);
+}
+
 function drawElement(ctx: CanvasRenderingContext2D, el: DesignElement, bw: number, bh: number, img?: HTMLImageElement | null) {
   ctx.save();
   ctx.translate(bw / 2 + el.x * bw, bh / 2 + el.y * bh);

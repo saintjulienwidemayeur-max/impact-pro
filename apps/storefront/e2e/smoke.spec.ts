@@ -561,4 +561,22 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await expect(page.getByTestId("order-mockup")).toHaveCount(1);
     await expect(page.getByTestId("order-mockup")).toHaveAttribute("data-source", "client"); // rendered from the stored design
   });
+
+  test("new texts are fitted to the print area until resized by hand", async ({ page }) => {
+    await page.goto("/personnaliser/t-shirt-personnalise");
+    await page.getByTestId("zone-BACK").click();
+    await page.getByTestId("add-text").click();
+    await page.getByTestId("text-input").fill("ÉQUIPE HAÏTI CHAMPIONS 2026");
+    const el = page.getByTestId("design-el-text");
+    const overlay = page.getByTestId("design-overlay");
+    await expect(el).toBeVisible();
+    await expect.poll(async () => (await el.boundingBox())!.width <= (await overlay.boundingBox())!.width + 1).toBe(true);
+    // growing it by hand switches the automatic fitting off
+    await el.focus();
+    for (let i = 0; i < 8; i++) await page.keyboard.press("+");
+    const grown = (await el.boundingBox())!.width;
+    await page.getByTestId("text-input").fill("ÉQUIPE HAÏTI CHAMPIONS 2026 !");
+    expect(Math.abs((await el.boundingBox())!.width - grown)).toBeGreaterThan(0); // not re-fitted: it follows the text, not the area
+    await expect.poll(async () => (await el.boundingBox())!.width > (await overlay.boundingBox())!.width).toBe(true);
+  });
 });

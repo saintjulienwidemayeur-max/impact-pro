@@ -28,7 +28,7 @@ import {
   type DesignElement,
   type UploadRef,
 } from "@/lib/design";
-import { loadImage } from "@/lib/design-render";
+import { ensureFonts, fitTextScale, loadImage } from "@/lib/design-render";
 import { sortedTiers, toNumber } from "@/lib/pricing";
 import { cn, formatHTG } from "@/lib/utils";
 
@@ -148,7 +148,30 @@ export function Customizer({ product }: { product: Product }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zone, elements.length]);
 
-  const patch = React.useCallback((id: string, p: Partial<DesignElement>) => setElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...p } : e))), []);
+  // A manual resize ends the automatic fitting of a text.
+  const patch = React.useCallback(
+    (id: string, p: Partial<DesignElement>) => setElements((prev) => prev.map((e) => (e.id === id ? { ...e, ...p, ...("scale" in p ? { autoFit: false } : {}) } : e))),
+    [],
+  );
+
+  /** Editor changes: a text that was never resized by hand keeps fitting the print area as it is typed. */
+  function editorChange(el: DesignElement, p: Partial<DesignElement>) {
+    patch(el.id, p);
+    if (el.kind === "TEXT" && el.autoFit !== false && !("scale" in p) && ("text" in p || "font" in p || "fontWeight" in p)) {
+      const merged = { ...el, ...p };
+      const area = preview.area;
+      void ensureFonts([merged]).then(() => {
+        const s = fitTextScale(merged, area);
+        setElements((prev) => prev.map((e) => (e.id === el.id && e.autoFit !== false ? { ...e, scale: s } : e)));
+      });
+    }
+  }
+
+  async function addText() {
+    const el = newTextElement(zone);
+    await ensureFonts([el]);
+    addElement({ ...el, scale: fitTextScale(el, preview.area) });
+  }
 
   function addElement(el: DesignElement) {
     if (elements.length >= MAX_ELEMENTS || zoneElements.length >= zoneDef.maxElements) {
@@ -417,7 +440,7 @@ export function Customizer({ product }: { product: Product }) {
                 {canAddLogo && <ElementUploader kind="LOGO" onUploaded={(u) => onUploaded("LOGO", u)} />}
                 {canAddText && (
                   <div>
-                    <Button type="button" variant="outline" onClick={() => addElement(newTextElement(zone))} data-testid="add-text">
+                    <Button type="button" variant="outline" onClick={() => void addText()} data-testid="add-text">
                       <Type aria-hidden="true" /> Ajouter du texte
                     </Button>
                     <p className="mt-1 text-[11px] text-ip-muted">8 polices, couleurs au choix.</p>
@@ -481,7 +504,7 @@ export function Customizer({ product }: { product: Product }) {
                   coverScale={coverScale}
                   canMoveUp={zoneElements[zoneElements.length - 1]?.id !== selected.id}
                   canMoveDown={zoneElements[0]?.id !== selected.id}
-                  onChange={(p) => patch(selected.id, p)}
+                  onChange={(p) => editorChange(selected, p)}
                   onDelete={() => removeElement(selected.id)}
                   onDuplicate={() => duplicateElement(selected)}
                   onMove={(dir) => moveLayer(selected.id, dir)}

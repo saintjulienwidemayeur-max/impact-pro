@@ -67,6 +67,8 @@ export interface DesignElement {
   scale: number;
   /** degrees, −180..180 */
   rotation: number;
+  /** TEXT only (client-side): keep shrinking the text to fit the print area until the customer resizes it by hand. */
+  autoFit?: boolean;
 }
 
 export const SCALE_MIN = 0.05;
@@ -83,7 +85,7 @@ export function newId(): string {
 export const clamp = (v: number, min: number, max: number) => Math.min(max, Math.max(min, v));
 
 export function newTextElement(placement: Placement): DesignElement {
-  return { id: newId(), placement, kind: "TEXT", text: "Votre texte", font: "inter", fontWeight: "bold", color: "#000000", align: "center", x: 0, y: 0, scale: 1, rotation: 0 };
+  return { id: newId(), placement, kind: "TEXT", text: "Votre texte", font: "inter", fontWeight: "bold", color: "#000000", align: "center", x: 0, y: 0, scale: 1, rotation: 0, autoFit: true };
 }
 
 export function newUploadElement(placement: Placement, kind: "LOGO" | "ARTWORK", upload: UploadRef): DesignElement {
