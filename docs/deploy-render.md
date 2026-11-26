@@ -1,6 +1,11 @@
 # Deploying Impact Pro on Render
 
-`render.yaml` (repo root) is a Render Blueprint that creates: Postgres, Key Value (Redis), the API (`impact-pro-api`) and the storefront (`impact-pro-storefront`).
+`render.yaml` (repo root) is a Render Blueprint that creates: Key Value (Redis), the API (`impact-pro-api`) and the storefront (`impact-pro-storefront`).
+
+## Database on Supabase
+Use Supabase → Connect → **Session pooler** URL (`postgresql://postgres.<ref>:<password>@aws-0-<region>.pooler.supabase.com:5432/postgres`) as `DATABASE_URL`.
+Do not use the Direct connection (IPv6 only; Render is IPv4) nor the Transaction pooler (port 6543; breaks Prisma migrations). URL-encode special characters in the password.
+Supabase Storage is S3-compatible and can hold customer logos (`S3_ENDPOINT=https://<ref>.supabase.co/storage/v1/s3`, plus bucket and S3 access keys from Storage settings) — not yet tested.
 
 ## Steps
 1. Push the branch to GitHub (already done) and merge it into `main` (Render deploys a chosen branch; you can also pick `claude/relaxed-wright-32qgi8`).
@@ -15,7 +20,7 @@
 ## Limits of the free plan (read before going live)
 - Free web services sleep after ~15 min idle (first request takes ~30–60 s).
 - **No persistent disk**: uploaded logos in `/tmp/uploads` are lost on every restart/redeploy. For real customers use a paid instance with a **Disk** (set `UPLOAD_DIR` to its mount path) or S3-compatible storage (Cloudflare R2, Backblaze B2, AWS S3) via `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (the S3 path is implemented but not yet tested against a real bucket).
-- Free Postgres is deleted after 30 days; use a paid database for production and enable backups.
+- Use Supabase backups (paid plans) or scheduled dumps for production data.
 
 ## Custom domain
 Render → service → Settings → Custom Domains (e.g. `impactpro.ht` → storefront, `api.impactpro.ht` → API). Then update `CORS_ORIGINS`, `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL` and redeploy the storefront.
