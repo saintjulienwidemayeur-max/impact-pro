@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -68,7 +69,7 @@ test.describe("storefront", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/sur tout/i);
     await expect(page.getByRole("heading", { name: "Produits populaires" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Personnalisez tout" })).toBeVisible();
-    await expect(page.locator('section[aria-labelledby="everything-title"]').getByRole("link", { name: /Ballons/ })).toHaveAttribute("href", "/personnaliser/ballon-personnalise");
+    await expect(page.locator('section[aria-labelledby="everything-title"]').getByRole("link", { name: /Ballons de fête/ })).toHaveAttribute("href", "/personnaliser/ballon-personnalise");
     await expect(page.getByRole("heading", { name: "Votre logo sur tout votre kit" })).toBeVisible();
     await expect(page.locator('img[src*="kit-promotionnel"]').first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Comment ça marche" })).toBeVisible();
@@ -373,8 +374,8 @@ test.describe("studio", () => {
   });
 
   test("products without photography use a plain print-area frame; PDF artwork is accepted", async ({ page }) => {
-    test.skip(REAL, "relies on the mock catalog (roll-up)");
-    await page.goto("/personnaliser/roll-up");
+    test.skip(REAL, "relies on the mock catalog (autocollants has no photography)");
+    await page.goto("/personnaliser/autocollants");
     await expect(page.getByText(/Photo du produit à venir/)).toBeVisible();
     await page.getByTestId("artwork-input").setInputFiles(PDF);
     await expect(page.getByTestId("layer-item")).toHaveCount(1, { timeout: 15_000 });
@@ -417,5 +418,147 @@ test.describe("studio", () => {
     await page.getByRole("button", { name: "Confirmer la commande" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "text must be 1..200 characters" }).first()).toBeVisible();
     await expect(page.getByTestId("cart-count")).toHaveText("1");
+  });
+});
+
+test.describe("parameters per product, final preview, order mock-ups", () => {
+  test.beforeEach(() => test.skip(!apiUp, "API not reachable"));
+
+  const minQty = async (page: Page) => (await page.locator("#cz-quantity").getAttribute("min")) ?? "1";
+
+  test("football: no color or size is asked, only the design and the quantity", async ({ page }) => {
+    await page.goto("/personnaliser/ballon-football");
+    await expect(page.getByRole("heading", { name: "Votre design" })).toBeVisible();
+    await expect(page.getByTestId("options")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /Options/ })).toHaveCount(0);
+    await expect(page.locator("#cz-size")).toHaveCount(0);
+    await expect(page.getByRole("radiogroup")).toHaveCount(0);
+    await expect(page.getByRole("heading", { name: /Quantité/ })).toContainText("2"); // steps are renumbered: design, quantity
+
+    await page.getByTestId("add-text").click();
+    await page.getByTestId("text-input").fill("Champions 2026");
+    await page.locator("#cz-quantity").fill(await minQty(page));
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByTestId("cart-count")).toHaveText("1");
+    await page.goto("/panier");
+    await expect(page.getByTestId("cart-line")).not.toContainText("Taille");
+    await expect(page.getByTestId("cart-line")).not.toContainText("Couleur");
+    await page.getByRole("link", { name: "Passer la commande" }).click();
+    await fillCheckout(page);
+    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.waitForURL(/\/commande\/confirmation/, { timeout: 30_000 });
+    if (!REAL) {
+      const item = (await lastOrderPayload(page)).items[0];
+      expect(item.productSlug).toBe("ballon-football");
+      expect(item.size).toBeUndefined();
+      expect(item.color).toBeUndefined();
+    }
+  });
+
+  test("t-shirt: color and size are asked (size required), shown with their labels in the cart", async ({ page }) => {
+    await page.goto("/personnaliser/t-shirt-personnalise");
+    await expect(page.getByTestId("option-color")).toContainText("Couleur");
+    await expect(page.getByTestId("option-size")).toContainText("Taille");
+    await page.getByTestId("zone-FRONT").click();
+    await addLogo(page);
+    await page.locator("#cz-quantity").fill(await minQty(page));
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByText("Veuillez choisir : taille.")).toBeVisible();
+    await expect(page.getByTestId("cart-count")).toHaveText("0");
+    await page.locator("#cz-size").selectOption("L");
+    await page.getByRole("radio", { name: "Noir" }).click();
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByTestId("cart-count")).toHaveText("1");
+    await page.goto("/panier");
+    await expect(page.getByTestId("cart-line")).toContainText("Couleur : Noir");
+    await expect(page.getByTestId("cart-line")).toContainText("Taille : L");
+  });
+
+  test("phone case: the size field is the phone model", async ({ page }) => {
+    await page.goto("/personnaliser/coque-telephone");
+    await expect(page.locator('label[for="cz-size"]')).toContainText("Modèle du téléphone");
+    await page.getByTestId("add-text").click();
+    await page.getByTestId("text-input").fill("Mon style");
+    await page.locator("#cz-quantity").fill(await minQty(page));
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByText("Veuillez choisir : modèle du téléphone.")).toBeVisible();
+    const models = await page.locator("#cz-size option").allTextContents();
+    expect(models.length).toBeGreaterThan(2);
+    await page.locator("#cz-size").selectOption({ index: 2 });
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByTestId("cart-count")).toHaveText("1");
+    await page.goto("/panier");
+    await expect(page.getByTestId("cart-line")).toContainText(`Modèle du téléphone : ${models[2]}`);
+  });
+
+  test("tent: dimensions and roof color are asked with their own labels", async ({ page }) => {
+    await page.goto("/personnaliser/tente-pliante-3x3");
+    await expect(page.getByTestId("option-size")).toContainText("Dimensions");
+    await expect(page.getByTestId("option-color")).toContainText("Couleur du toit");
+    await expect(page.getByTestId("zone-tabs")).toBeVisible();
+  });
+
+  test("final preview, cart mock-ups and the mock-ups stored with the order", async ({ page }) => {
+    await page.goto("/personnaliser/polo-brode");
+    await page.getByTestId("zone-FRONT").click();
+    await addLogo(page);
+    await page.getByTestId("zone-BACK").click();
+    await page.getByTestId("add-text").click();
+    await page.getByTestId("text-input").fill("Équipe Haïti 2026");
+    await page.locator("#cz-size").selectOption("M");
+    await page.locator("#cz-quantity").fill(await minQty(page));
+
+    // « Voir le rendu final »: every zone, no handles, download + back to editing
+    await page.getByTestId("final-open").click();
+    const dialog = page.getByTestId("final-preview");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByTestId("final-zone")).toHaveCount(2);
+    await expect(dialog.locator('[data-testid="handle-scale"]')).toHaveCount(0);
+    const [download] = await Promise.all([page.waitForEvent("download"), page.getByTestId("final-download").click()]);
+    expect(download.suggestedFilename()).toBe("apercu-polo-brode.png");
+    expect(fs.statSync((await download.path())!).size).toBeGreaterThan(5_000);
+    await page.getByTestId("final-back").click();
+    await expect(dialog).toHaveCount(0);
+
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByTestId("cart-count")).toHaveText("1");
+    await page.goto("/panier");
+    await expect(page.getByTestId("cart-mockup")).toHaveCount(2); // one rendered thumbnail per zone
+    await page.getByTestId("cart-final-open").click();
+    await expect(page.getByTestId("final-zone")).toHaveCount(2);
+    await page.keyboard.press("Escape");
+    await expect(page.getByTestId("final-preview")).toHaveCount(0);
+
+    await page.getByRole("link", { name: "Passer la commande" }).click();
+    await expect(page.getByTestId("cart-mockup")).toHaveCount(2); // checkout summary too
+    await fillCheckout(page);
+    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.waitForURL(/\/commande\/confirmation/, { timeout: 40_000 });
+    await expect(page.getByTestId("order-mockup")).toHaveCount(2);
+    await expect(page.getByTestId("order-options")).toContainText("Taille : M");
+    if (!REAL) {
+      const item = (await lastOrderPayload(page)).items[0];
+      expect(item.previews.map((p: { placement: string }) => p.placement).sort()).toEqual(["BACK", "FRONT"]);
+      await expect(page.getByTestId("order-mockup").first()).toHaveAttribute("data-source", "server");
+    }
+    const ref = (await page.getByTestId("order-ref").textContent())!.trim();
+    await page.goto(`/suivi?ref=${ref}&email=e2e@example.com`);
+    await expect(page.getByTestId("order-mockup")).toHaveCount(2);
+  });
+
+  test("the order still succeeds when mock-ups cannot be uploaded", async ({ page }) => {
+    await page.route(`${API}/api/v1/uploads/previews`, (route) => route.fulfill({ status: 404, contentType: "application/json", body: JSON.stringify({ error: { code: "NOT_FOUND", message: "x" } }) }));
+    await page.goto("/personnaliser/tasse-ceramique-11oz");
+    await page.getByTestId("add-text").click();
+    await page.getByTestId("text-input").fill("Sans aperçu");
+    await page.locator("#cz-quantity").fill(await minQty(page));
+    await page.getByRole("button", { name: "Commander maintenant" }).click();
+    await page.waitForURL(/\/commande$/);
+    await fillCheckout(page);
+    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.waitForURL(/\/commande\/confirmation/, { timeout: 40_000 });
+    await expect(page.getByTestId("order-ref")).toHaveText(/^IP-/);
+    await expect(page.getByTestId("order-mockup")).toHaveCount(1);
+    await expect(page.getByTestId("order-mockup")).toHaveAttribute("data-source", "client"); // rendered from the stored design
   });
 });

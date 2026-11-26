@@ -146,6 +146,17 @@ PRODUCTS.push(
     ],
   }),
   base({
+    slug: "autocollants",
+    name: "Autocollants personnalisés",
+    category: { slug: "autocollants", name: "Autocollants" },
+    basePrice: "25.00",
+    minQty: 50,
+    unitLabel: "autocollant",
+    placements: ["FRONT"],
+    supportsArtwork: true,
+    priceTiers: [{ minQty: 50, unitPrice: "25.00" }],
+  }),
+  base({
     slug: "coque-telephone",
     name: "Coque de téléphone personnalisée",
     category: { slug: "accessoires", name: "Accessoires" },
