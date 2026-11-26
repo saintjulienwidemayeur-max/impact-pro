@@ -126,4 +126,7 @@ Unit, integration, API, authorization, inventory concurrency, order lifecycle, c
 At the end of each phase: run tests, verify migrations, verify API, fix errors, update docs, report done/remaining.
 
 ## 17. Status
-- **Phase 1 — in progress**: monorepo, docs, API foundation (health, config, Prisma schema v1, Swagger), docker-compose, CI, storefront homepage shell in brand.
+- **Phase 1 — done** (2026-11-26): monorepo (pnpm + Turbo), docs/ (architecture, ERD, API map, roadmap, security, brand), API foundation (`apps/api`, port 4000: env validation, health, Swagger, envelope, throttling, Prisma schema v1 + init migration + seed, concurrency-safe inventory reserve with tests), infra/docker-compose.yml, CI workflow, storefront (`apps/storefront`, port 3000) homepage + pages in brand with Playwright smoke tests. Screenshots in docs/screenshots/.
+- Not yet verified: Docker stack boot, API Docker image build, CI run on GitHub.
+- Storefront catalog (`src/lib/catalog.ts`) and form endpoints are dev placeholders until Phase 3 wires them to the API. Phone/email/prices are placeholders.
+- **Next: Phase 2** — authentication & organizations.
