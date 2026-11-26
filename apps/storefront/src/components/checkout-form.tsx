@@ -155,7 +155,7 @@ export function CheckoutForm() {
           <div role="radiogroup" aria-labelledby="co-delivery" className="mt-4 grid gap-3 sm:grid-cols-2">
             {(
               [
-                { v: "PICKUP", icon: Store, title: "Retrait en boutique", text: "Port-au-Prince, sur rendez-vous" },
+                { v: "PICKUP", icon: Store, title: "Retrait en boutique", text: "Miami, sur rendez-vous" },
                 { v: "DELIVERY", icon: Truck, title: "Livraison", text: "Frais confirmés avec votre maquette" },
               ] as const
             ).map(({ v, icon: Icon, title, text }) => (

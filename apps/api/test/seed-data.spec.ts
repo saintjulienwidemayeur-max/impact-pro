@@ -60,14 +60,19 @@ describe('catalog seed data', () => {
     }
   });
 
-  it('garments require color and size; the cap requires color only', () => {
+  it('garments require color and size; products whose photo shows one colour offer no colour choice', () => {
     for (const slug of ['polo-brode', 't-shirt-personnalise']) {
       const f = optionFlags(get(slug));
       expect(f).toMatchObject({ colorsRequired: true, sizesRequired: true, sizeLabel: 'Taille' });
       expect(get(slug).sizes).toEqual(['S', 'M', 'L', 'XL', 'XXL']);
     }
     expect(get('t-shirt-personnalise').colors).toEqual(['Rouge', 'Noir', 'Bleu royal']);
-    expect(optionFlags(get('casquette-brodee'))).toMatchObject({ colorsRequired: true, sizesRequired: false });
+    expect(get('polo-brode').colors).toEqual(['Teal', 'Blanc']);
+    // Colours are only offered when a matching photo exists (otherwise the preview would show the wrong colour).
+    for (const slug of ['casquette-brodee', 'tasse-ceramique-11oz', 'badge-lanyard', 'tente-pliante-3x3', 'gourde-aluminium', 'coque-telephone', 'sac-tote']) {
+      expect(get(slug).colors ?? []).toEqual([]);
+      expect(optionFlags(get(slug)).colorsRequired).toBe(false);
+    }
   });
 
   it('product-specific labels follow the contract', () => {

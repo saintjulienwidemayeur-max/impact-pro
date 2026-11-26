@@ -175,8 +175,6 @@ PRODUCTS.push(
     basePrice: "38000.00",
     minQty: 1,
     unitLabel: "tente",
-    colorLabel: "Couleur du toit",
-    colors: ["Blanc", "Bleu", "Rouge"],
     sizeLabel: "Dimensions",
     sizes: ["3 × 3 m", "3 × 4,5 m", "3 × 6 m"],
     placements: ["TOP", "FRONT", "SIDE", "BACK"],

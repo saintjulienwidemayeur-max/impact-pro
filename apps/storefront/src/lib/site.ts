@@ -8,8 +8,8 @@ export const site = {
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   phoneDisplay: "+509 [XXXX-XXXX]",
   email: "contact@impactpro.ht",
-  address: "Port-au-Prince, Haïti",
-  hours: "Lun – Sam : 8 h 00 – 17 h 00",
+  address: "Miami, Floride, États-Unis",
+  hours: "Lun – Sam : 8 h 00 – 17 h 00 (heure de Miami)",
   freeShippingThresholdHTG: 10000,
 } as const;
 

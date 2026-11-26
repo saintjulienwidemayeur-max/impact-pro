@@ -491,10 +491,10 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await expect(page.getByTestId("cart-line")).toContainText(`Modèle du téléphone : ${models[2]}`);
   });
 
-  test("tent: dimensions and roof color are asked with their own labels", async ({ page }) => {
+  test("tent: only the dimensions are asked (no colour choice: the photo shows one colour)", async ({ page }) => {
     await page.goto("/personnaliser/tente-pliante-3x3");
     await expect(page.getByTestId("option-size")).toContainText("Dimensions");
-    await expect(page.getByTestId("option-color")).toContainText("Couleur du toit");
+    await expect(page.getByTestId("option-color")).toHaveCount(0);
     await expect(page.getByTestId("zone-tabs")).toBeVisible();
   });
 
