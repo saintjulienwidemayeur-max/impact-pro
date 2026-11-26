@@ -38,6 +38,21 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
     return res.body.data.id as string;
   }
 
+  /** What the legacy `placement` + `logoUploadId` shorthand turns into. */
+  function legacyLogoElement(placement: string, uploadId: string) {
+    return {
+      placement,
+      kind: 'LOGO',
+      x: 0,
+      y: 0,
+      scale: 1,
+      rotation: 0,
+      sort: 0,
+      logoUrl: `/api/v1/uploads/logos/${uploadId}`,
+      originalName: 'logo.png',
+    };
+  }
+
   function orderBody(items: unknown[], email = 'Client@Example.com') {
     return {
       customer: { fullName: 'Marie Joseph', company: 'Boulangerie Soleil', phone: '+509 3712-3456', email, city: 'Port-au-Prince' },
@@ -205,6 +220,16 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           { minQty: 100, unitPrice: '495.00' },
         ],
         images: ['/photos/tasse-11oz.webp'],
+        pricingMode: 'PER_PIECE',
+        supportsLogo: true,
+        supportsText: true,
+        supportsArtwork: false,
+        artworkRequired: false,
+        customSize: null,
+        zones: [
+          { placement: 'FRONT', label: 'Devant', maxElements: 10 },
+          { placement: 'WRAP', label: 'Tour complet', maxElements: 10 },
+        ],
       });
     });
 
@@ -246,6 +271,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           color: 'Blanc',
           size: null,
           logoUrl: `/api/v1/uploads/logos/${logoId}`,
+          elements: [legacyLogoElement('WRAP', logoId)],
         },
         {
           productSlug: bannerSlug,
@@ -257,6 +283,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           color: null,
           size: '3 × 1,2 m',
           logoUrl: `/api/v1/uploads/logos/${logoId}`,
+          elements: [legacyLogoElement('FULL', logoId)],
         },
       ]);
       expect(order.subtotal).toBe('51500.00');
@@ -332,7 +359,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
         .post('/api/v1/custom-orders')
         .send({
           customer: { fullName: 'M', phone: 'abc', email: 'not-an-email' },
-          items: [{ productSlug: mugSlug, quantity: 0, placement: 'TOP', logoUploadId: 'x' }],
+          items: [{ productSlug: mugSlug, quantity: 0, placement: 'NOWHERE', logoUploadId: 'x' }],
           deliveryMethod: 'TELEPORT',
           hacker: true,
         })

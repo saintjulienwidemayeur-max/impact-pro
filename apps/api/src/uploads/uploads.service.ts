@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import type { Upload } from '@prisma/client';
+import { UploadPurpose, type Upload } from '@prisma/client';
 import { imageSize } from 'image-size';
 import { createHash, randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
@@ -13,6 +13,8 @@ export interface UploadView {
   mimeType: string;
   size: number;
   originalName: string;
+  width?: number;
+  height?: number;
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -21,6 +23,17 @@ export function logoUrl(id: string): string {
   return `/api/v1/uploads/logos/${id}`;
 }
 
+export function artworkUrl(id: string): string {
+  return `/api/v1/uploads/artwork/${id}`;
+}
+
+/** Public (relative) URL of an upload, according to what it was uploaded as. */
+export function uploadUrl(id: string, purpose: UploadPurpose): string {
+  return purpose === UploadPurpose.ARTWORK ? artworkUrl(id) : logoUrl(id);
+}
+
+type IncomingFile = { buffer: Buffer; originalname?: string; size: number } | undefined;
+
 @Injectable()
 export class UploadsService {
   constructor(
@@ -28,7 +41,15 @@ export class UploadsService {
     private readonly storage: StorageService,
   ) {}
 
-  async createLogo(file: { buffer: Buffer; originalname?: string; size: number } | undefined): Promise<UploadView> {
+  createLogo(file: IncomingFile): Promise<UploadView> {
+    return this.create(file, UploadPurpose.LOGO);
+  }
+
+  createArtwork(file: IncomingFile): Promise<UploadView> {
+    return this.create(file, UploadPurpose.ARTWORK);
+  }
+
+  private async create(file: IncomingFile, purpose: UploadPurpose): Promise<UploadView> {
     if (!file || !file.buffer || file.size === 0) {
       throw new UnprocessableEntityException({
         code: 'VALIDATION_ERROR',
@@ -57,7 +78,7 @@ export class UploadsService {
     }
 
     const id = randomUUID();
-    const storageKey = `logos/${id}`;
+    const storageKey = `${purpose === UploadPurpose.ARTWORK ? 'artwork' : 'logos'}/${id}`;
     await this.storage.put(storageKey, file.buffer, mimeType);
     const upload = await this.prisma.upload.create({
       data: {
@@ -70,6 +91,7 @@ export class UploadsService {
         sha256: createHash('sha256').update(file.buffer).digest('hex'),
         width,
         height,
+        purpose,
       },
     });
     return this.toView(upload);
@@ -88,7 +110,14 @@ export class UploadsService {
   }
 
   toView(u: Upload): UploadView {
-    return { id: u.id, url: logoUrl(u.id), mimeType: u.mimeType, size: u.size, originalName: u.originalName };
+    return {
+      id: u.id,
+      url: uploadUrl(u.id, u.purpose),
+      mimeType: u.mimeType,
+      size: u.size,
+      originalName: u.originalName,
+      ...(u.width != null && u.height != null ? { width: u.width, height: u.height } : {}),
+    };
   }
 
   private notFound(): NotFoundException {

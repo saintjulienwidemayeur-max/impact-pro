@@ -20,6 +20,8 @@ export const envSchema = z.object({
   /** Local upload directory, used when S3 is not configured. Relative paths resolve from the API package root. */
   UPLOAD_DIR: z.string().min(1).default('var/uploads'),
   UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
+  /** Max size of « ready-to-print » artwork files (banners, flags…). */
+  UPLOAD_ARTWORK_MAX_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024),
   /** S3-compatible storage (MinIO in dev). All of endpoint/bucket/keys must be set to enable it. */
   S3_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().default('us-east-1'),
