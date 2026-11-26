@@ -164,6 +164,17 @@ export class DesignElementDto {
   sort?: number;
 }
 
+/** Rendered mock-up of one print zone (id from POST /uploads/previews). */
+export class ItemPreviewDto {
+  @ApiProperty({ enum: PrintPlacement, description: 'Must be one of the product placements; at most one preview per zone' })
+  @IsEnum(PrintPlacement)
+  placement!: PrintPlacement;
+
+  @ApiProperty({ format: 'uuid', description: 'Id returned by POST /uploads/previews (valid 7 days)' })
+  @IsUUID()
+  uploadId!: string;
+}
+
 export class CustomOrderItemDto {
   @ApiProperty({ example: 'tasse-ceramique-11oz' })
   @IsString()
@@ -179,18 +190,18 @@ export class CustomOrderItemDto {
   @Max(100000)
   quantity!: number;
 
-  @ApiPropertyOptional({ maxLength: 40 })
+  @ApiPropertyOptional({ maxLength: 40, description: 'One of product.colors (label: product.colorLabel); required when product.colorsRequired' })
   @Transform(trimOptional)
   @IsOptional()
   @IsString()
   @MaxLength(40)
   color?: string;
 
-  @ApiPropertyOptional({ maxLength: 20 })
+  @ApiPropertyOptional({ maxLength: 60, description: 'One of product.sizes (label: product.sizeLabel); required when product.sizesRequired' })
   @Transform(trimOptional)
   @IsOptional()
   @IsString()
-  @MaxLength(20)
+  @MaxLength(60)
   size?: string;
 
   @ApiPropertyOptional({ minimum: 1, maximum: 2000, description: 'Required when the product has customSize (banners, tents…)' })
@@ -217,6 +228,14 @@ export class CustomOrderItemDto {
   @ValidateNested({ each: true })
   @Type(() => DesignElementDto)
   elements?: DesignElementDto[];
+
+  @ApiPropertyOptional({ type: [ItemPreviewDto], maxItems: 12, description: 'Rendered mock-ups per zone so staff see what the customer saw (best effort, optional)' })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(12)
+  @ValidateNested({ each: true })
+  @Type(() => ItemPreviewDto)
+  previews?: ItemPreviewDto[];
 
   @ApiPropertyOptional({ enum: PrintPlacement, deprecated: true, description: 'Legacy shorthand (with logoUploadId) for one centered LOGO element' })
   @IsOptional()

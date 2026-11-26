@@ -163,6 +163,11 @@ model Product {
   artworkRequired  Boolean            @default(false)
   /// { minWidthCm, maxWidthCm, minHeightCm, maxHeightCm, defaultWidthCm, defaultHeightCm, minBillableM2 } or null
   customSize       Json?
+  /// Option labels + whether the customer must choose (a selector only exists when `colors` / `sizes` is non-empty).
+  colorLabel       String             @default("Couleur")
+  sizeLabel        String             @default("Taille")
+  colorsRequired   Boolean            @default(false)
+  sizesRequired    Boolean            @default(false)
   customOrderItems CustomOrderItem[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -192,6 +197,8 @@ enum PricingMode {
 enum UploadPurpose {
   LOGO
   ARTWORK
+  /// Rendered mock-up (PNG/JPEG) of a print zone, uploaded by the storefront at checkout.
+  PREVIEW
 }
 
 enum ElementKind {
@@ -385,6 +392,7 @@ model Upload {
   createdAt     DateTime                 @default(now())
   orderItems    CustomOrderItem[]
   elements      CustomOrderItemElement[]
+  previews      CustomOrderItemPreview[]
 
   @@index([createdAt])
 }
@@ -455,6 +463,7 @@ model CustomOrderItem {
   product     Product                  @relation(fields: [productId], references: [id], onDelete: Restrict)
   upload      Upload?                  @relation(fields: [uploadId], references: [id], onDelete: Restrict)
   elements    CustomOrderItemElement[]
+  previews    CustomOrderItemPreview[]
 
   @@unique([orderId, lineNo])
   @@index([productId])
@@ -482,5 +491,19 @@ model CustomOrderItemElement {
   upload     Upload?         @relation(fields: [uploadId], references: [id], onDelete: Restrict)
 
   @@unique([itemId, sort])
+  @@index([uploadId])
+}
+
+/// Rendered mock-up of one print zone of an order item (so staff see what the customer saw).
+model CustomOrderItemPreview {
+  id        String          @id @default(cuid())
+  itemId    String
+  placement PrintPlacement
+  uploadId  String          @db.Uuid
+  createdAt DateTime        @default(now())
+  item      CustomOrderItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  upload    Upload          @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, placement])
   @@index([uploadId])
 }

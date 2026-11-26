@@ -211,8 +211,12 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
         currency: 'HTG',
         minQty: 12,
         unitLabel: 'pièce',
+        colorLabel: 'Couleur',
         colors: ['Blanc'],
+        colorsRequired: false,
+        sizeLabel: 'Taille',
         sizes: [],
+        sizesRequired: false,
         placements: ['FRONT', 'WRAP'],
         priceTiers: [
           { minQty: 12, unitPrice: '650.00' },
@@ -271,6 +275,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           color: 'Blanc',
           size: null,
           logoUrl: `/api/v1/uploads/logos/${logoId}`,
+          previews: [],
           elements: [legacyLogoElement('WRAP', logoId)],
         },
         {
@@ -283,6 +288,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           color: null,
           size: '3 × 1,2 m',
           logoUrl: `/api/v1/uploads/logos/${logoId}`,
+          previews: [],
           elements: [legacyLogoElement('FULL', logoId)],
         },
       ]);

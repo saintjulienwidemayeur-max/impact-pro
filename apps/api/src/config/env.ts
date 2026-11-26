@@ -22,6 +22,8 @@ export const envSchema = z.object({
   UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
   /** Max size of « ready-to-print » artwork files (banners, flags…). */
   UPLOAD_ARTWORK_MAX_BYTES: z.coerce.number().int().positive().default(25 * 1024 * 1024),
+  /** Max size of rendered mock-up previews (PNG/JPEG) uploaded by the storefront at checkout. */
+  UPLOAD_PREVIEW_MAX_BYTES: z.coerce.number().int().positive().default(3 * 1024 * 1024),
   /** S3-compatible storage (MinIO in dev). All of endpoint/bucket/keys must be set to enable it. */
   S3_ENDPOINT: z.string().url().optional(),
   S3_REGION: z.string().default('us-east-1'),
@@ -35,6 +37,8 @@ export const envSchema = z.object({
   /** Stricter limit for public order creation (requests per THROTTLE_TTL_MS per IP). */
   ORDER_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
   UPLOAD_THROTTLE_LIMIT: z.coerce.number().int().positive().default(20),
+  /** Preview uploads happen in bursts at checkout (one per print zone), so they get a more generous limit. */
+  PREVIEW_THROTTLE_LIMIT: z.coerce.number().int().positive().default(60),
 });
 
 export type Env = z.infer<typeof envSchema>;
