@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+/* Impact Pro design tokens — CLAUDE.md §0 */
+@theme {
+  --color-ip-teal: #0a716a;
+  --color-ip-teal-600: #085f59;
+  --color-ip-cyan: #42c6f0;
+  --color-ip-deep: #0a3d39;
+  --color-ip-sun: #ffc93c;
+  --color-ip-sun-600: #f2b51a;
+  --color-ip-ink: #0e2a2e;
+  --color-ip-mist: #f2f6f5;
+  --color-ip-line: #dbe5e3;
+  --color-ip-muted: #4b6366;
+
+  --font-heading: var(--font-fredoka), ui-rounded, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 1.25rem;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background: #ffffff;
+    color: var(--color-ip-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-heading);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-ip-cyan);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@utility container-ip {
+  width: 100%;
+  max-width: 80rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  @media (width >= 40rem) {
+    padding-inline: 1.5rem;
+  }
+}
+
+/* Signature offset cyan "shadow" behind teal cards */
+@utility shadow-offset {
+  box-shadow: 8px 8px 0 0 var(--color-ip-cyan);
+}
+
+/* Cyan + yellow bottom stripe */
+@utility brand-stripe {
+  background: linear-gradient(90deg, var(--color-ip-cyan) 0 78%, var(--color-ip-sun) 78% 100%);
+}
