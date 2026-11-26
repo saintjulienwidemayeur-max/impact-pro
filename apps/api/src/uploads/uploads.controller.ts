@@ -5,13 +5,13 @@ import { ApiBody, ApiConsumes, ApiCreatedResponse, ApiNotFoundResponse, ApiOkRes
 import type { Response } from 'express';
 import { memoryStorage } from 'multer';
 import { envSchema } from '../config/env';
-import { uploadThrottle } from '../common/throttle-limits';
+import { previewThrottle, uploadThrottle } from '../common/throttle-limits';
 import { UploadsService, type UploadView } from './uploads.service';
 
 const fileBody = { schema: { type: 'object' as const, required: ['file'], properties: { file: { type: 'string', format: 'binary' } } } };
 
 /** Per-route multer limits, resolved from the (boot-validated) environment. */
-function limits(key: 'UPLOAD_MAX_BYTES' | 'UPLOAD_ARTWORK_MAX_BYTES') {
+function limits(key: 'UPLOAD_MAX_BYTES' | 'UPLOAD_ARTWORK_MAX_BYTES' | 'UPLOAD_PREVIEW_MAX_BYTES') {
   return { storage: memoryStorage(), limits: { fileSize: envSchema.shape[key].parse(process.env[key]), files: 1, fields: 5, parts: 6 } };
 }
 
@@ -83,6 +83,35 @@ export class ArtworkUploadsController {
   @Get(':id')
   @ApiOperation({ summary: 'Download a previously uploaded artwork file' })
   @ApiOkResponse({ description: 'The raw file bytes' })
+  @ApiNotFoundResponse({ description: 'Unknown upload id' })
+  download(@Param('id') id: string, @Res() res: Response): Promise<void> {
+    return send(this.uploads, id, res);
+  }
+}
+
+@ApiTags('uploads')
+@Controller({ path: 'uploads/previews', version: '1' })
+export class PreviewUploadsController {
+  constructor(private readonly uploads: UploadsService) {}
+
+  @Post()
+  @HttpCode(201)
+  @Throttle(previewThrottle)
+  @UseInterceptors(FileInterceptor('file', limits('UPLOAD_PREVIEW_MAX_BYTES')))
+  @ApiOperation({
+    summary: 'Upload a rendered mock-up of one print zone (PNG or JPEG, ≤ UPLOAD_PREVIEW_MAX_BYTES, default 3 MB)',
+    description: 'Attach the returned id to an order item in `previews: [{ placement, uploadId }]`. Type is verified from file contents.',
+  })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(fileBody)
+  @ApiCreatedResponse({ description: '{ data: { id, url, mimeType, size, originalName, width?, height? } }' })
+  create(@UploadedFile() file: Express.Multer.File | undefined): Promise<UploadView> {
+    return this.uploads.createPreview(file);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Download a previously uploaded mock-up preview' })
+  @ApiOkResponse({ description: 'The raw image bytes' })
   @ApiNotFoundResponse({ description: 'Unknown upload id' })
   download(@Param('id') id: string, @Res() res: Response): Promise<void> {
     return send(this.uploads, id, res);

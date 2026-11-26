@@ -27,10 +27,19 @@ export function artworkUrl(id: string): string {
   return `/api/v1/uploads/artwork/${id}`;
 }
 
+export function previewUrl(id: string): string {
+  return `/api/v1/uploads/previews/${id}`;
+}
+
 /** Public (relative) URL of an upload, according to what it was uploaded as. */
 export function uploadUrl(id: string, purpose: UploadPurpose): string {
-  return purpose === UploadPurpose.ARTWORK ? artworkUrl(id) : logoUrl(id);
+  if (purpose === UploadPurpose.ARTWORK) return artworkUrl(id);
+  if (purpose === UploadPurpose.PREVIEW) return previewUrl(id);
+  return logoUrl(id);
 }
+
+/** Rendered mock-ups are raster images only. */
+const PREVIEW_TYPES: ReadonlySet<string> = new Set(['image/png', 'image/jpeg']);
 
 type IncomingFile = { buffer: Buffer; originalname?: string; size: number } | undefined;
 
@@ -49,6 +58,11 @@ export class UploadsService {
     return this.create(file, UploadPurpose.ARTWORK);
   }
 
+  /** A rendered mock-up (PNG or JPEG) of one print zone, uploaded by the storefront at checkout. */
+  createPreview(file: IncomingFile): Promise<UploadView> {
+    return this.create(file, UploadPurpose.PREVIEW);
+  }
+
   private async create(file: IncomingFile, purpose: UploadPurpose): Promise<UploadView> {
     if (!file || !file.buffer || file.size === 0) {
       throw new UnprocessableEntityException({
@@ -58,10 +72,11 @@ export class UploadsService {
       });
     }
     const mimeType = detectLogoType(file.buffer);
-    if (!mimeType) {
+    const onlyImages = purpose === UploadPurpose.PREVIEW;
+    if (!mimeType || (onlyImages && !PREVIEW_TYPES.has(mimeType))) {
       throw new UnprocessableEntityException({
         code: 'UNSUPPORTED_FILE_TYPE',
-        message: 'Only PNG, JPEG, WEBP or PDF files are accepted',
+        message: onlyImages ? 'Only PNG or JPEG previews are accepted' : 'Only PNG, JPEG, WEBP or PDF files are accepted',
       });
     }
 
@@ -78,7 +93,7 @@ export class UploadsService {
     }
 
     const id = randomUUID();
-    const storageKey = `${purpose === UploadPurpose.ARTWORK ? 'artwork' : 'logos'}/${id}`;
+    const storageKey = `${purpose === UploadPurpose.ARTWORK ? 'artwork' : purpose === UploadPurpose.PREVIEW ? 'previews' : 'logos'}/${id}`;
     await this.storage.put(storageKey, file.buffer, mimeType);
     const upload = await this.prisma.upload.create({
       data: {

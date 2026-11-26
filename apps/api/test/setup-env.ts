@@ -13,6 +13,7 @@ process.env.COOKIE_SECRET ??= 'test-only-cookie-secret-0123456789abcdef';
 process.env.THROTTLE_LIMIT ??= '1000';
 process.env.ORDER_THROTTLE_LIMIT ??= '1000';
 process.env.UPLOAD_THROTTLE_LIMIT ??= '1000';
+process.env.PREVIEW_THROTTLE_LIMIT ??= '1000';
 // Uploads go to a throw-away directory, never the dev upload folder.
 process.env.UPLOAD_DIR ??= join(tmpdir(), `impact-pro-test-uploads-${process.pid}`);
 delete process.env.S3_ENDPOINT;

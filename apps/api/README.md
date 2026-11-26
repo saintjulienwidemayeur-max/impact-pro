@@ -25,18 +25,20 @@ dedicated database (`TEST_DATABASE_URL`, default `impact_pro_test`); migrations 
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/api/v1/catalog/products` | `?page&pageSize(≤100)&category=<slug>&q=` → `{ data: Product[], meta }` |
-| GET | `/api/v1/catalog/products/:slug` | slug, name, description, category, basePrice, compareAtPrice, currency, minQty, unitLabel, colors, sizes, placements, priceTiers, images + **customizer v2**: `pricingMode` (`PER_PIECE` \| `PER_AREA` — tiers are HTG/m²), `supportsLogo/Text/Artwork`, `artworkRequired`, `customSize`, `zones[{ placement, label, maxElements }]` |
+| GET | `/api/v1/catalog/products/:slug` | slug, name, description, category, basePrice, compareAtPrice, currency, minQty, unitLabel, colors, sizes, placements, priceTiers, images + **options (round 2)**: `colorLabel`, `sizeLabel` (« Couleur du toit », « Modèle du téléphone », « Dimensions »…), `colorsRequired`, `sizesRequired` — a selector exists only when `colors` / `sizes` is non-empty (a ball has none) + **customizer v2**: `pricingMode` (`PER_PIECE` \| `PER_AREA` — tiers are HTG/m²), `supportsLogo/Text/Artwork`, `artworkRequired`, `customSize`, `zones[{ placement, label, maxElements }]` |
 | POST | `/api/v1/uploads/logos` | multipart field `file`; PNG/JPEG/WEBP/PDF ≤ 10 MB (`UPLOAD_MAX_BYTES`), type checked from file bytes (SVG refused); 201 `{ id, url, mimeType, size, originalName, width?, height? }` |
 | POST | `/api/v1/uploads/artwork` | same, for ready-to-print files (banners, flags, roll-ups…); ≤ 25 MB (`UPLOAD_ARTWORK_MAX_BYTES`); `url` = `/api/v1/uploads/artwork/:id` |
 | GET | `/api/v1/uploads/artwork/:id` | streams the file (same headers as logos) |
+| POST | `/api/v1/uploads/previews` | rendered mock-up of one print zone: PNG/JPEG only, ≤ 3 MB (`UPLOAD_PREVIEW_MAX_BYTES`), type checked from bytes; `url` = `/api/v1/uploads/previews/:id`; own rate limit `PREVIEW_THROTTLE_LIMIT` (default 60) |
+| GET | `/api/v1/uploads/previews/:id` | streams the image (same headers as logos) |
 | GET | `/api/v1/uploads/logos/:id` | streams the file (`nosniff`, `Cross-Origin-Resource-Policy: cross-origin`, PDF as attachment) |
-| POST | `/api/v1/custom-orders` | customer + 1–20 items + `deliveryMethod`. Item = `productSlug, quantity, color?, size?, notes?, widthCm?/heightCm? (products with customSize)` + `elements[]` (1–30 design elements: `placement, kind LOGO\|TEXT\|ARTWORK, uploadId?, text?, font?, fontWeight?, color?, align?, x, y, scale, rotation, sort?`; ≤ 10 per zone) — or the legacy shorthand `placement + logoUploadId`. Prices computed server-side (PER_PIECE: tier by quantity; PER_AREA: `max(w×h/10000, minBillableM2) × rate`, rate tier by quantity), client prices ignored, snapshotted; reference `IP-YYYY-NNNNNN` |
+| POST | `/api/v1/custom-orders` | customer + 1–20 items + `deliveryMethod`. Item = `productSlug, quantity, color?, size?, notes?, widthCm?/heightCm? (products with customSize)` + `elements[]` (1–30 design elements: `placement, kind LOGO\|TEXT\|ARTWORK, uploadId?, text?, font?, fontWeight?, color?, align?, x, y, scale, rotation, sort?`; ≤ 10 per zone) — or the legacy shorthand `placement + logoUploadId`. `color` / `size` must be one of the product's values (case/accent-insensitive, stored with the product's spelling) and are required when `colorsRequired` / `sizesRequired` (products with `customSize` list `sizes` only as presets). Optional `previews[]` (≤ 12): `{ placement, uploadId }` — ids from `POST /uploads/previews`, one per zone, returned as `items[].previews: [{ placement, url }]` (also on tracking). Prices computed server-side (PER_PIECE: tier by quantity; PER_AREA: `max(w×h/10000, minBillableM2) × rate`, rate tier by quantity), client prices ignored, snapshotted; reference `IP-YYYY-NNNNNN` |
 | GET | `/api/v1/custom-orders/:reference?email=` | returns the order only if the email matches; otherwise 404 |
 
 Errors: `422 VALIDATION_ERROR` (details `[{ field, messages }]`), `404 PRODUCT_NOT_FOUND`, `422 QUANTITY_BELOW_MINIMUM`,
-`422 UPLOAD_NOT_FOUND` (unknown or older than 7 days), `422 ELEMENT_NOT_SUPPORTED`, `422 ARTWORK_REQUIRED`, `422 SIZE_OUT_OF_RANGE`, `422 UNSUPPORTED_FILE_TYPE`, `413 PAYLOAD_TOO_LARGE`,
+`422 UPLOAD_NOT_FOUND` (unknown or older than 7 days), `422 ELEMENT_NOT_SUPPORTED`, `422 ARTWORK_REQUIRED`, `422 SIZE_OUT_OF_RANGE`, `422 COLOR_REQUIRED`, `422 SIZE_REQUIRED`, `422 INVALID_OPTION` (details `{ index, field, label, value?, allowed[] }`), `422 UNSUPPORTED_FILE_TYPE`, `413 PAYLOAD_TOO_LARGE`,
 `404 ORDER_NOT_FOUND`, `429 TOO_MANY_REQUESTS`.
-Rate limits per IP: `ORDER_THROTTLE_LIMIT` (default 10) and `UPLOAD_THROTTLE_LIMIT` (default 20) per `THROTTLE_TTL_MS`.
+Rate limits per IP: `ORDER_THROTTLE_LIMIT` (default 10) and `UPLOAD_THROTTLE_LIMIT` (default 20; previews: `PREVIEW_THROTTLE_LIMIT`, default 60) per `THROTTLE_TTL_MS`.
 
 ### Upload storage
 

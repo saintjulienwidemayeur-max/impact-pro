@@ -19,8 +19,14 @@ export interface CatalogProductView {
   currency: string;
   minQty: number;
   unitLabel: string;
+  /** Selector label (« Couleur », « Couleur du toit »…); the selector only exists when `colors` is non-empty. */
+  colorLabel: string;
   colors: string[];
+  colorsRequired: boolean;
+  /** Selector label (« Taille », « Modèle du téléphone », « Dimensions »…); only meaningful when `sizes` is non-empty. */
+  sizeLabel: string;
   sizes: string[];
+  sizesRequired: boolean;
   placements: PrintPlacement[];
   priceTiers: PriceTierView[];
   images: string[];
@@ -124,8 +130,12 @@ export class CatalogService {
       currency: variant.currency,
       minQty: p.minOrderQty,
       unitLabel: p.unitLabel,
+      colorLabel: p.colorLabel,
       colors: p.colors,
+      colorsRequired: p.colorsRequired,
+      sizeLabel: p.sizeLabel,
       sizes: p.sizes,
+      sizesRequired: p.sizesRequired,
       placements: p.placements,
       priceTiers: variant.priceTiers.map((t) => ({ minQty: t.minQty, unitPrice: money(t.unitPrice) })),
       images: p.images,

@@ -1,11 +1,11 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { CustomOrderStatus, ElementKind, PricingMode, Prisma, type PrintPlacement } from '@prisma/client';
+import { CustomOrderStatus, ElementKind, PricingMode, Prisma, UploadPurpose, type PrintPlacement } from '@prisma/client';
 import { CatalogService, unitPriceFor, type ProductWithPricing } from '../catalog/catalog.service';
 import { MAX_ELEMENTS_PER_ZONE, parseCustomSize } from '../catalog/placements';
 import { money } from '../common/money';
 import { PrismaService } from '../prisma/prisma.service';
-import { uploadUrl } from '../uploads/uploads.service';
-import type { CreateCustomOrderDto, CustomOrderItemDto, DesignElementDto } from './dto/create-custom-order.dto';
+import { previewUrl, uploadUrl } from '../uploads/uploads.service';
+import type { CreateCustomOrderDto, CustomOrderItemDto, DesignElementDto, ItemPreviewDto } from './dto/create-custom-order.dto';
 
 /** Uploads must have been made recently; older uploads are treated as unknown. */
 export const UPLOAD_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -45,6 +45,8 @@ export interface CustomOrderItemView {
   /** Billable area in m² (PER_AREA products). */
   areaM2?: number;
   elements: DesignElementView[];
+  /** Rendered mock-ups per zone, when the storefront uploaded them. */
+  previews: { placement: PrintPlacement; url: string }[];
 }
 
 export interface CustomOrderView {
@@ -64,6 +66,7 @@ const orderInclude = {
         orderBy: { sort: 'asc' as const },
         include: { upload: { select: { id: true, purpose: true, originalName: true } } },
       },
+      previews: { orderBy: [{ createdAt: 'asc' as const }, { id: 'asc' as const }], select: { placement: true, uploadId: true } },
     },
   },
 } satisfies Prisma.CustomOrderInclude;
@@ -114,6 +117,15 @@ function unprocessable(code: string, message: string, details?: unknown): Unproc
   return new UnprocessableEntityException({ code, message, details });
 }
 
+/** Accent-, case- and space-insensitive key used to match a submitted option against the product's list. */
+const optionKey = (v: string): string =>
+  v
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
 @Injectable()
 export class CustomOrdersService {
   constructor(
@@ -139,9 +151,12 @@ export class CustomOrdersService {
           });
         }
 
+        const options = this.resolveOptions(item, product, index);
         const elements = this.resolveElements(item, product, index);
         this.checkElements(elements, product, index);
         await this.checkUploads(tx, elements, uploadCutoff, index);
+        const previews = this.resolvePreviews(item.previews, product, index);
+        await this.checkPreviewUploads(tx, previews, uploadCutoff, index);
 
         const { unitPrice, lineTotal, widthCm, heightCm, areaM2 } = this.price(product, item, index);
         subtotal = subtotal.add(lineTotal);
@@ -157,8 +172,8 @@ export class CustomOrdersService {
           unitPrice,
           quantity: item.quantity,
           lineTotal,
-          color: item.color ?? null,
-          size: item.size ?? null,
+          color: options.color,
+          size: options.size,
           widthCm,
           heightCm,
           areaM2,
@@ -166,6 +181,9 @@ export class CustomOrdersService {
           upload: firstWithUpload?.uploadId ? { connect: { id: firstWithUpload.uploadId } } : undefined,
           notes: item.notes ?? null,
           lineNo: index + 1,
+          previews: previews.length
+            ? { create: previews.map((p) => ({ placement: p.placement, upload: { connect: { id: p.uploadId } } })) }
+            : undefined,
           elements: {
             create: elements.map((e, sort) => ({
               sort,
@@ -232,6 +250,83 @@ export class CustomOrdersService {
     return this.toView(order);
   }
 
+  /**
+   * Color / size options: a selector only exists when the product lists values. A submitted value must be one of them
+   * (matched ignoring case and accents, stored as the product's own spelling); required selectors must be filled.
+   * Products with a custom size (banners…) list `sizes` only as quick presets, so the size stays optional there.
+   */
+  private resolveOptions(item: CustomOrderItemDto, product: ProductWithPricing, index: number): { color: string | null; size: string | null } {
+    const pick = (field: 'color' | 'size', value: string | undefined, allowed: string[], required: boolean, label: string) => {
+      if (value === undefined) {
+        if (required && allowed.length > 0) {
+          throw unprocessable(field === 'color' ? 'COLOR_REQUIRED' : 'SIZE_REQUIRED', `Please choose: ${label}`, {
+            index,
+            productSlug: product.slug,
+            field,
+            label,
+            allowed,
+          });
+        }
+        return null;
+      }
+      const match = allowed.find((a) => optionKey(a) === optionKey(value));
+      if (!match) {
+        throw unprocessable('INVALID_OPTION', `"${value}" is not available for ${label.toLowerCase()} on this product`, {
+          index,
+          productSlug: product.slug,
+          field,
+          label,
+          value,
+          allowed,
+        });
+      }
+      return match;
+    };
+    return {
+      color: pick('color', item.color, product.colors, product.colorsRequired, product.colorLabel),
+      size: pick('size', item.size, product.sizes, product.sizesRequired && !parseCustomSize(product.customSize), product.sizeLabel),
+    };
+  }
+
+  /** Mock-up previews per zone: zones must exist on the product, at most one preview per zone. */
+  private resolvePreviews(previews: ItemPreviewDto[] | undefined, product: ProductWithPricing, index: number): ItemPreviewDto[] {
+    if (!previews?.length) return [];
+    const seen = new Set<PrintPlacement>();
+    for (const [i, p] of previews.entries()) {
+      if (!product.placements.includes(p.placement)) {
+        throw unprocessable('VALIDATION_ERROR', 'Validation failed', [
+          { field: `items.${index}.previews.${i}.placement`, messages: [`zone ${p.placement} is not available for this product`] },
+        ]);
+      }
+      if (seen.has(p.placement)) {
+        throw unprocessable('VALIDATION_ERROR', 'Validation failed', [
+          { field: `items.${index}.previews.${i}.placement`, messages: [`only one preview per zone (${p.placement})`] },
+        ]);
+      }
+      seen.add(p.placement);
+    }
+    return previews;
+  }
+
+  private async checkPreviewUploads(tx: Prisma.TransactionClient, previews: ItemPreviewDto[], cutoff: Date, index: number): Promise<void> {
+    if (previews.length === 0) return;
+    const ids = [...new Set(previews.map((p) => p.uploadId))];
+    const found = await tx.upload.findMany({
+      where: { id: { in: ids }, purpose: UploadPurpose.PREVIEW, createdAt: { gte: cutoff } },
+      select: { id: true },
+    });
+    const ok = new Set(found.map((u) => u.id));
+    for (const [previewIndex, p] of previews.entries()) {
+      if (!ok.has(p.uploadId)) {
+        throw unprocessable('UPLOAD_NOT_FOUND', 'The preview was not found or has expired; please upload it again', {
+          index,
+          previewIndex,
+          uploadId: p.uploadId,
+        });
+      }
+    }
+  }
+
   /** `elements` as sent, or the legacy `placement` + `logoUploadId` shorthand as one centered LOGO element. */
   private resolveElements(item: CustomOrderItemDto, product: ProductWithPricing, index: number): NormalizedElement[] {
     if (item.elements?.length) {
@@ -290,7 +385,10 @@ export class CustomOrdersService {
   private async checkUploads(tx: Prisma.TransactionClient, elements: NormalizedElement[], cutoff: Date, index: number): Promise<void> {
     const ids = [...new Set(elements.flatMap((e) => (e.uploadId ? [e.uploadId] : [])))];
     if (ids.length === 0) return;
-    const found = await tx.upload.findMany({ where: { id: { in: ids }, createdAt: { gte: cutoff } }, select: { id: true } });
+    const found = await tx.upload.findMany({
+      where: { id: { in: ids }, purpose: { in: [UploadPurpose.LOGO, UploadPurpose.ARTWORK] }, createdAt: { gte: cutoff } },
+      select: { id: true },
+    });
     const ok = new Set(found.map((u) => u.id));
     for (const [elementIndex, e] of elements.entries()) {
       if (e.uploadId && !ok.has(e.uploadId)) {
@@ -384,6 +482,7 @@ export class CustomOrdersService {
           ...(i.heightCm !== null && { heightCm: i.heightCm.toNumber() }),
           ...(i.areaM2 !== null && { areaM2: i.areaM2.toNumber() }),
           elements,
+          previews: i.previews.map((p) => ({ placement: p.placement, url: previewUrl(p.uploadId) })),
         };
       }),
     };
