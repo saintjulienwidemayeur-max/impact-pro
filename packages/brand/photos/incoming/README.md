@@ -17,3 +17,16 @@ watermark (Freepik free licence requires attribution; remove the watermark only 
 | 10 | White cap, side view | casquette SIDE zone |
 | 13, 14, 15 | T-shirt red / blue / black, front + back | t-shirt-personnalise (+ colors) |
 | 16 | Tri-fold brochure mockups (printed sample) | flyers-brochures reference only |
+
+## Batch 2
+
+| File | Product | Use |
+|---|---|---|
+| 17 | Tri-fold brochure, blank, 3/4 view | flyers-brochures (needs perspective quad) |
+| 19 | Roll-up, blank, front view (grey gradient bg) | roll-up (flat print area) |
+| 20 | Roll-up, blank, 3/4 view | roll-up gallery / perspective quad |
+| 18 | Roll-up with a printed third-party design (Avila Naturalle) | reference only — do not publish (third-party brand) |
+| 21 | **Football** (soccer ball); background is a baked-in checkerboard, needs cut-out | new product: ballon-football (« balon » = ball) |
+| 24 | Folding tent 3x3 with side wall, blank, white bg (3D render) | tente-pliante-3x3 (roof / valance / side wall quads) |
+| 23 | Tent stand set (tent, flags, roll-ups, table), blank, vector | gallery / « stand complet » |
+| 22 | Tent with a printed third-party design (TentCraft) | reference only — do not publish |
