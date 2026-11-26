@@ -22,4 +22,11 @@ describe('loadEnv', () => {
     expect(env.S3_ENDPOINT).toBeUndefined();
     expect(env.CORS_ORIGINS).toEqual([]);
   });
+
+  it('defaults upload limits to 10 MB for logos and 25 MB for artwork', () => {
+    const env = loadEnv(base);
+    expect(env.UPLOAD_MAX_BYTES).toBe(10 * 1024 * 1024);
+    expect(env.UPLOAD_ARTWORK_MAX_BYTES).toBe(25 * 1024 * 1024);
+    expect(loadEnv({ ...base, UPLOAD_ARTWORK_MAX_BYTES: '1000' }).UPLOAD_ARTWORK_MAX_BYTES).toBe(1000);
+  });
 });

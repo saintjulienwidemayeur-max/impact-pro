@@ -3,7 +3,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { ENV } from '../config/config.module';
 import type { Env } from '../config/env';
-import { UploadsController } from './uploads.controller';
+import { ArtworkUploadsController, UploadsController } from './uploads.controller';
 import { UploadsService } from './uploads.service';
 
 @Module({
@@ -16,7 +16,7 @@ import { UploadsService } from './uploads.service';
       }),
     }),
   ],
-  controllers: [UploadsController],
+  controllers: [UploadsController, ArtworkUploadsController],
   providers: [UploadsService],
   exports: [UploadsService],
 })

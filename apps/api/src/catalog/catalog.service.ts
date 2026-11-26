@@ -1,7 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma, ProductStatus, type PrintPlacement } from '@prisma/client';
+import { Prisma, ProductStatus, type PricingMode, type PrintPlacement } from '@prisma/client';
 import { money } from '../common/money';
 import { PrismaService } from '../prisma/prisma.service';
+import { MAX_ELEMENTS_PER_ZONE, PLACEMENT_LABELS, parseCustomSize, type CustomSizeConfig } from './placements';
 
 export interface PriceTierView {
   minQty: number;
@@ -23,6 +24,14 @@ export interface CatalogProductView {
   placements: PrintPlacement[];
   priceTiers: PriceTierView[];
   images: string[];
+  /** PER_AREA: priceTiers.unitPrice is HTG per m². */
+  pricingMode: PricingMode;
+  supportsLogo: boolean;
+  supportsText: boolean;
+  supportsArtwork: boolean;
+  artworkRequired: boolean;
+  customSize: CustomSizeConfig | null;
+  zones: { placement: PrintPlacement; label: string; maxElements: number }[];
 }
 
 const productInclude = {
@@ -120,6 +129,13 @@ export class CatalogService {
       placements: p.placements,
       priceTiers: variant.priceTiers.map((t) => ({ minQty: t.minQty, unitPrice: money(t.unitPrice) })),
       images: p.images,
+      pricingMode: p.pricingMode,
+      supportsLogo: p.supportsLogo,
+      supportsText: p.supportsText,
+      supportsArtwork: p.supportsArtwork,
+      artworkRequired: p.artworkRequired,
+      customSize: parseCustomSize(p.customSize),
+      zones: p.placements.map((placement) => ({ placement, label: PLACEMENT_LABELS[placement], maxElements: MAX_ELEMENTS_PER_ZONE })),
     };
   }
 }

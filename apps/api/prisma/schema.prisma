@@ -156,6 +156,13 @@ model Product {
   sizes            String[]           @default([])
   placements       PrintPlacement[]   @default([])
   images           String[]           @default([]) // storefront-relative paths, e.g. /photos/tasse-11oz.jpg
+  pricingMode      PricingMode        @default(PER_PIECE)
+  supportsLogo     Boolean            @default(true)
+  supportsText     Boolean            @default(true)
+  supportsArtwork  Boolean            @default(false)
+  artworkRequired  Boolean            @default(false)
+  /// { minWidthCm, maxWidthCm, minHeightCm, maxHeightCm, defaultWidthCm, defaultHeightCm, minBillableM2 } or null
+  customSize       Json?
   customOrderItems CustomOrderItem[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
@@ -173,6 +180,24 @@ enum PrintPlacement {
   SLEEVE
   WRAP
   FULL
+  SIDE
+  TOP
+}
+
+enum PricingMode {
+  PER_PIECE
+  PER_AREA // price tiers hold HTG per m²
+}
+
+enum UploadPurpose {
+  LOGO
+  ARTWORK
+}
+
+enum ElementKind {
+  LOGO
+  TEXT
+  ARTWORK
 }
 
 model ProductAttribute {
@@ -347,17 +372,19 @@ model InventoryReservation {
 
 /// A customer-supplied file (logo artwork). Bytes live in object storage (S3/MinIO) or local disk.
 model Upload {
-  id            String            @id @default(uuid()) @db.Uuid
-  storageKey    String            @unique // random, never derived from the client filename
+  id            String                   @id @default(uuid()) @db.Uuid
+  storageKey    String                   @unique // random, never derived from the client filename
   storageDriver String // "s3" | "local"
   originalName  String // sanitized, display only
   mimeType      String
   size          Int
-  sha256        String            @db.Char(64)
+  sha256        String                   @db.Char(64)
   width         Int?
   height        Int?
-  createdAt     DateTime          @default(now())
+  purpose       UploadPurpose            @default(LOGO)
+  createdAt     DateTime                 @default(now())
   orderItems    CustomOrderItem[]
+  elements      CustomOrderItemElement[]
 
   @@index([createdAt])
 }
@@ -404,27 +431,56 @@ model CustomOrder {
 }
 
 model CustomOrderItem {
-  id          String         @id @default(cuid())
+  id          String                   @id @default(cuid())
   orderId     String
   lineNo      Int // 1-based position in the order, as submitted
   productId   String
   variantId   String?
   productSlug String // snapshot
   productName String // snapshot
-  unitPrice   Decimal        @db.Decimal(14, 2) // snapshot at order time
+  unitPrice   Decimal                  @db.Decimal(14, 2) // snapshot at order time
   quantity    Int
-  lineTotal   Decimal        @db.Decimal(14, 2)
+  lineTotal   Decimal                  @db.Decimal(14, 2)
   color       String?
   size        String?
-  placement   PrintPlacement
-  uploadId    String         @db.Uuid
+  widthCm     Decimal?                 @db.Decimal(8, 1)
+  heightCm    Decimal?                 @db.Decimal(8, 1)
+  areaM2      Decimal?                 @db.Decimal(10, 4)
+  /// Legacy single-logo columns, kept (nullable) and filled from the first element for old consumers.
+  placement   PrintPlacement?
+  uploadId    String?                  @db.Uuid
   notes       String?
-  createdAt   DateTime       @default(now())
-  order       CustomOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product     Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
-  upload      Upload         @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+  createdAt   DateTime                 @default(now())
+  order       CustomOrder              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product                  @relation(fields: [productId], references: [id], onDelete: Restrict)
+  upload      Upload?                  @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+  elements    CustomOrderItemElement[]
 
   @@unique([orderId, lineNo])
   @@index([productId])
+  @@index([uploadId])
+}
+
+model CustomOrderItemElement {
+  id         String          @id @default(cuid())
+  itemId     String
+  sort       Int
+  placement  PrintPlacement
+  kind       ElementKind
+  uploadId   String?         @db.Uuid
+  text       String?
+  font       String?
+  fontWeight String?
+  color      String?
+  align      String?
+  x          Float
+  y          Float
+  scale      Float
+  rotation   Float
+  createdAt  DateTime        @default(now())
+  item       CustomOrderItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  upload     Upload?         @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+
+  @@unique([itemId, sort])
   @@index([uploadId])
 }

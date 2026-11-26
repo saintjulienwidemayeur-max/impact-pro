@@ -27,7 +27,10 @@ export class CustomOrdersController {
     description: 'Prices are computed server-side from catalog price tiers; any client-sent price is ignored.',
   })
   @ApiCreatedResponse({ description: '{ data: { reference, status, currency, subtotal, items[], createdAt } }' })
-  @ApiUnprocessableEntityResponse({ description: 'VALIDATION_ERROR · QUANTITY_BELOW_MINIMUM · UPLOAD_NOT_FOUND' })
+  @ApiUnprocessableEntityResponse({
+    description:
+      'VALIDATION_ERROR · QUANTITY_BELOW_MINIMUM · UPLOAD_NOT_FOUND · ELEMENT_NOT_SUPPORTED · ARTWORK_REQUIRED · SIZE_OUT_OF_RANGE',
+  })
   @ApiNotFoundResponse({ description: 'PRODUCT_NOT_FOUND' })
   @ApiTooManyRequestsResponse({ description: 'Rate limited' })
   create(@Body() dto: CreateCustomOrderDto, @Req() req: Request & { id?: string }): Promise<CustomOrderView> {

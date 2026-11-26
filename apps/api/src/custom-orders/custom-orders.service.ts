@@ -1,24 +1,50 @@
 import { Injectable, NotFoundException, UnprocessableEntityException } from '@nestjs/common';
-import { CustomOrderStatus, Prisma, type PrintPlacement } from '@prisma/client';
-import { CatalogService, unitPriceFor } from '../catalog/catalog.service';
+import { CustomOrderStatus, ElementKind, PricingMode, Prisma, type PrintPlacement } from '@prisma/client';
+import { CatalogService, unitPriceFor, type ProductWithPricing } from '../catalog/catalog.service';
+import { MAX_ELEMENTS_PER_ZONE, parseCustomSize } from '../catalog/placements';
 import { money } from '../common/money';
 import { PrismaService } from '../prisma/prisma.service';
-import { logoUrl } from '../uploads/uploads.service';
-import type { CreateCustomOrderDto } from './dto/create-custom-order.dto';
+import { uploadUrl } from '../uploads/uploads.service';
+import type { CreateCustomOrderDto, CustomOrderItemDto, DesignElementDto } from './dto/create-custom-order.dto';
 
-/** Logos must have been uploaded recently; older uploads are treated as unknown. */
+/** Uploads must have been made recently; older uploads are treated as unknown. */
 export const UPLOAD_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+export interface DesignElementView {
+  placement: PrintPlacement;
+  kind: ElementKind;
+  text?: string;
+  font?: string;
+  fontWeight?: string;
+  color?: string;
+  align?: string;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  sort: number;
+  /** Relative URL of the upload (LOGO / ARTWORK elements). */
+  logoUrl?: string;
+  originalName?: string;
+}
 
 export interface CustomOrderItemView {
   productSlug: string;
   productName: string;
   quantity: number;
+  /** PER_PIECE: price of one piece. PER_AREA: price of one piece of the ordered size. */
   unitPrice: string;
   lineTotal: string;
-  placement: PrintPlacement;
+  /** First element's placement / logo (kept for older consumers); null when the item has no element. */
+  placement: PrintPlacement | null;
   color: string | null;
   size: string | null;
-  logoUrl: string;
+  logoUrl: string | null;
+  widthCm?: number;
+  heightCm?: number;
+  /** Billable area in m² (PER_AREA products). */
+  areaM2?: number;
+  elements: DesignElementView[];
 }
 
 export interface CustomOrderView {
@@ -30,11 +56,62 @@ export interface CustomOrderView {
   createdAt: string;
 }
 
-const orderInclude = { items: { orderBy: { lineNo: 'asc' as const } } } satisfies Prisma.CustomOrderInclude;
+const orderInclude = {
+  items: {
+    orderBy: { lineNo: 'asc' as const },
+    include: {
+      elements: {
+        orderBy: { sort: 'asc' as const },
+        include: { upload: { select: { id: true, purpose: true, originalName: true } } },
+      },
+    },
+  },
+} satisfies Prisma.CustomOrderInclude;
 type OrderWithItems = Prisma.CustomOrderGetPayload<{ include: typeof orderInclude }>;
 
 export function formatReference(seq: bigint | number, year: number): string {
   return `IP-${year}-${String(seq).padStart(6, '0')}`;
+}
+
+/** A design element with every default applied. */
+interface NormalizedElement {
+  /** Client-provided layer order (or the array index); only used to order elements, then replaced by the final position. */
+  sortKey: number;
+  placement: PrintPlacement;
+  kind: ElementKind;
+  uploadId: string | null;
+  text: string | null;
+  font: string | null;
+  fontWeight: string | null;
+  color: string | null;
+  align: string | null;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+}
+
+function normalizeElement(e: DesignElementDto, index: number): NormalizedElement {
+  const isText = e.kind === ElementKind.TEXT;
+  return {
+    sortKey: e.sort ?? index,
+    placement: e.placement,
+    kind: e.kind,
+    uploadId: isText ? null : (e.uploadId ?? null),
+    text: isText ? (e.text ?? null) : null,
+    font: isText ? (e.font ?? 'inter') : null,
+    fontWeight: isText ? (e.fontWeight ?? 'regular') : null,
+    color: isText ? (e.color?.toUpperCase() ?? '#000000') : null,
+    align: isText ? (e.align ?? 'center') : null,
+    x: e.x ?? 0,
+    y: e.y ?? 0,
+    scale: e.scale ?? 1,
+    rotation: e.rotation ?? 0,
+  };
+}
+
+function unprocessable(code: string, message: string, details?: unknown): UnprocessableEntityException {
+  return new UnprocessableEntityException({ code, message, details });
 }
 
 @Injectable()
@@ -49,32 +126,29 @@ export class CustomOrdersService {
       const uploadCutoff = new Date(Date.now() - UPLOAD_MAX_AGE_MS);
       const lines: Prisma.CustomOrderItemCreateWithoutOrderInput[] = [];
       let subtotal = new Prisma.Decimal(0);
+      let elementCount = 0;
 
       for (const [index, item] of dto.items.entries()) {
         const product = await this.catalog.findActiveForPricing(item.productSlug, tx);
         if (item.quantity < product.minOrderQty) {
-          throw new UnprocessableEntityException({
-            code: 'QUANTITY_BELOW_MINIMUM',
-            message: `Minimum quantity for "${product.name}" is ${product.minOrderQty}`,
-            details: { index, productSlug: product.slug, minQty: product.minOrderQty, quantity: item.quantity },
-          });
-        }
-        const upload = await tx.upload.findFirst({
-          where: { id: item.logoUploadId, createdAt: { gte: uploadCutoff } },
-          select: { id: true },
-        });
-        if (!upload) {
-          throw new UnprocessableEntityException({
-            code: 'UPLOAD_NOT_FOUND',
-            message: 'The logo file was not found or has expired; please upload it again',
-            details: { index, logoUploadId: item.logoUploadId },
+          throw unprocessable('QUANTITY_BELOW_MINIMUM', `Minimum quantity for "${product.name}" is ${product.minOrderQty}`, {
+            index,
+            productSlug: product.slug,
+            minQty: product.minOrderQty,
+            quantity: item.quantity,
           });
         }
 
-        const variant = product.variants[0];
-        const unitPrice = unitPriceFor(variant.basePrice, variant.priceTiers, item.quantity);
-        const lineTotal = unitPrice.mul(item.quantity);
+        const elements = this.resolveElements(item, product, index);
+        this.checkElements(elements, product, index);
+        await this.checkUploads(tx, elements, uploadCutoff, index);
+
+        const { unitPrice, lineTotal, widthCm, heightCm, areaM2 } = this.price(product, item, index);
         subtotal = subtotal.add(lineTotal);
+        elementCount += elements.length;
+
+        const variant = product.variants[0];
+        const firstWithUpload = elements.find((e) => e.uploadId);
         lines.push({
           product: { connect: { id: product.id } },
           variantId: variant.id,
@@ -85,10 +159,30 @@ export class CustomOrdersService {
           lineTotal,
           color: item.color ?? null,
           size: item.size ?? null,
-          placement: item.placement,
-          upload: { connect: { id: upload.id } },
+          widthCm,
+          heightCm,
+          areaM2,
+          placement: elements[0].placement,
+          upload: firstWithUpload?.uploadId ? { connect: { id: firstWithUpload.uploadId } } : undefined,
           notes: item.notes ?? null,
           lineNo: index + 1,
+          elements: {
+            create: elements.map((e, sort) => ({
+              sort,
+              placement: e.placement,
+              kind: e.kind,
+              upload: e.uploadId ? { connect: { id: e.uploadId } } : undefined,
+              text: e.text,
+              font: e.font,
+              fontWeight: e.fontWeight,
+              color: e.color,
+              align: e.align,
+              x: e.x,
+              y: e.y,
+              scale: e.scale,
+              rotation: e.rotation,
+            })),
+          },
         });
       }
 
@@ -119,7 +213,7 @@ export class CustomOrdersService {
           action: 'custom_order.create',
           entityType: 'CustomOrder',
           entityId: created.id,
-          metadata: { reference, itemCount: lines.length, subtotal: money(subtotal), currency: 'HTG' },
+          metadata: { reference, itemCount: lines.length, elementCount, subtotal: money(subtotal), currency: 'HTG' },
           ipAddress: ctx.ipAddress ?? null,
           requestId: ctx.requestId ?? null,
         },
@@ -138,6 +232,120 @@ export class CustomOrdersService {
     return this.toView(order);
   }
 
+  /** `elements` as sent, or the legacy `placement` + `logoUploadId` shorthand as one centered LOGO element. */
+  private resolveElements(item: CustomOrderItemDto, product: ProductWithPricing, index: number): NormalizedElement[] {
+    if (item.elements?.length) {
+      // Stable order by the layer index the client gave (array order when absent); final `sort` = position.
+      return item.elements
+        .map((e, i) => normalizeElement(e, i))
+        .sort((a, b) => a.sortKey - b.sortKey);
+    }
+    if (item.placement && item.logoUploadId) {
+      return [
+        normalizeElement({ placement: item.placement, kind: ElementKind.LOGO, uploadId: item.logoUploadId } as DesignElementDto, 0),
+      ];
+    }
+    if (product.artworkRequired) {
+      throw unprocessable('ARTWORK_REQUIRED', `"${product.name}" needs your ready-to-print file`, { index, productSlug: product.slug });
+    }
+    throw unprocessable('VALIDATION_ERROR', 'Validation failed', [
+      { field: `items.${index}.elements`, messages: ['at least one design element is required'] },
+    ]);
+  }
+
+  private checkElements(elements: NormalizedElement[], product: ProductWithPricing, index: number): void {
+    const perZone = new Map<PrintPlacement, number>();
+    for (const [elementIndex, e] of elements.entries()) {
+      const reason = !product.placements.includes(e.placement)
+        ? `zone ${e.placement} is not available for this product`
+        : e.kind === ElementKind.LOGO && !product.supportsLogo
+          ? 'logos are not supported for this product'
+          : e.kind === ElementKind.TEXT && !product.supportsText
+            ? 'text is not supported for this product'
+            : e.kind === ElementKind.ARTWORK && !product.supportsArtwork
+              ? 'ready-to-print files are not supported for this product'
+              : null;
+      if (reason) {
+        throw unprocessable('ELEMENT_NOT_SUPPORTED', reason, {
+          index,
+          elementIndex,
+          productSlug: product.slug,
+          placement: e.placement,
+          kind: e.kind,
+        });
+      }
+      const n = (perZone.get(e.placement) ?? 0) + 1;
+      perZone.set(e.placement, n);
+      if (n > MAX_ELEMENTS_PER_ZONE) {
+        throw unprocessable('VALIDATION_ERROR', 'Validation failed', [
+          { field: `items.${index}.elements`, messages: [`at most ${MAX_ELEMENTS_PER_ZONE} elements per zone (${e.placement})`] },
+        ]);
+      }
+    }
+    if (product.artworkRequired && !elements.some((e) => e.kind === ElementKind.ARTWORK)) {
+      throw unprocessable('ARTWORK_REQUIRED', `"${product.name}" needs your ready-to-print file`, { index, productSlug: product.slug });
+    }
+  }
+
+  private async checkUploads(tx: Prisma.TransactionClient, elements: NormalizedElement[], cutoff: Date, index: number): Promise<void> {
+    const ids = [...new Set(elements.flatMap((e) => (e.uploadId ? [e.uploadId] : [])))];
+    if (ids.length === 0) return;
+    const found = await tx.upload.findMany({ where: { id: { in: ids }, createdAt: { gte: cutoff } }, select: { id: true } });
+    const ok = new Set(found.map((u) => u.id));
+    for (const [elementIndex, e] of elements.entries()) {
+      if (e.uploadId && !ok.has(e.uploadId)) {
+        throw unprocessable('UPLOAD_NOT_FOUND', 'The file was not found or has expired; please upload it again', {
+          index,
+          elementIndex,
+          uploadId: e.uploadId,
+        });
+      }
+    }
+  }
+
+  private price(product: ProductWithPricing, item: CustomOrderItemDto, index: number) {
+    const variant = product.variants[0];
+    const rate = unitPriceFor(variant.basePrice, variant.priceTiers, item.quantity);
+    const size = parseCustomSize(product.customSize);
+
+    let widthCm: Prisma.Decimal | null = null;
+    let heightCm: Prisma.Decimal | null = null;
+    let areaM2: Prisma.Decimal | null = null;
+    if (size) {
+      const w = item.widthCm;
+      const h = item.heightCm;
+      if (w === undefined || h === undefined) {
+        throw unprocessable('VALIDATION_ERROR', 'Validation failed', [
+          ...(w === undefined ? [{ field: `items.${index}.widthCm`, messages: ['widthCm is required for this product'] }] : []),
+          ...(h === undefined ? [{ field: `items.${index}.heightCm`, messages: ['heightCm is required for this product'] }] : []),
+        ]);
+      }
+      if (w < size.minWidthCm || w > size.maxWidthCm || h < size.minHeightCm || h > size.maxHeightCm) {
+        throw unprocessable('SIZE_OUT_OF_RANGE', 'The requested size is outside the allowed range', {
+          index,
+          productSlug: product.slug,
+          widthCm: w,
+          heightCm: h,
+          minWidthCm: size.minWidthCm,
+          maxWidthCm: size.maxWidthCm,
+          minHeightCm: size.minHeightCm,
+          maxHeightCm: size.maxHeightCm,
+        });
+      }
+      widthCm = new Prisma.Decimal(w).toDecimalPlaces(1);
+      heightCm = new Prisma.Decimal(h).toDecimalPlaces(1);
+      const raw = widthCm.mul(heightCm).div(10000);
+      areaM2 = Prisma.Decimal.max(raw, new Prisma.Decimal(size.minBillableM2)).toDecimalPlaces(4);
+    }
+
+    if (product.pricingMode === PricingMode.PER_AREA) {
+      const billable = areaM2 ?? new Prisma.Decimal(1);
+      const unitPrice = billable.mul(rate).toDecimalPlaces(2);
+      return { unitPrice, lineTotal: unitPrice.mul(item.quantity), widthCm, heightCm, areaM2 };
+    }
+    return { unitPrice: rate, lineTotal: rate.mul(item.quantity), widthCm, heightCm, areaM2 };
+  }
+
   private toView(o: OrderWithItems): CustomOrderView {
     return {
       reference: o.reference,
@@ -145,17 +353,39 @@ export class CustomOrdersService {
       currency: o.currency,
       subtotal: money(o.subtotal),
       createdAt: o.createdAt.toISOString(),
-      items: o.items.map((i) => ({
-        productSlug: i.productSlug,
-        productName: i.productName,
-        quantity: i.quantity,
-        unitPrice: money(i.unitPrice),
-        lineTotal: money(i.lineTotal),
-        placement: i.placement,
-        color: i.color,
-        size: i.size,
-        logoUrl: logoUrl(i.uploadId),
-      })),
+      items: o.items.map((i) => {
+        const elements: DesignElementView[] = i.elements.map((e) => ({
+          placement: e.placement,
+          kind: e.kind,
+          ...(e.text !== null && { text: e.text }),
+          ...(e.font !== null && { font: e.font }),
+          ...(e.fontWeight !== null && { fontWeight: e.fontWeight }),
+          ...(e.color !== null && { color: e.color }),
+          ...(e.align !== null && { align: e.align }),
+          x: e.x,
+          y: e.y,
+          scale: e.scale,
+          rotation: e.rotation,
+          sort: e.sort,
+          ...(e.upload && { logoUrl: uploadUrl(e.upload.id, e.upload.purpose), originalName: e.upload.originalName }),
+        }));
+        const firstUpload = elements.find((e) => e.logoUrl);
+        return {
+          productSlug: i.productSlug,
+          productName: i.productName,
+          quantity: i.quantity,
+          unitPrice: money(i.unitPrice),
+          lineTotal: money(i.lineTotal),
+          placement: elements[0]?.placement ?? i.placement,
+          color: i.color,
+          size: i.size,
+          logoUrl: firstUpload?.logoUrl ?? null,
+          ...(i.widthCm !== null && { widthCm: i.widthCm.toNumber() }),
+          ...(i.heightCm !== null && { heightCm: i.heightCm.toNumber() }),
+          ...(i.areaM2 !== null && { areaM2: i.areaM2.toNumber() }),
+          elements,
+        };
+      }),
     };
   }
 }

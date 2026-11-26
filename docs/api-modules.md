@@ -82,6 +82,8 @@ AppModule
 |---|---|---|---|
 | GET | /catalog/products | public | visibility |
 | GET | /catalog/products/:slug | public | visibility |
+| POST | /uploads/logos · /uploads/artwork (≤ 10 MB / ≤ 25 MB) · GET /uploads/{logos,artwork}/:id | public (rate-limited) | – |
+| POST | /custom-orders (design elements: LOGO/TEXT/ARTWORK per zone; PER_PIECE / PER_AREA pricing) · GET /custom-orders/:ref?email= | public (rate-limited) | – |
 | GET | /catalog/search?q=&filters= | public | visibility |
 | GET | /catalog/compare?ids= | public | – |
 | GET | /catalog/categories (tree) · /catalog/categories/:slug | public | – |
