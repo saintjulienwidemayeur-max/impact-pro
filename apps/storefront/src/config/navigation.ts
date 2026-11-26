@@ -17,3 +17,22 @@ export const navCategories = [
 ] as const;
 
 export type NavCategorySlug = (typeof navCategories)[number]["slug"];
+
+/**
+ * Customizable product families added with the studio. They link straight to the customizer of a catalog product
+ * (slug = API product slug), so the destination always exists once the catalog is seeded.
+ */
+export const navFamilies = [
+  { slug: "ballon-personnalise", name: "Ballons", tagline: "Latex imprimé, 1 ou 2 faces" },
+  { slug: "tente-pliante-3x3", name: "Tentes pliantes", tagline: "Toit et côtés imprimés" },
+  { slug: "roll-up", name: "Roll-up", tagline: "Votre fichier, 85 × 200 cm" },
+  { slug: "sac-tote", name: "Sacs tote", tagline: "Devant et dos" },
+  { slug: "sac-a-cordon", name: "Sacs à cordon", tagline: "Logo + texte" },
+  { slug: "parapluie", name: "Parapluies", tagline: "Toile imprimée" },
+  { slug: "gourde-isotherme", name: "Gourdes", tagline: "Logo et texte" },
+  { slug: "gobelet-isotherme", name: "Gobelets", tagline: "Isothermes" },
+  { slug: "cle-usb", name: "Clés USB", tagline: "Votre logo gravé" },
+  { slug: "porte-cles", name: "Porte-clés", tagline: "Devant et dos" },
+  { slug: "flyers-brochures", name: "Flyers & brochures", tagline: "Importez votre fichier" },
+  { slug: "autocollants", name: "Autocollants", tagline: "Stickers sur mesure" },
+] as const;

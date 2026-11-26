@@ -59,8 +59,10 @@ export default async function CustomizePage() {
                       className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-card)] border border-ip-line bg-white transition-shadow hover:shadow-lg"
                     >
                       <span className="relative block aspect-[4/3] overflow-hidden bg-white">
-                        {photo && (
+                        {photo ? (
                           <Image src={photo.src} alt="" fill sizes="(min-width: 1024px) 25vw, 50vw" className="object-cover transition-transform duration-300 group-hover:scale-105" />
+                        ) : (
+                          <span className="flex h-full items-center justify-center bg-ip-mist text-xs font-semibold text-ip-muted">Photo à venir</span>
                         )}
                       </span>
                       <span className="flex flex-1 flex-col p-3 sm:p-4">
@@ -69,7 +71,7 @@ export default async function CustomizePage() {
                           dès {formatHTG(lowestPrice(p.basePrice, p.priceTiers))} / {p.unitLabel}
                         </span>
                         <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-bold uppercase tracking-wide text-ip-teal">
-                          Ajouter mon logo <ArrowRight className="size-3.5" aria-hidden="true" />
+                          Personnaliser <ArrowRight className="size-3.5" aria-hidden="true" />
                         </span>
                       </span>
                     </Link>

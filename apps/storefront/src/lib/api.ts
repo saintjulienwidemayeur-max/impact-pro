@@ -3,7 +3,9 @@
  * Server components use `API_URL` (internal), browsers use `NEXT_PUBLIC_API_URL`.
  */
 
-export const PLACEMENTS = ["FRONT", "BACK", "CHEST_LEFT", "SLEEVE", "WRAP", "FULL"] as const;
+import type { FontId, OrderElementPayload } from "./design";
+
+export const PLACEMENTS = ["FRONT", "BACK", "CHEST_LEFT", "SLEEVE", "WRAP", "FULL", "SIDE", "TOP"] as const;
 export type Placement = (typeof PLACEMENTS)[number];
 
 export const placementLabels: Record<Placement, string> = {
@@ -13,6 +15,8 @@ export const placementLabels: Record<Placement, string> = {
   SLEEVE: "Manche",
   WRAP: "Tour complet",
   FULL: "Pleine surface",
+  SIDE: "Côté",
+  TOP: "Dessus / toit",
 };
 
 export interface PriceTier {
@@ -41,6 +45,22 @@ export interface Product {
   priceTiers: PriceTier[];
   /** Image URLs (strings) — objects tolerated for forward compatibility. */
   images: (string | ProductImage)[];
+  /* Customizer v2 capabilities (optional: tolerated when the API predates them). */
+  pricingMode?: "PER_PIECE" | "PER_AREA";
+  supportsLogo?: boolean;
+  supportsText?: boolean;
+  supportsArtwork?: boolean;
+  artworkRequired?: boolean;
+  customSize?: {
+    minWidthCm: number;
+    maxWidthCm: number;
+    minHeightCm: number;
+    maxHeightCm: number;
+    defaultWidthCm: number;
+    defaultHeightCm: number;
+    minBillableM2: number;
+  } | null;
+  zones?: { placement: Placement; label: string; maxElements: number }[];
 }
 
 export interface UploadedLogo {
@@ -49,6 +69,8 @@ export interface UploadedLogo {
   mimeType: string;
   size: number;
   originalName: string;
+  width?: number;
+  height?: number;
 }
 
 export type DeliveryMethod = "PICKUP" | "DELIVERY";
@@ -60,12 +82,30 @@ export interface CustomOrderInput {
     quantity: number;
     color?: string;
     size?: string;
-    placement: Placement;
-    logoUploadId: string;
+    widthCm?: number;
+    heightCm?: number;
     notes?: string;
+    elements: OrderElementPayload[];
   }[];
   deliveryMethod: DeliveryMethod;
   notes?: string;
+}
+
+export interface CustomOrderElement {
+  placement: Placement;
+  kind: "LOGO" | "TEXT" | "ARTWORK";
+  text?: string | null;
+  font?: FontId | null;
+  fontWeight?: "regular" | "bold" | null;
+  color?: string | null;
+  align?: "left" | "center" | "right" | null;
+  x: number;
+  y: number;
+  scale: number;
+  rotation: number;
+  sort: number;
+  logoUrl?: string | null;
+  originalName?: string | null;
 }
 
 export interface CustomOrderItem {
@@ -74,10 +114,15 @@ export interface CustomOrderItem {
   quantity: number;
   color: string | null;
   size: string | null;
-  placement: Placement;
+  widthCm?: number | null;
+  heightCm?: number | null;
+  areaM2?: number | string | null;
+  /** Legacy single-logo fields (first element). */
+  placement?: Placement;
+  logoUrl?: string | null;
+  elements?: CustomOrderElement[];
   unitPrice: string;
   lineTotal: string;
-  logoUrl: string;
 }
 
 export type CustomOrderStatus = "RECEIVED" | "MOCKUP_SENT" | "APPROVED" | "IN_PRODUCTION" | "READY" | "DELIVERED" | "CANCELLED";
@@ -201,11 +246,13 @@ export async function getCustomOrder(reference: string, email: string): Promise<
 
 /* ---------- Uploads (browser) ---------- */
 
-/** Uploads a logo with progress reporting (XHR, since fetch has no upload progress). */
-export function uploadLogo(file: File, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<UploadedLogo> {
+export type UploadKind = "logos" | "artwork";
+
+/** Uploads a file with progress reporting (XHR, since fetch has no upload progress). */
+export function uploadFile(kind: UploadKind, file: File, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<UploadedLogo> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${apiBaseUrl()}/api/v1/uploads/logos`);
+    xhr.open("POST", `${apiBaseUrl()}/api/v1/uploads/${kind}`);
     xhr.responseType = "json";
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
@@ -227,6 +274,9 @@ export function uploadLogo(file: File, onProgress?: (pct: number) => void, signa
   });
 }
 
+export const uploadLogo = (file: File, onProgress?: (pct: number) => void, signal?: AbortSignal) => uploadFile("logos", file, onProgress, signal);
+export const uploadArtwork = (file: File, onProgress?: (pct: number) => void, signal?: AbortSignal) => uploadFile("artwork", file, onProgress, signal);
+
 /* ---------- Error messages ---------- */
 
 const codeMessages: Record<string, string> = {
@@ -239,9 +289,12 @@ const codeMessages: Record<string, string> = {
   INVALID_PLACEMENT: "L'emplacement choisi n'est pas disponible pour ce produit.",
   INVALID_OPTION: "Une option (couleur ou taille) n'est pas disponible.",
   TOO_MANY_REQUESTS: "Trop de tentatives. Patientez une minute avant de réessayer.",
-  FILE_TOO_LARGE: "Le fichier dépasse 10 Mo.",
-  PAYLOAD_TOO_LARGE: "Le fichier dépasse 10 Mo.",
+  FILE_TOO_LARGE: "Le fichier est trop volumineux (10 Mo pour un logo, 25 Mo pour un fichier prêt à imprimer).",
+  PAYLOAD_TOO_LARGE: "Le fichier est trop volumineux (10 Mo pour un logo, 25 Mo pour un fichier prêt à imprimer).",
   UNSUPPORTED_FILE_TYPE: "Format accepté : PNG, JPG, WEBP ou PDF.",
+  ELEMENT_NOT_SUPPORTED: "Un élément de votre design (logo, texte ou fichier) n'est pas disponible pour ce produit.",
+  ARTWORK_REQUIRED: "Ce produit nécessite votre fichier prêt à imprimer. Importez-le avant de commander.",
+  SIZE_OUT_OF_RANGE: "Les dimensions choisies sont hors des limites disponibles pour ce produit.",
 };
 
 export function friendlyError(e: unknown): string {

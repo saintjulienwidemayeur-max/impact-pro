@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Check, FileText } from "lucide-react";
-import { orderStatusLabels, placementLabels, resolveApiUrl, type CustomOrder, type CustomOrderStatus } from "@/lib/api";
+import { Check, FileText, Type } from "lucide-react";
+import { orderStatusLabels, placementLabels, resolveApiUrl, type CustomOrder, type CustomOrderElement, type CustomOrderItem, type CustomOrderStatus } from "@/lib/api";
+import { fontById } from "@/lib/design";
 import { toNumber } from "@/lib/pricing";
 import { cn, formatHTG } from "@/lib/utils";
 
@@ -39,6 +40,65 @@ export function OrderStatusTimeline({ status }: { status: CustomOrderStatus }) {
   );
 }
 
+/** Elements grouped per print zone (falls back to the legacy single logo of older orders). */
+function zonesOf(it: CustomOrderItem): { placement: string; elements: CustomOrderElement[] }[] {
+  const els = it.elements?.length
+    ? it.elements
+    : it.logoUrl
+      ? [{ placement: it.placement ?? "FRONT", kind: "LOGO" as const, x: 0, y: 0, scale: 1, rotation: 0, sort: 0, logoUrl: it.logoUrl, originalName: null }]
+      : [];
+  const order: string[] = [];
+  for (const e of [...els].sort((a, b) => a.sort - b.sort)) if (!order.includes(e.placement)) order.push(e.placement);
+  return order.map((placement) => ({ placement, elements: els.filter((e) => e.placement === placement).sort((a, b) => a.sort - b.sort) }));
+}
+
+export function ItemDesign({ item }: { item: CustomOrderItem }) {
+  const zones = zonesOf(item);
+  if (!zones.length) return <span className="text-xs text-ip-muted">—</span>;
+  return (
+    <ul className="space-y-2" data-testid="order-design">
+      {zones.map((z) => (
+        <li key={z.placement} className="text-xs">
+          <p className="font-semibold text-ip-ink">{placementLabels[z.placement as keyof typeof placementLabels] ?? z.placement}</p>
+          <ul className="mt-0.5 space-y-1">
+            {z.elements.map((e, i) =>
+              e.kind === "TEXT" ? (
+                <li key={i} className="flex items-start gap-1.5 text-ip-muted">
+                  <Type className="mt-0.5 size-3.5 shrink-0 text-ip-teal" aria-hidden="true" />
+                  <span>
+                    <span className="whitespace-pre-line font-medium text-ip-ink">« {e.text} »</span>
+                    <span className="block">
+                      {fontById(e.font ?? undefined).label}
+                      {e.fontWeight === "bold" ? " gras" : ""} · {e.color}
+                    </span>
+                  </span>
+                </li>
+              ) : (
+                <li key={i} className="flex items-center gap-1.5">
+                  {e.logoUrl && !/\.pdf$/i.test(e.originalName ?? "") ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={resolveApiUrl(e.logoUrl)} alt="" className="size-8 shrink-0 rounded border border-ip-line bg-white object-contain" />
+                  ) : (
+                    <FileText className="size-4 shrink-0 text-ip-teal" aria-hidden="true" />
+                  )}
+                  {e.logoUrl ? (
+                    <a href={resolveApiUrl(e.logoUrl)} target="_blank" rel="noopener noreferrer" className="font-semibold text-ip-teal hover:underline">
+                      {e.kind === "ARTWORK" ? "Fichier prêt à imprimer" : "Logo"}
+                      {e.originalName ? ` · ${e.originalName}` : ""}
+                    </a>
+                  ) : (
+                    <span>{e.kind === "ARTWORK" ? "Fichier prêt à imprimer" : "Logo"}</span>
+                  )}
+                </li>
+              ),
+            )}
+          </ul>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export function OrderDetails({ order }: { order: CustomOrder }) {
   const created = order.createdAt ? new Date(order.createdAt) : null;
   return (
@@ -59,11 +119,11 @@ export function OrderDetails({ order }: { order: CustomOrder }) {
       </div>
       <OrderStatusTimeline status={order.status} />
       <div className="overflow-x-auto rounded-2xl border border-ip-line">
-        <table className="w-full min-w-[520px] text-sm">
+        <table className="w-full min-w-[620px] text-sm">
           <thead className="bg-ip-mist text-left text-xs uppercase tracking-wide text-ip-muted">
             <tr>
               <th scope="col" className="px-4 py-2 font-semibold">Article</th>
-              <th scope="col" className="px-4 py-2 font-semibold">Logo</th>
+              <th scope="col" className="px-4 py-2 font-semibold">Design</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Qté</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Prix unitaire</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Total</th>
@@ -76,12 +136,12 @@ export function OrderDetails({ order }: { order: CustomOrder }) {
                   <Link href={`/produits/${it.productSlug}`} className="font-semibold hover:text-ip-teal">
                     {it.productName}
                   </Link>
-                  <p className="text-xs text-ip-muted">{[placementLabels[it.placement], it.color, it.size].filter(Boolean).join(" · ")}</p>
+                  <p className="text-xs text-ip-muted">
+                    {[it.color, it.size, it.widthCm && it.heightCm ? `${it.widthCm} × ${it.heightCm} cm` : null].filter(Boolean).join(" · ")}
+                  </p>
                 </td>
                 <td className="px-4 py-3">
-                  <a href={resolveApiUrl(it.logoUrl)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-ip-teal hover:underline">
-                    <FileText className="size-3.5" aria-hidden="true" /> Voir le fichier
-                  </a>
+                  <ItemDesign item={it} />
                 </td>
                 <td className="px-4 py-3 text-right">{it.quantity}</td>
                 <td className="px-4 py-3 text-right">{formatHTG(toNumber(it.unitPrice))}</td>
