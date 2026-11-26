@@ -13,6 +13,8 @@ export interface PrintArea {
   w: number;
   h: number;
   rot: number;
+  /** Surface curvature for a realistic wrap: `phi` = half-angle of the visible cylinder (rad), `arch` = vertical bow (fraction of height, + = center lower). */
+  curve?: { phi: number; arch: number };
   /** Surface color used to mask the sample logo already printed on the photo (null = no mask). */
   patch: string | null;
   /** Extra masks for sample logos elsewhere on the photo (same units, unrotated). */
@@ -24,23 +26,31 @@ export interface Photo {
   alt: string;
   width: number;
   height: number;
+  /** Same photo without the sample logo printed on it (used as the base of the live preview). */
+  blank?: string;
 }
 
-const p = (file: string, alt: string, width: number, height: number): Photo => ({ src: `/photos/${file}`, alt, width, height });
+const p = (file: string, alt: string, width: number, height: number, blank?: string): Photo => ({
+  src: `/photos/${file}`,
+  alt,
+  width,
+  height,
+  ...(blank ? { blank: `/photos/${blank}` } : {}),
+});
 
 export const photos = {
-  tasse: p("tasse-11oz.webp", "Tasse céramique blanche 11 oz avec logo imprimé", 1400, 1620),
+  tasse: p("tasse-11oz.webp", "Tasse céramique blanche 11 oz avec logo imprimé", 1400, 1620, "tasse-11oz-blank.webp"),
   tasses: p("tasses-serie.webp", "Deux tasses blanches personnalisées, icône et logo", 1400, 966),
-  poloBlanc: p("polo-blanc-brode.webp", "Polo blanc avec logo brodé côté cœur", 1255, 1737),
-  poloTeal: p("polo-equipe-teal.webp", "Polo d'équipe teal, vue devant et dos avec logo", 1400, 855),
-  casquette: p("casquette-brodee.webp", "Casquette blanche avec logo brodé en façade", 1400, 1268),
+  poloBlanc: p("polo-blanc-brode.webp", "Polo blanc avec logo brodé côté cœur", 1255, 1737, "polo-blanc-brode-blank.webp"),
+  poloTeal: p("polo-equipe-teal.webp", "Polo d'équipe teal, vue devant et dos avec logo", 1400, 855, "polo-equipe-teal-blank.webp"),
+  casquette: p("casquette-brodee.webp", "Casquette blanche avec logo brodé en façade", 1400, 1268, "casquette-brodee-blank.webp"),
   banderole: p("banderole-pvc.jpg", "Banderole PVC extérieure 3 × 1,2 m installée avec œillets", 1400, 1295),
   drapeaux: p("drapeaux-plume.webp", "Trois drapeaux plume blanc, teal et jaune", 1400, 942),
   carteRecto: p("carte-visite-recto.jpg", "Carte de visite recto, fond teal avec logo", 1400, 793),
   carteVerso: p("carte-visite-verso.jpg", "Carte de visite verso avec coordonnées et icône", 1400, 794),
   entete: p("papier-entete.jpg", "Papier à en-tête A4 avec logo et coordonnées", 1250, 1768),
-  carnet: p("carnet-a5.webp", "Carnet A5 teal avec logo en sérigraphie", 1238, 1506),
-  stylos: p("stylos.webp", "Stylos blancs marqués en tampographie", 1094, 1506),
+  carnet: p("carnet-a5.webp", "Carnet A5 teal avec logo en sérigraphie", 1238, 1506, "carnet-a5-blank.webp"),
+  stylos: p("stylos.webp", "Stylos blancs marqués en tampographie", 1094, 1506, "stylos-blank.webp"),
   etiquettes: p("etiquettes-sceaux.jpg", "Étiquettes rondes « Merci ! » et sceau avec icône", 1008, 469),
   photocallEvent: p("photocall-evenement.jpg", "Photocall installé lors d'un événement, motif step & repeat", 1400, 1295),
   photocallFichier: p("photocall-fichier.jpg", "Fichier d'impression du photocall 3 × 2,25 m", 1400, 1050),

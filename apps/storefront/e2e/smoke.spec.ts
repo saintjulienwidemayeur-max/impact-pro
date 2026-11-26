@@ -22,7 +22,11 @@ async function customizeMug(page: Page, qty = "24") {
   await page.goto("/personnaliser/tasse-ceramique-11oz");
   await page.getByTestId("logo-input").setInputFiles(LOGO);
   await expect(page.getByTestId("logo-uploaded")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByTestId("logo-overlay").locator("img")).toBeVisible();
+  // The logo is rendered on a canvas (wrapped + shaded on the product photo) with an accessible drag layer.
+  await expect(page.getByTestId("logo-canvas")).toBeVisible();
+  await expect(page.getByTestId("logo-overlay")).toBeVisible();
+  // opacity switches to 1 once both the logo and the base photo are loaded and drawn
+  await expect(page.getByTestId("logo-canvas")).toHaveCSS("opacity", "1", { timeout: 10_000 });
   await page.locator("#cz-quantity").fill(qty);
 }
 
@@ -95,7 +99,7 @@ test.describe("storefront", () => {
 
     await page.goto("/panier");
     await expect(page.getByTestId("cart-line")).toHaveCount(1);
-    await expect(page.getByTestId("cart-line").getByText("test-logo.png")).toBeVisible();
+    await expect(page.getByTestId("cart-line")).toContainText("test-logo.png");
     await page.getByRole("link", { name: "Passer la commande" }).click();
 
     await page.getByRole("button", { name: "Confirmer la commande" }).click();
