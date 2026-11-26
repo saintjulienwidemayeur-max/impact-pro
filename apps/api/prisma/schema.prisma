@@ -150,6 +150,13 @@ model Product {
   minOrderQty      Int                @default(1)
   decorationMethod String? // sublimation, broderie, sérigraphie, tampographie…
   leadTimeDays     Int?
+  unitLabel        String             @default("pièce") // shown as "par {unitLabel}"
+  compareAtPrice   Decimal?           @db.Decimal(14, 2) // struck-through "was" price
+  colors           String[]           @default([])
+  sizes            String[]           @default([])
+  placements       PrintPlacement[]   @default([])
+  images           String[]           @default([]) // storefront-relative paths, e.g. /photos/tasse-11oz.jpg
+  customOrderItems CustomOrderItem[]
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
   category         Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
@@ -157,6 +164,15 @@ model Product {
   attributes       ProductAttribute[]
 
   @@index([categoryId, status])
+}
+
+enum PrintPlacement {
+  FRONT
+  BACK
+  CHEST_LEFT
+  SLEEVE
+  WRAP
+  FULL
 }
 
 model ProductAttribute {
@@ -172,10 +188,10 @@ model ProductAttribute {
 }
 
 model ProductAttributeValue {
-  id          String                    @id @default(cuid())
+  id          String                  @id @default(cuid())
   attributeId String
   value       String
-  attribute   ProductAttribute          @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  attribute   ProductAttribute        @relation(fields: [attributeId], references: [id], onDelete: Cascade)
   variants    VariantAttributeValue[]
 
   @@unique([attributeId, value])
@@ -325,4 +341,90 @@ model InventoryReservation {
 
   @@index([inventoryItemId, status])
   @@index([reference])
+}
+
+// ───────────────────────────── Uploads (customer files) ─────────────────────────────
+
+/// A customer-supplied file (logo artwork). Bytes live in object storage (S3/MinIO) or local disk.
+model Upload {
+  id            String            @id @default(uuid()) @db.Uuid
+  storageKey    String            @unique // random, never derived from the client filename
+  storageDriver String // "s3" | "local"
+  originalName  String // sanitized, display only
+  mimeType      String
+  size          Int
+  sha256        String            @db.Char(64)
+  width         Int?
+  height        Int?
+  createdAt     DateTime          @default(now())
+  orderItems    CustomOrderItem[]
+
+  @@index([createdAt])
+}
+
+// ─────────────────────────── Custom orders (storefront) ───────────────────────────
+
+enum CustomOrderStatus {
+  RECEIVED
+  MOCKUP_SENT
+  APPROVED
+  IN_PRODUCTION
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum DeliveryMethod {
+  PICKUP
+  DELIVERY
+}
+
+/// Order placed from the public storefront customizer. Prices are computed server-side and snapshotted.
+model CustomOrder {
+  id             String            @id @default(cuid())
+  reference      String            @unique // IP-YYYY-NNNNNN, from sequence custom_order_ref_seq
+  status         CustomOrderStatus @default(RECEIVED)
+  currency       String            @default("HTG") @db.Char(3)
+  subtotal       Decimal           @db.Decimal(14, 2)
+  customerName   String
+  company        String?
+  phone          String
+  email          String // stored lower-cased
+  city           String?
+  address        String?
+  deliveryMethod DeliveryMethod
+  notes          String?
+  ipAddress      String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  items          CustomOrderItem[]
+
+  @@index([email])
+  @@index([status, createdAt])
+}
+
+model CustomOrderItem {
+  id          String         @id @default(cuid())
+  orderId     String
+  lineNo      Int // 1-based position in the order, as submitted
+  productId   String
+  variantId   String?
+  productSlug String // snapshot
+  productName String // snapshot
+  unitPrice   Decimal        @db.Decimal(14, 2) // snapshot at order time
+  quantity    Int
+  lineTotal   Decimal        @db.Decimal(14, 2)
+  color       String?
+  size        String?
+  placement   PrintPlacement
+  uploadId    String         @db.Uuid
+  notes       String?
+  createdAt   DateTime       @default(now())
+  order       CustomOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product        @relation(fields: [productId], references: [id], onDelete: Restrict)
+  upload      Upload         @relation(fields: [uploadId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, lineNo])
+  @@index([productId])
+  @@index([uploadId])
 }

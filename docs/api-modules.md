@@ -37,7 +37,7 @@ AppModule
 - Filters use `?status=PAID&organizationId=…&createdFrom=2026-01-01&createdTo=…&q=search`.
 - Sorting uses `?sort=-createdAt,name`. A leading `-` means descending. Fields come from a per-endpoint allow-list.
 
-**HTTP status codes:** 200 OK · 201 Created · 204 No Content · 400 validation · 401 unauthenticated · 403 forbidden (role) · 404 not found *(also returned for other orgs' resources)* · 409 conflict / state transition · 422 business rule · 429 rate-limited · 500.
+**HTTP status codes:** 200 OK · 201 Created · 204 No Content · 401 unauthenticated · 403 forbidden (role) · 404 not found *(also returned for other orgs' resources)* · 409 conflict / state transition · 422 validation (`details: [{ field, messages }]`) & business rule · 413 payload too large · 429 rate-limited · 500.
 
 **Error codes:** `VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, INVALID_STATE_TRANSITION, INSUFFICIENT_STOCK, ALLOCATION_EXCEEDS_QUANTITY, BUDGET_EXCEEDED, PAYMENT_FAILED, IDEMPOTENCY_REPLAY, RATE_LIMITED, CSRF_INVALID, FILE_REJECTED, INTERNAL_ERROR`.
 

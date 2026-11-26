@@ -3,10 +3,14 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AppConfigModule, ENV } from './config/config.module';
 import type { Env } from './config/env';
+import { CatalogModule } from './catalog/catalog.module';
+import { CustomOrdersModule } from './custom-orders/custom-orders.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RedisModule } from './redis/redis.module';
+import { StorageModule } from './storage/storage.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -19,6 +23,10 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
     HealthModule,
     InventoryModule,
+    StorageModule,
+    CatalogModule,
+    UploadsModule,
+    CustomOrdersModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

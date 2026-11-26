@@ -17,6 +17,22 @@ export const envSchema = z.object({
   THROTTLE_TTL_MS: z.coerce.number().int().positive().default(60_000),
   THROTTLE_LIMIT: z.coerce.number().int().positive().default(120),
   COOKIE_SECRET: z.string().min(32, 'COOKIE_SECRET must be at least 32 characters'),
+  /** Local upload directory, used when S3 is not configured. Relative paths resolve from the API package root. */
+  UPLOAD_DIR: z.string().min(1).default('var/uploads'),
+  UPLOAD_MAX_BYTES: z.coerce.number().int().positive().default(10 * 1024 * 1024),
+  /** S3-compatible storage (MinIO in dev). All of endpoint/bucket/keys must be set to enable it. */
+  S3_ENDPOINT: z.string().url().optional(),
+  S3_REGION: z.string().default('us-east-1'),
+  S3_BUCKET: z.string().optional(),
+  S3_ACCESS_KEY: z.string().optional(),
+  S3_SECRET_KEY: z.string().optional(),
+  S3_FORCE_PATH_STYLE: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
+  /** Stricter limit for public order creation (requests per THROTTLE_TTL_MS per IP). */
+  ORDER_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
+  UPLOAD_THROTTLE_LIMIT: z.coerce.number().int().positive().default(20),
 });
 
 export type Env = z.infer<typeof envSchema>;
