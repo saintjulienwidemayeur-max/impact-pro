@@ -75,6 +75,8 @@ export interface ProductMedia {
   colorPreviews?: Record<string, Partial<Record<Placement, Photo>>>;
   /** Placements previewed on a photo that does not really show that side (flagged « aperçu indicatif »). */
   approx?: Placement[];
+  /** Same, for a given color keyword (overrides `approx` when that color is selected). */
+  approxByColor?: Record<string, Placement[]>;
 }
 
 const media: Record<string, ProductMedia> = {
@@ -132,8 +134,11 @@ interface ManifestProduct {
   areas?: Record<string, Partial<Record<Placement, ManifestArea>>>;
   frame?: { aspect: number };
   approxPlacements?: Placement[];
-  /** Merge into the hand-written entry of the same slug instead of replacing it. */
+  approxPlacementsByColor?: Record<string, Placement[]>;
+  /** Merge into the hand-written entry of the same slug (new photos first, the existing ones follow) instead of replacing it. */
   merge?: boolean;
+  /** Free-text provenance note (ignored at runtime). */
+  note?: string;
 }
 
 const frames: Record<string, number> = {};
@@ -176,13 +181,15 @@ function registerManifest(products: Record<string, ManifestProduct>) {
       }
       if (merge) {
         media[slug] = {
-          gallery: [...existing.gallery, ...gallery.filter((g) => !existing.gallery.some((e) => fileOf(e) === fileOf(g)))],
+          // new photos first, then the previous ones (the existing photo becomes gallery #2…)
+          gallery: [...gallery, ...existing.gallery.filter((e) => !gallery.some((g) => fileOf(g) === fileOf(e)))],
           previews: { ...existing.previews, ...previews },
           colorPreviews: { ...(existing.colorPreviews ?? {}), ...(colorPreviews ?? {}) },
           approx: [...new Set([...(existing.approx ?? []), ...(m.approxPlacements ?? [])])],
+          approxByColor: { ...(existing.approxByColor ?? {}), ...(m.approxPlacementsByColor ?? {}) },
         };
       } else {
-        media[slug] = { gallery, previews, colorPreviews, approx: m.approxPlacements };
+        media[slug] = { gallery, previews, colorPreviews, approx: m.approxPlacements, approxByColor: m.approxPlacementsByColor };
       }
     }
     for (const [file, areas] of Object.entries(m.areas ?? {})) {
@@ -273,18 +280,21 @@ export function previewFor(slug: string, placement: Placement, color?: string): 
   const m = media[slug];
   if (!m) return plainPreview(slug, placement);
   let dedicated: Photo | undefined;
-  let fallback: Photo | undefined = m.gallery[0];
-  const byColor = color && m.colorPreviews ? Object.entries(m.colorPreviews).find(([k]) => normalize(color).includes(k))?.[1] : undefined;
+  // zones without their own photo fall back to the front view (the gallery's first photo may be a side view)
+  let fallback: Photo | undefined = m.previews.FRONT ?? m.gallery[0];
+  const byColorEntry = color && m.colorPreviews ? Object.entries(m.colorPreviews).find(([k]) => normalize(color).includes(k)) : undefined;
+  const byColor = byColorEntry?.[1];
   if (byColor) {
     dedicated = byColor[placement];
     fallback = byColor.FRONT ?? Object.values(byColor)[0] ?? fallback;
   } else {
     dedicated = m.previews[placement];
   }
+  const approx = (byColorEntry && m.approxByColor?.[byColorEntry[0]]) || m.approx;
   const photo = dedicated ?? fallback;
   if (!photo) return plainPreview(slug, placement);
   const areas = printAreas[fileOf(photo)] ?? {};
   const own = areas[placement];
   const area = own ?? areas.FRONT ?? Object.values(areas)[0] ?? plainPreview(slug, placement).area;
-  return { photo, area, indicative: !dedicated || !own || Boolean(m.approx?.includes(placement)) };
+  return { photo, area, indicative: !dedicated || !own || Boolean(approx?.includes(placement)) };
 }
