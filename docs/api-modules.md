@@ -62,6 +62,21 @@ AppModule
 | POST | /auth/password/forgot · /auth/password/reset | public | – |
 | POST | /auth/verify-email | public | – |
 
+### Customer accounts (implemented)
+Cookie `ip_session` + header `x-csrf-token` (value of cookie `ip_csrf`) on every state-changing call.
+| Method | Path | Notes |
+|---|---|---|
+| POST | /auth/register | 201, sets cookies. `EMAIL_TAKEN`, 422 on weak password |
+| POST | /auth/login | `INVALID_CREDENTIALS`, `TOO_MANY_ATTEMPTS` (429) |
+| POST | /auth/logout | revokes the session |
+| GET | /auth/me · /auth/csrf | `UNAUTHENTICATED` when no session |
+| PATCH | /auth/me | profile (name, phone) |
+| POST | /auth/change-password | `INVALID_CURRENT_PASSWORD`, `PASSWORD_UNCHANGED`; revokes other sessions |
+| GET | /me/orders | paginated (`page`, `pageSize`≤50) |
+| GET | /me/orders/:reference | foreign/guest → 404 `ORDER_NOT_FOUND` |
+| POST | /me/orders/claim | `{reference, email}` attaches a guest order |
+Other codes: `CSRF_INVALID`, `ORIGIN_NOT_ALLOWED` (403).
+
 ### Users, roles, organizations
 | Method | Path | Auth | Org |
 |---|---|---|---|

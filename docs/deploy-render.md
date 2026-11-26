@@ -13,6 +13,7 @@ Supabase Storage is S3-compatible and can hold customer logos (`S3_ENDPOINT=http
 3. Render asks for the variables marked `sync: false`. First pass, leave the URLs empty or put a guess; the real URLs only exist after creation:
    - `impact-pro-api` → `CORS_ORIGINS` = `https://<storefront>.onrender.com`
    - `impact-pro-storefront` → `NEXT_PUBLIC_API_URL` = `https://<api>.onrender.com`, `NEXT_PUBLIC_SITE_URL` = `https://<storefront>.onrender.com`, optionally `NEXT_PUBLIC_WHATSAPP_NUMBER` (e.g. `509XXXXXXXX`).
+   - Accounts: the storefront proxies `/api/v1/auth|me|custom-orders` to the API (first-party cookies). Set `API_URL` (or `NEXT_PUBLIC_API_URL`) **before the storefront build**; `CORS_ORIGINS` on the API must contain the storefront origin; keep `TRUST_PROXY_HOPS=1` on Render.
 4. `NEXT_PUBLIC_API_URL` is **inlined at build time**: after setting it, trigger **Manual Deploy → Clear build cache & deploy** on the storefront.
 5. Check `https://<api>.onrender.com/api/v1/health` (→ `database: up`) and `/api/docs`, then open the storefront URL.
 6. After the first successful deploy set `AUTO_SEED=false` on the API (the seed only loads the placeholder catalog; it upserts by slug, so keeping it on would reset catalog edits).

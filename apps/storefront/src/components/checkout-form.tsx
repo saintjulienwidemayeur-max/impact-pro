@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-import { ArrowRight, Loader2, Lock, ShoppingCart, Store, Truck } from "lucide-react";
+import { ArrowRight, Loader2, Lock, ShoppingCart, Store, Truck, UserCheck, UserRound } from "lucide-react";
+import { useAuth } from "./auth-provider";
 import { useCart } from "./cart-provider";
 import { CartLineSummary } from "./cart-view";
 import { Button } from "./ui/button";
@@ -35,6 +36,7 @@ function mapApiFields(fields: Record<string, string>): { form: Errors; items: st
 export function CheckoutForm() {
   const router = useRouter();
   const { lines, total, ready, clear } = useCart();
+  const { user, status: authStatus } = useAuth();
   const [delivery, setDelivery] = React.useState<DeliveryMethod>("PICKUP");
   const [errors, setErrors] = React.useState<Errors>({});
   const [general, setGeneral] = React.useState<string | null>(null);
@@ -128,22 +130,47 @@ export function CheckoutForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-8 lg:grid-cols-[1fr_380px]">
       <div className="space-y-8">
-        <section aria-labelledby="co-contact" className="rounded-2xl border border-ip-line p-5 sm:p-6">
+        {user ? (
+          <p className="flex flex-wrap items-center gap-x-2 rounded-2xl bg-ip-teal/10 p-4 text-sm" data-testid="checkout-signed-in">
+            <UserCheck className="size-5 shrink-0 text-ip-teal" aria-hidden="true" />
+            <span>
+              Connecté en tant que <strong>{user.fullName ?? user.email}</strong> : cette commande sera ajoutée à votre espace client.
+            </span>
+            <Link href="/compte" className="font-semibold text-ip-teal underline-offset-2 hover:underline">
+              Mon espace
+            </Link>
+          </p>
+        ) : (
+          authStatus !== "loading" && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-ip-mist p-4 text-sm" data-testid="checkout-account-banner">
+              <UserRound className="size-5 shrink-0 text-ip-teal" aria-hidden="true" />
+              <span>Créez un compte pour suivre vos commandes (facultatif).</span>
+              <Link href="/inscription?next=/commande" className="font-semibold text-ip-teal underline-offset-2 hover:underline">
+                Créer un compte
+              </Link>
+              <span aria-hidden="true">·</span>
+              <Link href="/connexion?next=/commande" className="font-semibold text-ip-teal underline-offset-2 hover:underline">
+                Se connecter
+              </Link>
+            </p>
+          )
+        )}
+        <section key={user?.id ?? "guest"} aria-labelledby="co-contact" className="rounded-2xl border border-ip-line p-5 sm:p-6">
           <h2 id="co-contact" className="text-xl font-semibold">
             Vos coordonnées
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Field id="fullName" label="Nom complet" required error={err("fullName")}>
-              <Input id="fullName" name="fullName" autoComplete="name" aria-invalid={Boolean(err("fullName"))} aria-describedby="fullName-msg" />
+              <Input id="fullName" name="fullName" autoComplete="name" defaultValue={user?.fullName ?? ""} aria-invalid={Boolean(err("fullName"))} aria-describedby="fullName-msg" />
             </Field>
             <Field id="company" label="Entreprise" error={err("company")} hint="Facultatif">
               <Input id="company" name="company" autoComplete="organization" aria-describedby="company-msg" />
             </Field>
             <Field id="phone" label="Téléphone" required error={err("phone")} hint="Format +509 XXXX-XXXX">
-              <Input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+509 " aria-invalid={Boolean(err("phone"))} aria-describedby="phone-msg" />
+              <Input id="phone" name="phone" type="tel" autoComplete="tel" placeholder="+509 " defaultValue={user?.phone ?? ""} aria-invalid={Boolean(err("phone"))} aria-describedby="phone-msg" />
             </Field>
             <Field id="email" label="Courriel" required error={err("email")} hint="Pour la maquette et le suivi">
-              <Input id="email" name="email" type="email" autoComplete="email" aria-invalid={Boolean(err("email"))} aria-describedby="email-msg" />
+              <Input id="email" name="email" type="email" autoComplete="email" defaultValue={user?.email ?? ""} aria-invalid={Boolean(err("email"))} aria-describedby="email-msg" />
             </Field>
           </div>
         </section>

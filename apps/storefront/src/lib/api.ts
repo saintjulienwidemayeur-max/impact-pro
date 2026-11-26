@@ -246,6 +246,12 @@ export async function getProduct(slug: string): Promise<Product | null> {
 /* ---------- Orders ---------- */
 
 export async function createCustomOrder(input: CustomOrderInput): Promise<CustomOrder> {
+  // Signed-in customers order through the same-origin proxy so the session cookie + CSRF header reach the API and the
+  // order lands in « Mes commandes ». Guests keep calling the API directly (no cookie needed).
+  if (typeof document !== "undefined" && document.cookie.split("; ").some((c) => c.startsWith("ip_csrf="))) {
+    const { createOrderAsMember } = await import("./account-api"); // dynamic: account-api imports this module
+    return createOrderAsMember(input);
+  }
   return request<CustomOrder>("/custom-orders", {
     method: "POST",
     headers: { "Content-Type": "application/json" },

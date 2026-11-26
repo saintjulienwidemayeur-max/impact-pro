@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { AuthModule } from './auth/auth.module';
 import { AppConfigModule, ENV } from './config/config.module';
 import type { Env } from './config/env';
 import { CatalogModule } from './catalog/catalog.module';
@@ -19,6 +20,7 @@ import { UploadsModule } from './uploads/uploads.module';
       useFactory: (env: Env) => [{ ttl: env.THROTTLE_TTL_MS, limit: env.THROTTLE_LIMIT }],
     }),
     PrismaModule,
+    AuthModule,
     HealthModule,
     InventoryModule,
     StorageModule,

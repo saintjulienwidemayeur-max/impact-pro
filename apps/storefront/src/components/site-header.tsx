@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import * as React from "react";
 import { ArrowRight, ChevronDown, Menu, Search, ShoppingCart, User, X } from "lucide-react";
+import { initialOf, useAuth } from "./auth-provider";
 import { useCart } from "./cart-provider";
 import { navCategories as categories } from "@/config/navigation";
 import { mainNav, services, site } from "@/lib/site";
@@ -34,6 +35,38 @@ function TopBar() {
         </Link>
       </div>
     </div>
+  );
+}
+
+/** Signed out → /connexion; signed in → /compte with the customer's initial. */
+function AccountLink() {
+  const { user, status } = useAuth();
+  if (user) {
+    return (
+      <Link
+        href="/compte"
+        aria-label={`Mon compte, connecté en tant que ${user.fullName ?? user.email}`}
+        data-testid="account-link"
+        className="inline-flex h-10 items-center gap-2 rounded-xl px-1.5 hover:bg-ip-mist hover:text-ip-teal"
+      >
+        <span aria-hidden="true" className="inline-flex size-8 items-center justify-center rounded-full bg-ip-teal font-heading text-sm font-bold text-white">
+          {initialOf(user)}
+        </span>
+        <span className="hidden max-w-28 truncate text-sm font-semibold xl:inline">{(user.fullName ?? user.email).split(" ")[0]}</span>
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href="/connexion"
+      aria-label="Se connecter"
+      data-testid="account-link"
+      data-auth={status}
+      className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 hover:bg-ip-mist hover:text-ip-teal"
+    >
+      <User className="size-5" aria-hidden="true" />
+      <span className="hidden text-sm font-semibold xl:inline">Connexion</span>
+    </Link>
   );
 }
 
@@ -109,6 +142,7 @@ function DesktopDropdown({ id, label, open, onToggle, onClose }: { id: MenuId; l
 export function SiteHeader() {
   const pathname = usePathname();
   const { count, ready } = useCart();
+  const { user } = useAuth();
   const [openMenu, setOpenMenu] = React.useState<MenuId | null>(null);
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const navRef = React.useRef<HTMLElement>(null);
@@ -185,9 +219,7 @@ export function SiteHeader() {
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             <SearchForm id="search-desktop" className="hidden w-56 lg:block" />
-            <Link href="/compte" aria-label="Mon compte" className="inline-flex size-10 items-center justify-center rounded-xl hover:bg-ip-mist hover:text-ip-teal">
-              <User className="size-5" aria-hidden="true" />
-            </Link>
+            <AccountLink />
             <Link
               href="/panier"
               aria-label={`Panier, ${count} article${count > 1 ? "s" : ""}`}
@@ -257,6 +289,22 @@ export function SiteHeader() {
                   )}
                 </ul>
               </nav>
+              <div className="grid grid-cols-2 gap-2">
+                {user ? (
+                  <Link href="/compte" onClick={() => setMobileOpen(false)} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl border-2 border-ip-teal font-semibold text-ip-teal">
+                    <User className="size-4" aria-hidden="true" /> Mon espace client
+                  </Link>
+                ) : (
+                  <>
+                    <Link href="/connexion" onClick={() => setMobileOpen(false)} className="inline-flex h-11 items-center justify-center rounded-xl border-2 border-ip-teal font-semibold text-ip-teal">
+                      Se connecter
+                    </Link>
+                    <Link href="/inscription" onClick={() => setMobileOpen(false)} className="inline-flex h-11 items-center justify-center rounded-xl bg-ip-teal font-semibold text-white">
+                      Créer un compte
+                    </Link>
+                  </>
+                )}
+              </div>
               <Link href="/devis" onClick={() => setMobileOpen(false)} className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-ip-sun font-bold text-ip-ink">
                 Demander un devis <ArrowRight className="size-4" aria-hidden="true" />
               </Link>

@@ -79,6 +79,41 @@ export const trackingSchema = z.object({
   email: z.string().trim().email("Adresse courriel invalide."),
 });
 
+/* ---------- Customer accounts ---------- */
+
+const optionalPhone = z
+  .string()
+  .trim()
+  .max(20, "Numéro de téléphone invalide.")
+  .refine((v) => v === "" || (v.length >= 8 && phoneRegex.test(v)), "Numéro de téléphone invalide (ex. +509 3712-3456).")
+  .optional();
+
+export const loginSchema = z.object({
+  email: z.string().trim().email("Adresse e-mail invalide."),
+  password: z.string().min(1, "Entrez votre mot de passe."),
+});
+
+export const registerSchema = z.object({
+  fullName: z.string().trim().min(2, "Indiquez votre nom complet.").max(120),
+  email: z.string().trim().email("Adresse e-mail invalide.").max(254),
+  phone: optionalPhone,
+  password: z.string().min(10, "Le mot de passe doit contenir au moins 10 caractères.").max(128, "Le mot de passe ne peut pas dépasser 128 caractères."),
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: "Vous devez accepter les conditions pour créer un compte." }) }),
+});
+
+export const profileSchema = z.object({
+  fullName: z.string().trim().min(2, "Indiquez votre nom complet.").max(120),
+  phone: optionalPhone,
+});
+
+export const passwordChangeSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Entrez votre mot de passe actuel."),
+    newPassword: z.string().min(10, "Le mot de passe doit contenir au moins 10 caractères.").max(128, "Le mot de passe ne peut pas dépasser 128 caractères."),
+    confirm: z.string(),
+  })
+  .refine((v) => v.newPassword === v.confirm, { path: ["confirm"], message: "Les deux mots de passe ne correspondent pas." });
+
 export function fieldErrors(error: z.ZodError): Record<string, string> {
   const out: Record<string, string> = {};
   for (const issue of error.issues) {

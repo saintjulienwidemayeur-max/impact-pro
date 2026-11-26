@@ -50,21 +50,24 @@ model Organization {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  email         String       @unique
+  id            String        @id @default(cuid())
+  email         String        @unique
   passwordHash  String? // Argon2id; null for invited users without password yet
   firstName     String?
   lastName      String?
+  /// Display name entered at sign-up (customer accounts); firstName/lastName stay for staff/org users.
+  fullName      String?
   phone         String?
-  status        UserStatus   @default(ACTIVE)
-  isStaff       Boolean      @default(false)
+  status        UserStatus    @default(ACTIVE)
+  isStaff       Boolean       @default(false)
   emailVerified DateTime?
   lastLoginAt   DateTime?
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   memberships   Membership[]
   sessions      Session[]
   auditLogs     AuditLog[]
+  customOrders  CustomOrder[]
 }
 
 model Membership {
@@ -82,15 +85,19 @@ model Membership {
 }
 
 model Session {
-  id               String    @id @default(cuid())
-  userId           String
-  refreshTokenHash String    @unique // SHA-256 of the opaque refresh token; raw token never stored
-  userAgent        String?
-  ipAddress        String?
-  expiresAt        DateTime
-  revokedAt        DateTime?
-  createdAt        DateTime  @default(now())
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  userId            String
+  refreshTokenHash  String    @unique // SHA-256 of the opaque refresh token; raw token never stored
+  userAgent         String?
+  ipAddress         String?
+  /// Sliding (idle) expiry, pushed forward while the session is used.
+  expiresAt         DateTime
+  /// Hard limit: the session can never be extended past this date.
+  absoluteExpiresAt DateTime?
+  lastUsedAt        DateTime  @default(now())
+  revokedAt         DateTime?
+  createdAt         DateTime  @default(now())
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([expiresAt])
@@ -430,10 +437,14 @@ model CustomOrder {
   deliveryMethod DeliveryMethod
   notes          String?
   ipAddress      String?
+  /// Set when the order was placed (or later claimed) by a signed-in customer; null for guest orders.
+  userId         String?
+  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   items          CustomOrderItem[]
 
+  @@index([userId, createdAt])
   @@index([email])
   @@index([status, createdAt])
 }
