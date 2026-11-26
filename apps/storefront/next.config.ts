@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   // Monorepo root (pnpm workspace) — used for output file tracing.
   outputFileTracingRoot: path.join(__dirname, "../.."),
   poweredByHeader: false,
+  // Render free instances have 512 MB: the on-demand image optimizer (sharp) caused out-of-memory kills.
+  // Photos are already compressed WebP/JPEG (≤ 220 KB each), so they are served as-is.
+  images: { unoptimized: true },
   async headers() {
     return [
       {
