@@ -61,6 +61,11 @@ export interface Product {
     minBillableM2: number;
   } | null;
   zones?: { placement: Placement; label: string; maxElements: number }[];
+  /* Product parameters (docs/customizer-v2-contract.md §7.1): only the options a product really needs are asked. */
+  colorLabel?: string;
+  sizeLabel?: string;
+  colorsRequired?: boolean;
+  sizesRequired?: boolean;
 }
 
 export interface UploadedLogo {
@@ -86,6 +91,8 @@ export interface CustomOrderInput {
     heightCm?: number;
     notes?: string;
     elements: OrderElementPayload[];
+    /** One rendered mock-up per zone (uploaded through /uploads/previews), best effort. */
+    previews?: { placement: Placement; uploadId: string }[];
   }[];
   deliveryMethod: DeliveryMethod;
   notes?: string;
@@ -121,6 +128,8 @@ export interface CustomOrderItem {
   placement?: Placement;
   logoUrl?: string | null;
   elements?: CustomOrderElement[];
+  /** Mock-ups rendered by the customer's browser at checkout (when the API stored them). */
+  previews?: { placement: Placement; url: string }[];
   unitPrice: string;
   lineTotal: string;
 }
@@ -211,6 +220,17 @@ export async function listProducts(): Promise<Product[]> {
   return Array.isArray(data) ? data : [];
 }
 
+/** slug → option labels (« Modèle du téléphone »…), so order pages can label colors / sizes. Never throws. */
+export async function optionLabelsBySlug(): Promise<Record<string, { colorLabel?: string; sizeLabel?: string }>> {
+  try {
+    const out: Record<string, { colorLabel?: string; sizeLabel?: string }> = {};
+    for (const p of await listProducts()) out[p.slug] = { colorLabel: p.colorLabel, sizeLabel: p.sizeLabel };
+    return out;
+  } catch {
+    return {};
+  }
+}
+
 /** Returns null when the product does not exist (404); throws on other failures. */
 export async function getProduct(slug: string): Promise<Product | null> {
   try {
@@ -246,7 +266,7 @@ export async function getCustomOrder(reference: string, email: string): Promise<
 
 /* ---------- Uploads (browser) ---------- */
 
-export type UploadKind = "logos" | "artwork";
+export type UploadKind = "logos" | "artwork" | "previews";
 
 /** Uploads a file with progress reporting (XHR, since fetch has no upload progress). */
 export function uploadFile(kind: UploadKind, file: File, onProgress?: (pct: number) => void, signal?: AbortSignal): Promise<UploadedLogo> {
@@ -276,6 +296,7 @@ export function uploadFile(kind: UploadKind, file: File, onProgress?: (pct: numb
 
 export const uploadLogo = (file: File, onProgress?: (pct: number) => void, signal?: AbortSignal) => uploadFile("logos", file, onProgress, signal);
 export const uploadArtwork = (file: File, onProgress?: (pct: number) => void, signal?: AbortSignal) => uploadFile("artwork", file, onProgress, signal);
+export const uploadPreview = (file: File, signal?: AbortSignal) => uploadFile("previews", file, undefined, signal);
 
 /* ---------- Error messages ---------- */
 
@@ -287,7 +308,9 @@ const codeMessages: Record<string, string> = {
   UPLOAD_NOT_FOUND: "Un logo n'a pas été retrouvé sur nos serveurs. Merci de le téléverser à nouveau.",
   PRODUCT_NOT_FOUND: "Un produit de votre panier n'est plus disponible.",
   INVALID_PLACEMENT: "L'emplacement choisi n'est pas disponible pour ce produit.",
-  INVALID_OPTION: "Une option (couleur ou taille) n'est pas disponible.",
+  INVALID_OPTION: "Une option (couleur, taille, modèle…) n'est plus disponible pour ce produit.",
+  COLOR_REQUIRED: "Choisissez une option de couleur pour un article de votre panier.",
+  SIZE_REQUIRED: "Choisissez la taille / le format / le modèle d'un article de votre panier.",
   TOO_MANY_REQUESTS: "Trop de tentatives. Patientez une minute avant de réessayer.",
   FILE_TOO_LARGE: "Le fichier est trop volumineux (10 Mo pour un logo, 25 Mo pour un fichier prêt à imprimer).",
   PAYLOAD_TOO_LARGE: "Le fichier est trop volumineux (10 Mo pour un logo, 25 Mo pour un fichier prêt à imprimer).",

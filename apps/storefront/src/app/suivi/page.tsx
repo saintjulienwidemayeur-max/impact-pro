@@ -3,7 +3,7 @@ import { SearchX } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { OrderDetails } from "@/components/order-details";
 import { PageHeader } from "@/components/page-header";
-import { getCustomOrder, type CustomOrder } from "@/lib/api";
+import { getCustomOrder, optionLabelsBySlug, type CustomOrder } from "@/lib/api";
 import { fieldErrors, trackingSchema } from "@/lib/schemas";
 
 export const dynamic = "force-dynamic";
@@ -37,6 +37,8 @@ export default async function TrackingPage({ searchParams }: { searchParams: Sea
   const input =
     "h-11 w-full rounded-xl border border-ip-line bg-white px-4 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50 aria-[invalid=true]:border-red-600";
 
+  const labels = order ? await optionLabelsBySlug() : {};
+
   return (
     <>
       <PageHeader title="Suivi de commande" intro="Entrez votre référence (ex. IP-2026-000123) et le courriel utilisé lors de la commande." crumbs={[{ label: "Suivi" }]} />
@@ -62,7 +64,7 @@ export default async function TrackingPage({ searchParams }: { searchParams: Sea
         </form>
 
         {failed && <ApiUnavailable title="Suivi momentanément indisponible" compact />}
-        {order && <OrderDetails order={order} />}
+        {order && <OrderDetails order={order} labels={labels} />}
         {submitted && parsed.success && !failed && !order && (
           <div role="status" className="flex flex-col items-center rounded-[var(--radius-card)] border border-dashed border-ip-line bg-ip-mist px-6 py-10 text-center">
             <SearchX className="size-10 text-ip-teal" aria-hidden="true" />

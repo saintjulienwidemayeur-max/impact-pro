@@ -2,7 +2,7 @@
  * Design model shared by the studio, the cart and the order payload (docs/customizer-v2-contract.md §4–5).
  * A design is a flat list of elements; each element belongs to one print zone (placement).
  */
-import { placementLabels, type Placement, type PriceTier, type Product } from "./api";
+import { placementLabels, type CustomOrderElement, type Placement, type PriceTier, type Product } from "./api";
 import { toNumber, unitPriceFor } from "./pricing";
 
 export type ElementKind = "LOGO" | "TEXT" | "ARTWORK";
@@ -120,6 +120,42 @@ export interface ProductCaps {
 
 export const placementLabelsFr: Record<Placement, string> = placementLabels;
 
+/* ---------- Product parameters: only what the product really needs (contract §7.1) ---------- */
+
+export interface OptionDef {
+  /** Field label shown to the customer (« Couleur », « Modèle du téléphone », « Dimensions »…). */
+  label: string;
+  required: boolean;
+  values: string[];
+}
+
+export interface ProductOptions {
+  color: OptionDef | null;
+  size: OptionDef | null;
+}
+
+/**
+ * A color / size block exists only when the product lists values for it (a ball has none, so nothing is asked).
+ * Sizes are not an option when the product has a free custom size (banners…): there they are quick-pick dimensions.
+ */
+export function optionsOf(p: Pick<Product, "colors" | "sizes" | "colorLabel" | "sizeLabel" | "colorsRequired" | "sizesRequired" | "customSize">): ProductOptions {
+  const colors = p.colors ?? [];
+  const sizes = p.sizes ?? [];
+  return {
+    color: colors.length ? { label: p.colorLabel?.trim() || "Couleur", required: p.colorsRequired ?? true, values: colors } : null,
+    size: sizes.length && !p.customSize ? { label: p.sizeLabel?.trim() || "Taille", required: p.sizesRequired ?? true, values: sizes } : null,
+  };
+}
+
+/** « Taille : M · Couleur : Rouge » style summary used by the cart, checkout, confirmation and tracking. */
+export function describeOptions(o: { color?: string | null; size?: string | null; colorLabel?: string | null; sizeLabel?: string | null; widthCm?: number | null; heightCm?: number | null }): string[] {
+  const out: string[] = [];
+  if (o.color) out.push(`${o.colorLabel || "Couleur"} : ${o.color}`);
+  if (o.size) out.push(`${o.sizeLabel || "Taille"} : ${o.size}`);
+  if (o.widthCm && o.heightCm) out.push(`${o.widthCm} × ${o.heightCm} cm`);
+  return out;
+}
+
 export function capsOf(p: Product): ProductCaps {
   const placements: Placement[] = p.placements?.length ? p.placements : ["FRONT"];
   return {
@@ -157,6 +193,29 @@ export function estimateUnit(p: PriceInput): number {
     return a === null ? rate : Math.round(a * rate * 100) / 100;
   }
   return rate;
+}
+
+/** Rebuilds renderable design elements from the elements an order returns (confirmation / tracking mock-ups). */
+export function fromOrderElements(els: CustomOrderElement[]): DesignElement[] {
+  return [...els]
+    .sort((a, b) => a.sort - b.sort)
+    .map((e, i) => ({
+      id: `order-${i}`,
+      placement: e.placement,
+      kind: e.kind,
+      upload: e.logoUrl
+        ? { id: "", url: e.logoUrl, mimeType: /\.pdf$/i.test(e.originalName ?? e.logoUrl) ? "application/pdf" : "image/png", originalName: e.originalName ?? "" }
+        : undefined,
+      text: e.text ?? undefined,
+      font: e.font ?? undefined,
+      fontWeight: e.fontWeight ?? undefined,
+      color: e.color ?? undefined,
+      align: e.align ?? undefined,
+      x: e.x,
+      y: e.y,
+      scale: e.scale,
+      rotation: e.rotation,
+    }));
 }
 
 /* ---------- Order payload ---------- */

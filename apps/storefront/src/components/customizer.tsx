@@ -3,11 +3,12 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
-import { ArrowRight, Copy, FileText, ImageIcon, Minus, Plus, ShoppingCart, Trash2, Type } from "lucide-react";
+import { ArrowRight, Copy, Eye, FileText, ImageIcon, Minus, Plus, ShoppingCart, Trash2, Type } from "lucide-react";
 import { useCart } from "./cart-provider";
 import { Button } from "./ui/button";
 import { Field, Textarea } from "./ui/field";
 import { DesignPreview } from "./studio/design-preview";
+import { FinalPreviewDialog } from "./studio/final-preview-dialog";
 import { ElementEditor } from "./studio/element-editor";
 import { ElementUploader } from "./studio/element-uploader";
 import { previewFor, productPhotos } from "@/config/product-media";
@@ -22,6 +23,7 @@ import {
   newId,
   newTextElement,
   newUploadElement,
+  optionsOf,
   placementLabelsFr,
   type DesignElement,
   type UploadRef,
@@ -77,6 +79,8 @@ export function Customizer({ product }: { product: Product }) {
   const router = useRouter();
   const { add } = useCart();
   const caps = React.useMemo(() => capsOf(product), [product]);
+  // Only the parameters this product really has (a ball has no size, a phone case asks for the model…).
+  const options = React.useMemo(() => optionsOf({ ...product, customSize: capsOf(product).customSize }), [product]);
   const tiers = sortedTiers(product.priceTiers);
   const gallery = productPhotos(product);
   const perArea = caps.pricingMode === "PER_AREA";
@@ -85,7 +89,7 @@ export function Customizer({ product }: { product: Product }) {
   const [elements, setElements] = React.useState<DesignElement[]>([]);
   const [zone, setZone] = React.useState<Placement>(caps.zones[0].placement);
   const [selectedId, setSelectedId] = React.useState<string | null>(null);
-  const [color, setColor] = React.useState<string | undefined>(product.colors[0]);
+  const [color, setColor] = React.useState<string | undefined>(options.color?.required !== false ? options.color?.values[0] : undefined);
   const [size, setSize] = React.useState<string | undefined>(undefined);
   const [qtyInput, setQtyInput] = React.useState(String(product.minQty));
   const [wInput, setWInput] = React.useState(String(caps.customSize?.defaultWidthCm ?? ""));
@@ -94,6 +98,7 @@ export function Customizer({ product }: { product: Product }) {
   const [view, setView] = React.useState<"studio" | number>("studio");
   const [errors, setErrors] = React.useState<Errors>({});
   const [coverScale, setCoverScale] = React.useState<number | null>(null);
+  const [finalOpen, setFinalOpen] = React.useState(false);
 
   const zoneDef = caps.zones.find((z) => z.placement === zone) ?? caps.zones[0];
   const zoneElements = elements.filter((e) => e.placement === zone);
@@ -189,8 +194,8 @@ export function Customizer({ product }: { product: Product }) {
     else if (caps.artworkRequired && !elements.some((e) => e.kind === "ARTWORK")) next.design = "Ce produit nécessite votre fichier prêt à imprimer : importez-le pour continuer.";
     else if (elements.some((e) => e.kind === "TEXT" && !(e.text ?? "").trim())) next.design = "Un de vos textes est vide : écrivez-le ou supprimez-le.";
     else if (elements.some((e) => e.kind === "TEXT" && e.color && !HEX_RE.test(e.color))) next.design = "Une couleur de texte est invalide.";
-    if (product.colors.length && !color) next.color = "Choisissez une couleur.";
-    if (product.sizes.length && !cs && !size) next.size = "Choisissez une taille.";
+    if (options.color?.required && !color) next.color = `Veuillez choisir : ${options.color.label.toLowerCase()}.`;
+    if (options.size?.required && !size) next.size = `Veuillez choisir : ${options.size.label.toLowerCase()}.`;
     if (!validQty) next.quantity = `Quantité minimale : ${product.minQty} ${product.unitLabel}.`;
     if (cs && !dimsValid) next.dimensions = `Largeur ${cs.minWidthCm}–${cs.maxWidthCm} cm, hauteur ${cs.minHeightCm}–${cs.maxHeightCm} cm.`;
     setErrors(next);
@@ -211,8 +216,10 @@ export function Customizer({ product }: { product: Product }) {
       pricingMode: caps.pricingMode,
       customSize: cs,
       quantity: qty,
-      color,
-      size: cs ? undefined : size,
+      color: options.color ? color : undefined,
+      size: options.size ? size : undefined,
+      colorLabel: options.color?.label,
+      sizeLabel: options.size?.label,
       widthCm: cs ? widthCm : undefined,
       heightCm: cs ? heightCm : undefined,
       elements,
@@ -243,6 +250,7 @@ export function Customizer({ product }: { product: Product }) {
     return all.filter((s, i) => all.findIndex((o) => o.w === s.w && o.h === s.h) === i);
   }, [cs, product.sizes]);
 
+  const hasOptions = Boolean(options.color || options.size || cs);
   const showStudio = view === "studio";
   const mainPhoto = typeof view === "number" ? gallery[view] : null;
   const canAddLogo = caps.supportsLogo;
@@ -306,6 +314,13 @@ export function Customizer({ product }: { product: Product }) {
           ) : null}
         </div>
         </div>
+        {elements.length > 0 && (
+          <div className="mt-3 flex justify-center">
+            <Button type="button" variant="outline" onClick={() => setFinalOpen(true)} data-testid="final-open">
+              <Eye aria-hidden="true" /> Voir le rendu final
+            </Button>
+          </div>
+        )}
         {preview.photo.plain && !gallery.length && (
           <p className="mt-2 rounded-xl bg-ip-mist p-3 text-xs text-ip-muted">Photo du produit à venir : l&apos;aperçu montre la zone d&apos;impression. Votre maquette finale vous sera envoyée avant production.</p>
         )}
@@ -432,7 +447,7 @@ export function Customizer({ product }: { product: Product }) {
                             <Type className="size-4 text-ip-teal" aria-hidden="true" />
                           ) : el.upload?.mimeType.startsWith("image/") ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={resolveApiUrl(el.upload.url)} alt="" className="max-h-full max-w-full object-contain" />
+                            <img src={resolveApiUrl(el.upload.url)} crossOrigin="anonymous" alt="" className="max-h-full max-w-full object-contain" />
                           ) : (
                             <FileText className="size-4 text-ip-teal" aria-hidden="true" />
                           )}
@@ -475,124 +490,129 @@ export function Customizer({ product }: { product: Product }) {
             )}
           </section>
 
-          {/* 2 · Options */}
-          <section aria-labelledby="step-options">
-            <h3 id="step-options" className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <span className="inline-flex size-7 items-center justify-center rounded-full bg-ip-teal text-sm text-white">2</span> Options
-            </h3>
-            <div className="space-y-5">
-              {product.colors.length > 0 && (
-                <div>
-                  <p id="lbl-prodcolor" className="mb-2 text-sm font-medium">
-                    Couleur
-                  </p>
-                  <div role="radiogroup" aria-labelledby="lbl-prodcolor" id="cz-color" tabIndex={-1} className="flex flex-wrap gap-2">
-                    {product.colors.map((c) => (
-                      <Chip
-                        key={c}
-                        selected={color === c}
-                        swatch={swatchFor(c)}
-                        onClick={() => {
-                          setColor(c);
-                          setErrors((e) => ({ ...e, color: undefined }));
-                        }}
-                      >
-                        {c}
-                      </Chip>
-                    ))}
+          {/* 2 · Options (only when the product has parameters) */}
+          {hasOptions && (
+            <section aria-labelledby="step-options">
+              <h3 id="step-options" className="mb-3 flex items-center gap-2 text-lg font-semibold">
+                <span className="inline-flex size-7 items-center justify-center rounded-full bg-ip-teal text-sm text-white">2</span> Options
+              </h3>
+              <div className="space-y-5" data-testid="options">
+                {options.color && (
+                  <div data-testid="option-color">
+                    <p id="lbl-prodcolor" className="mb-2 text-sm font-medium">
+                      {options.color.label}
+                      {options.color.required && <span className="text-red-700"> *</span>}
+                    </p>
+                    <div role="radiogroup" aria-labelledby="lbl-prodcolor" id="cz-color" tabIndex={-1} className="flex flex-wrap gap-2">
+                      {options.color.values.map((c) => (
+                        <Chip
+                          key={c}
+                          selected={color === c}
+                          swatch={swatchFor(c)}
+                          onClick={() => {
+                            setColor(color === c && !options.color?.required ? undefined : c);
+                            setErrors((e) => ({ ...e, color: undefined }));
+                          }}
+                        >
+                          {c}
+                        </Chip>
+                      ))}
+                    </div>
+                    {errors.color && <p className="mt-1 text-xs text-red-700" role="alert">{errors.color}</p>}
                   </div>
-                  {errors.color && <p className="mt-1 text-xs text-red-700" role="alert">{errors.color}</p>}
-                </div>
-              )}
-              {product.sizes.length > 0 && !cs && (
-                <Field id="cz-size" label="Taille" required error={errors.size}>
-                  <select
-                    id="cz-size"
-                    value={size ?? ""}
-                    onChange={(e) => {
-                      setSize(e.target.value || undefined);
-                      setErrors((er) => ({ ...er, size: undefined }));
-                    }}
-                    aria-invalid={Boolean(errors.size)}
-                    aria-describedby="cz-size-msg"
-                    className="h-11 w-full rounded-xl border border-ip-line bg-white px-4 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
-                  >
-                    <option value="">Choisir…</option>
-                    {product.sizes.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-              )}
-              {cs && (
-                <fieldset className="rounded-2xl border border-ip-line p-4" data-testid="custom-size">
-                  <legend className="px-1 text-sm font-medium">Dimensions (cm)</legend>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field id="cz-width" label={`Largeur (${cs.minWidthCm}–${cs.maxWidthCm})`}>
-                      <input
-                        id="cz-width"
-                        type="number"
-                        inputMode="decimal"
-                        min={cs.minWidthCm}
-                        max={cs.maxWidthCm}
-                        value={wInput}
+                )}
+                {options.size && (
+                  <div data-testid="option-size">
+                    <Field id="cz-size" label={options.size.label} required={options.size.required} error={errors.size}>
+                      <select
+                        id="cz-size"
+                        value={size ?? ""}
                         onChange={(e) => {
-                          setWInput(e.target.value);
-                          setErrors((er) => ({ ...er, dimensions: undefined }));
+                          setSize(e.target.value || undefined);
+                          setErrors((er) => ({ ...er, size: undefined }));
                         }}
-                        aria-invalid={Boolean(errors.dimensions)}
-                        aria-describedby="cz-width-msg"
-                        className="h-11 w-full rounded-xl border border-ip-line px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
-                      />
-                    </Field>
-                    <Field id="cz-height" label={`Hauteur (${cs.minHeightCm}–${cs.maxHeightCm})`}>
-                      <input
-                        id="cz-height"
-                        type="number"
-                        inputMode="decimal"
-                        min={cs.minHeightCm}
-                        max={cs.maxHeightCm}
-                        value={hInput}
-                        onChange={(e) => {
-                          setHInput(e.target.value);
-                          setErrors((er) => ({ ...er, dimensions: undefined }));
-                        }}
-                        aria-invalid={Boolean(errors.dimensions)}
-                        aria-describedby="cz-height-msg"
-                        className="h-11 w-full rounded-xl border border-ip-line px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
-                      />
+                        aria-invalid={Boolean(errors.size)}
+                        aria-describedby="cz-size-msg"
+                        className="h-11 w-full rounded-xl border border-ip-line bg-white px-4 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+                      >
+                        <option value="">{options.size.required ? "Choisir…" : "Aucune préférence"}</option>
+                        {options.size.values.map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
                     </Field>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-2">
-                    {quickSizes.map((s) => (
-                      <button
-                        key={`${s.w}x${s.h}`}
-                        type="button"
-                        onClick={() => {
-                          setWInput(String(s.w));
-                          setHInput(String(s.h));
-                          setErrors((er) => ({ ...er, dimensions: undefined }));
-                        }}
-                        className={cn("h-9 rounded-lg border-2 px-3 text-xs font-semibold", Number(wInput) === s.w && Number(hInput) === s.h ? "border-ip-teal bg-ip-teal/5 text-ip-teal" : "border-ip-line hover:border-ip-teal/60")}
-                      >
-                        {s.w} × {s.h} cm
-                      </button>
-                    ))}
-                  </div>
-                  <p id="cz-dimensions" tabIndex={-1} className={cn("mt-2 min-h-4 text-xs", errors.dimensions ? "text-red-700" : "text-ip-muted")} role={errors.dimensions ? "alert" : undefined}>
-                    {errors.dimensions ?? (area !== null ? `Surface facturée : ${area.toFixed(2)} m² (minimum ${cs.minBillableM2} m²)` : "")}
-                  </p>
-                </fieldset>
-              )}
-            </div>
-          </section>
+                )}
+                {cs && (
+                  <fieldset className="rounded-2xl border border-ip-line p-4" data-testid="custom-size">
+                    <legend className="px-1 text-sm font-medium">Dimensions (cm)</legend>
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field id="cz-width" label={`Largeur (${cs.minWidthCm}–${cs.maxWidthCm})`}>
+                        <input
+                          id="cz-width"
+                          type="number"
+                          inputMode="decimal"
+                          min={cs.minWidthCm}
+                          max={cs.maxWidthCm}
+                          value={wInput}
+                          onChange={(e) => {
+                            setWInput(e.target.value);
+                            setErrors((er) => ({ ...er, dimensions: undefined }));
+                          }}
+                          aria-invalid={Boolean(errors.dimensions)}
+                          aria-describedby="cz-width-msg"
+                          className="h-11 w-full rounded-xl border border-ip-line px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+                        />
+                      </Field>
+                      <Field id="cz-height" label={`Hauteur (${cs.minHeightCm}–${cs.maxHeightCm})`}>
+                        <input
+                          id="cz-height"
+                          type="number"
+                          inputMode="decimal"
+                          min={cs.minHeightCm}
+                          max={cs.maxHeightCm}
+                          value={hInput}
+                          onChange={(e) => {
+                            setHInput(e.target.value);
+                            setErrors((er) => ({ ...er, dimensions: undefined }));
+                          }}
+                          aria-invalid={Boolean(errors.dimensions)}
+                          aria-describedby="cz-height-msg"
+                          className="h-11 w-full rounded-xl border border-ip-line px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+                        />
+                      </Field>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-2">
+                      {quickSizes.map((q) => (
+                        <button
+                          key={`${q.w}x${q.h}`}
+                          type="button"
+                          onClick={() => {
+                            setWInput(String(q.w));
+                            setHInput(String(q.h));
+                            setErrors((er) => ({ ...er, dimensions: undefined }));
+                          }}
+                          className={cn("h-9 rounded-lg border-2 px-3 text-xs font-semibold", Number(wInput) === q.w && Number(hInput) === q.h ? "border-ip-teal bg-ip-teal/5 text-ip-teal" : "border-ip-line hover:border-ip-teal/60")}
+                        >
+                          {q.w} × {q.h} cm
+                        </button>
+                      ))}
+                    </div>
+                    <p id="cz-dimensions" tabIndex={-1} className={cn("mt-2 min-h-4 text-xs", errors.dimensions ? "text-red-700" : "text-ip-muted")} role={errors.dimensions ? "alert" : undefined}>
+                      {errors.dimensions ?? (area !== null ? `Surface facturée : ${area.toFixed(2)} m² (minimum ${cs.minBillableM2} m²)` : "")}
+                    </p>
+                  </fieldset>
+                )}
+              </div>
+            </section>
+          )}
 
           {/* 3 · Quantity */}
           <section aria-labelledby="step-qty">
             <h3 id="step-qty" className="mb-3 flex items-center gap-2 text-lg font-semibold">
-              <span className="inline-flex size-7 items-center justify-center rounded-full bg-ip-teal text-sm text-white">3</span> Quantité
+              <span className="inline-flex size-7 items-center justify-center rounded-full bg-ip-teal text-sm text-white">{hasOptions ? 3 : 2}</span> Quantité
             </h3>
             <label htmlFor="cz-quantity" className="mb-2 block text-sm font-medium">
               Nombre de {product.unitLabel}s — minimum {product.minQty}
@@ -664,6 +684,7 @@ export function Customizer({ product }: { product: Product }) {
           </div>
         </form>
       </div>
+      {finalOpen && <FinalPreviewDialog productName={product.name} productSlug={product.slug} color={color} elements={elements} onClose={() => setFinalOpen(false)} />}
     </div>
   );
 }

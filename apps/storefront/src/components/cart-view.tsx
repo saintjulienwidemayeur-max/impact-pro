@@ -2,27 +2,32 @@
 
 import Link from "next/link";
 import * as React from "react";
-import { ArrowRight, Pencil, ShoppingCart, Trash2 } from "lucide-react";
+import { ArrowRight, Eye, Pencil, ShoppingCart, Trash2 } from "lucide-react";
 import { useCart, type ResolvedCartLine } from "./cart-provider";
 import { DesignPreview } from "./studio/design-preview";
+import { FinalPreviewDialog } from "./studio/final-preview-dialog";
 import { Button } from "./ui/button";
 import { previewFor } from "@/config/product-media";
-import { describeZone, placementLabelsFr, summarizeZones } from "@/lib/design";
+import { describeOptions, describeZone, placementLabelsFr, summarizeZones } from "@/lib/design";
 import { formatHTG } from "@/lib/utils";
 
 export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
   const zones = summarizeZones(line.elements);
-  const first = zones[0]?.placement ?? "FRONT";
-  const target = previewFor(line.productSlug, first, line.color);
-  const dims = line.widthCm && line.heightCm ? `${line.widthCm} × ${line.heightCm} cm` : null;
+  const [finalOpen, setFinalOpen] = React.useState(false);
+  const opts = describeOptions(line);
   return (
-    <div className="flex items-start gap-3">
-      <div className="w-24 shrink-0 overflow-hidden rounded-xl border border-ip-line bg-white sm:w-28">
-        <DesignPreview preview={target} elements={line.elements.filter((e) => e.placement === first)} sizes="112px" compact />
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+      <div className="flex shrink-0 flex-wrap gap-2" data-testid="cart-mockups">
+        {zones.slice(0, 4).map((z) => (
+          <figure key={z.placement} className="w-24 overflow-hidden rounded-xl border border-ip-line bg-white sm:w-28" data-testid="cart-mockup">
+            <DesignPreview preview={previewFor(line.productSlug, z.placement, line.color)} elements={line.elements.filter((e) => e.placement === z.placement)} sizes="112px" compact />
+            {zones.length > 1 && <figcaption className="bg-ip-mist px-1.5 py-0.5 text-center text-[10px] font-semibold text-ip-teal">{placementLabelsFr[z.placement]}</figcaption>}
+          </figure>
+        ))}
       </div>
       <div className="min-w-0 text-sm">
         <p className="font-semibold">{line.productName}</p>
-        <p className="text-xs text-ip-muted">{[line.color, line.size, dims].filter(Boolean).join(" · ")}</p>
+        {opts.length > 0 && <p className="text-xs text-ip-muted">{opts.join(" · ")}</p>}
         <ul className="mt-1 space-y-0.5 text-xs text-ip-muted" aria-label="Design par emplacement">
           {zones.map((z) => (
             <li key={z.placement}>
@@ -31,7 +36,11 @@ export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
           ))}
         </ul>
         {line.notes && <p className="mt-0.5 line-clamp-2 text-xs italic text-ip-muted">« {line.notes} »</p>}
+        <button type="button" onClick={() => setFinalOpen(true)} className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-ip-teal hover:underline" data-testid="cart-final-open">
+          <Eye className="size-3" aria-hidden="true" /> Voir le rendu final
+        </button>
       </div>
+      {finalOpen && <FinalPreviewDialog productName={line.productName} productSlug={line.productSlug} color={line.color} elements={line.elements} onClose={() => setFinalOpen(false)} />}
     </div>
   );
 }

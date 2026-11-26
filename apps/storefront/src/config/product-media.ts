@@ -5,6 +5,7 @@
 import { placementLabels, type Placement, type Product } from "@/lib/api";
 import printAreasJson from "./print-areas.json";
 import newMediaJson from "./new-products-media.json";
+import { quadBox, type Quad } from "@/lib/quad";
 
 export interface PrintArea {
   /** Center, as a fraction of the photo width / height. */
@@ -14,6 +15,10 @@ export interface PrintArea {
   w: number;
   h: number;
   rot: number;
+  /** Perspective print area: [TL, TR, BR, BL] as fractions of the photo width / height. cx/cy/w/h/rot are then derived. */
+  quad?: [[number, number], [number, number], [number, number], [number, number]];
+  /** Aspect (w / h) of the flat print area mapped onto `quad`. */
+  aspect?: number;
   /** Surface curvature for a realistic wrap: `phi` = half-angle of the visible cylinder (rad), `arch` = vertical bow (fraction of height, + = center lower). */
   curve?: { phi: number; arch: number };
   /** Surface color used to mask the sample logo already printed on the photo (null = no mask). */
@@ -116,30 +121,76 @@ interface ManifestPhoto {
   height: number;
   blank?: string;
 }
+type ManifestArea =
+  | { cx: number; cy: number; w: number; h: number; rot: number; patch: string | null; curve?: { phi: number; arch: number }; masks?: PrintArea["masks"] }
+  | { quad: number[][]; aspect: number; patch?: string | null; curve?: { phi: number; arch: number } };
 interface ManifestProduct {
   gallery?: ManifestPhoto[];
   previews?: Partial<Record<Placement, string>>;
-  areas?: Record<string, Partial<Record<Placement, PrintArea>>>;
+  /** Color keyword (matched case/accent-insensitively against the selected color) → photo file per placement. */
+  colorPreviews?: Record<string, Partial<Record<Placement, string>>>;
+  areas?: Record<string, Partial<Record<Placement, ManifestArea>>>;
   frame?: { aspect: number };
   approxPlacements?: Placement[];
+  /** Merge into the hand-written entry of the same slug instead of replacing it. */
+  merge?: boolean;
 }
 
 const frames: Record<string, number> = {};
+
+/** Turns a manifest area into a PrintArea; `quad` areas get an equivalent box (cx, cy, w, h, rot) for the generic code. */
+export function normalizeArea(a: ManifestArea, photoW: number, photoH: number): PrintArea {
+  if ("quad" in a && a.quad?.length === 4) {
+    const q = a.quad.map(([x, y]) => [x, y]) as [[number, number], [number, number], [number, number], [number, number]];
+    const k = photoH / photoW; // y fractions → width units
+    const b = quadBox(q.map(([x, y]) => [x, y * k]) as Quad, a.aspect);
+    return { cx: b.cx, cy: b.cy / k, w: b.w, h: b.h, rot: b.rot, patch: a.patch ?? null, curve: a.curve, quad: q, aspect: a.aspect };
+  }
+  return a as PrintArea;
+}
 
 function registerManifest(products: Record<string, ManifestProduct>) {
   for (const [slug, m] of Object.entries(products)) {
     const toPhoto = (mp: ManifestPhoto): Photo => p(mp.file, mp.alt, mp.width, mp.height, mp.blank);
     const gallery = (m.gallery ?? []).map(toPhoto);
     const byFile = new Map(gallery.map((g) => [fileOf(g), g]));
+    const existing = media[slug];
+    // the previous hand-written t-shirt entry only reused the polo photos: real t-shirt photos always replace it
+    const merge = Boolean(m.merge && existing && slug !== "t-shirt-personnalise");
+    if (merge) for (const g of existing.gallery) if (!byFile.has(fileOf(g))) byFile.set(fileOf(g), g);
     if (gallery.length) {
       const previews: Partial<Record<Placement, Photo>> = {};
       for (const [pl, file] of Object.entries(m.previews ?? {})) {
         const ph = byFile.get(file);
         if (ph) previews[pl as Placement] = ph;
       }
-      media[slug] = { gallery, previews, approx: m.approxPlacements };
+      let colorPreviews: ProductMedia["colorPreviews"];
+      for (const [key, byPl] of Object.entries(m.colorPreviews ?? {})) {
+        colorPreviews ??= {};
+        const row: Partial<Record<Placement, Photo>> = {};
+        for (const [pl, file] of Object.entries(byPl)) {
+          const ph = byFile.get(file);
+          if (ph) row[pl as Placement] = ph;
+        }
+        colorPreviews[key] = row;
+      }
+      if (merge) {
+        media[slug] = {
+          gallery: [...existing.gallery, ...gallery.filter((g) => !existing.gallery.some((e) => fileOf(e) === fileOf(g)))],
+          previews: { ...existing.previews, ...previews },
+          colorPreviews: { ...(existing.colorPreviews ?? {}), ...(colorPreviews ?? {}) },
+          approx: [...new Set([...(existing.approx ?? []), ...(m.approxPlacements ?? [])])],
+        };
+      } else {
+        media[slug] = { gallery, previews, colorPreviews, approx: m.approxPlacements };
+      }
     }
-    for (const [file, areas] of Object.entries(m.areas ?? {})) printAreas[file] = { ...(printAreas[file] ?? {}), ...areas };
+    for (const [file, areas] of Object.entries(m.areas ?? {})) {
+      const dims = byFile.get(file) ?? { width: 1000, height: 1000 };
+      const norm: Partial<Record<Placement, PrintArea>> = {};
+      for (const [pl, a] of Object.entries(areas)) if (a) norm[pl as Placement] = normalizeArea(a, dims.width, dims.height);
+      printAreas[file] = { ...(printAreas[file] ?? {}), ...norm };
+    }
     if (m.frame?.aspect) frames[slug] = m.frame.aspect;
   }
 }
@@ -166,6 +217,11 @@ Object.assign(frames, {
   "porte-cles": 1.4,
   "protege-passeport": 0.72,
   tablier: 0.8,
+  "ballon-football": 1,
+  "coque-telephone": 0.62,
+  "gourde-aluminium": 0.4,
+  "gobelet-cafe": 0.65,
+  "badge-lanyard": 0.65,
   ...frames,
 });
 

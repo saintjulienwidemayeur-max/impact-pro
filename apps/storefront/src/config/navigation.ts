@@ -23,14 +23,20 @@ export type NavCategorySlug = (typeof navCategories)[number]["slug"];
  * (slug = API product slug), so the destination always exists once the catalog is seeded.
  */
 export const navFamilies = [
-  { slug: "ballon-personnalise", name: "Ballons", tagline: "Latex imprimé, 1 ou 2 faces" },
+  { slug: "ballon-football", name: "Ballons de foot", tagline: "Votre logo sur le ballon" },
+  { slug: "ballon-personnalise", name: "Ballons de fête", tagline: "Latex imprimé, 1 ou 2 faces" },
+  { slug: "t-shirt-personnalise", name: "T-shirts", tagline: "Devant, dos, plusieurs couleurs" },
   { slug: "tente-pliante-3x3", name: "Tentes pliantes", tagline: "Toit et côtés imprimés" },
   { slug: "roll-up", name: "Roll-up", tagline: "Votre fichier, 85 × 200 cm" },
   { slug: "sac-tote", name: "Sacs tote", tagline: "Devant et dos" },
   { slug: "sac-a-cordon", name: "Sacs à cordon", tagline: "Logo + texte" },
   { slug: "parapluie", name: "Parapluies", tagline: "Toile imprimée" },
-  { slug: "gourde-isotherme", name: "Gourdes", tagline: "Logo et texte" },
-  { slug: "gobelet-isotherme", name: "Gobelets", tagline: "Isothermes" },
+  { slug: "gourde-aluminium", name: "Gourdes aluminium", tagline: "Logo et texte" },
+  { slug: "gourde-isotherme", name: "Gourdes isothermes", tagline: "Logo et texte" },
+  { slug: "gobelet-cafe", name: "Gobelets café", tagline: "Couvercle blanc ou noir" },
+  { slug: "gobelet-isotherme", name: "Gobelets isothermes", tagline: "Logo et texte" },
+  { slug: "coque-telephone", name: "Coques téléphone", tagline: "Choisissez votre modèle" },
+  { slug: "badge-lanyard", name: "Badges & lanyards", tagline: "Événements et équipes" },
   { slug: "cle-usb", name: "Clés USB", tagline: "Votre logo gravé" },
   { slug: "porte-cles", name: "Porte-clés", tagline: "Devant et dos" },
   { slug: "flyers-brochures", name: "Flyers & brochures", tagline: "Importez votre fichier" },

@@ -4,7 +4,7 @@ import { CheckCircle2, SearchX } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { nextSteps, OrderDetails } from "@/components/order-details";
 import { PageHeader } from "@/components/page-header";
-import { getCustomOrder, type CustomOrder } from "@/lib/api";
+import { getCustomOrder, optionLabelsBySlug, type CustomOrder } from "@/lib/api";
 import { trackingSchema } from "@/lib/schemas";
 import { whatsappHref } from "@/lib/site";
 
@@ -28,6 +28,8 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
     }
   }
 
+  const labels = order ? await optionLabelsBySlug() : {};
+
   return (
     <>
       <PageHeader title="Merci pour votre commande !" crumbs={[{ label: "Commande" }, { label: "Confirmation" }]} />
@@ -44,7 +46,7 @@ export default async function ConfirmationPage({ searchParams }: { searchParams:
                   votre référence pour suivre l&apos;avancement.
                 </p>
               </div>
-              <OrderDetails order={order} />
+              <OrderDetails order={order} labels={labels} />
             </>
           ) : (
             <div className="flex flex-col items-center rounded-[var(--radius-card)] border border-dashed border-ip-line bg-ip-mist px-6 py-14 text-center">

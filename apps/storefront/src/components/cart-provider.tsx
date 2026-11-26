@@ -22,6 +22,9 @@ export interface CartLine {
   quantity: number;
   color?: string;
   size?: string;
+  /** Labels of the options at the time of the order (« Modèle du téléphone »…); display only. */
+  colorLabel?: string;
+  sizeLabel?: string;
   widthCm?: number;
   heightCm?: number;
   elements: DesignElement[];

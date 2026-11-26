@@ -76,7 +76,7 @@ export function LogoUploader({ id, value, onChange, error }: LogoUploaderProps) 
           <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-ip-line bg-white">
             {value.mimeType.startsWith("image/") ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={resolveApiUrl(value.url)} alt="" className="max-h-full max-w-full object-contain" />
+              <img src={resolveApiUrl(value.url)} crossOrigin="anonymous" alt="" className="max-h-full max-w-full object-contain" />
             ) : (
               <FileText className="size-6 text-ip-teal" aria-hidden="true" />
             )}

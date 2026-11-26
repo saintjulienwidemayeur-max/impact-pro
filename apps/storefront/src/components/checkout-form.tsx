@@ -11,6 +11,7 @@ import { Button } from "./ui/button";
 import { Field, Input, Textarea } from "./ui/field";
 import { ApiError, createCustomOrder, detailsToFields, friendlyError, type DeliveryMethod } from "@/lib/api";
 import { toOrderElements } from "@/lib/design";
+import { uploadOrderPreviews } from "@/lib/mockup";
 import { checkoutSchema, fieldErrors } from "@/lib/schemas";
 import { cn, formatHTG } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ export function CheckoutForm() {
   const [errors, setErrors] = React.useState<Errors>({});
   const [general, setGeneral] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(false);
+  const [stage, setStage] = React.useState<"previews" | "send">("send");
 
   if (!ready) return <div className="h-96 animate-pulse rounded-2xl bg-ip-mist" aria-busy="true" aria-label="Chargement" />;
 
@@ -71,6 +73,15 @@ export function CheckoutForm() {
     const v = parsed.data;
     setPending(true);
     try {
+      // One rendered mock-up per zone travels with the order (best effort: never blocks or fails the order).
+      setStage("previews");
+      let previews: Awaited<ReturnType<typeof uploadOrderPreviews>> = [];
+      try {
+        previews = await uploadOrderPreviews(lines);
+      } catch {
+        previews = [];
+      }
+      setStage("send");
       const order = await createCustomOrder({
         customer: {
           fullName: v.fullName,
@@ -89,6 +100,7 @@ export function CheckoutForm() {
           heightCm: l.heightCm,
           notes: l.notes,
           elements: toOrderElements(l.elements),
+          previews: previews[lines.indexOf(l)]?.length ? previews[lines.indexOf(l)] : undefined,
         })),
         deliveryMethod: v.deliveryMethod,
         notes: v.notes || undefined,
@@ -211,7 +223,7 @@ export function CheckoutForm() {
         )}
         <Button type="submit" variant="sun" size="lg" className="w-full" disabled={pending}>
           {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Lock aria-hidden="true" />}
-          {pending ? "Envoi…" : "Confirmer la commande"}
+          {pending ? (stage === "previews" ? "Préparation de vos aperçus…" : "Envoi…") : "Confirmer la commande"}
         </Button>
         <p className="text-xs text-ip-muted">
           Aucun paiement maintenant : nous vous envoyons la maquette et le montant final, puis vous payez par MonCash, NatCash ou carte.

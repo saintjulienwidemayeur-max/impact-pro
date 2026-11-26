@@ -7,7 +7,8 @@ import { RotateCw } from "lucide-react";
 import type { Preview } from "@/config/product-media";
 import { resolveApiUrl } from "@/lib/api";
 import { clamp, SCALE_MAX, SCALE_MIN, type DesignElement } from "@/lib/design";
-import { drawZone, elementBox, ensureFonts, loadImage, meanLuminance } from "@/lib/design-render";
+import { drawZone, elementBox, ensureFonts, isLightHex, loadImage, meanLuminance } from "@/lib/design-render";
+import { cssMatrix3d, quadEdges, quadToFlat, scaleQuad, type Quad } from "@/lib/quad";
 import { cn } from "@/lib/utils";
 
 interface DesignPreviewProps {
@@ -25,14 +26,6 @@ interface DesignPreviewProps {
   compact?: boolean;
   /** Zone label for the « aperçu indicatif » note. */
   zoneLabel?: string;
-}
-
-function isLight(hex: string | null): boolean {
-  if (!hex) return true;
-  const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex);
-  if (!m) return true;
-  const [r, g, b] = [m[1], m[2], m[3]].map((x) => Number.parseInt(x, 16) / 255);
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.6;
 }
 
 const imageUrl = (el: DesignElement) => (el.upload && el.upload.mimeType.startsWith("image/") ? resolveApiUrl(el.upload.url) : null);
@@ -108,8 +101,19 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
   }, [fontsKey]);
 
   const height = width * (photo.height / photo.width);
-  const light = isLight(area.patch);
-  const box = width > 0 ? { w: area.w * width, h: area.h * width, left: area.cx * width - (area.w * width) / 2, top: area.cy * height - (area.h * width) / 2 } : null;
+  const light = isLightHex(area.patch);
+  // Perspective areas: the interaction layer is a flat `w × h` box mapped onto the quad with a CSS 3D matrix.
+  const quadCss: Quad | null = width > 0 && area.quad && area.aspect ? scaleQuad(area.quad as Quad, width, height) : null;
+  let box: { w: number; h: number; left: number; top: number } | null = null;
+  if (width > 0) {
+    if (quadCss && area.aspect) {
+      const e = quadEdges(quadCss);
+      const w = (e.top + e.bottom) / 2;
+      box = { w, h: w / area.aspect, left: 0, top: 0 };
+    } else {
+      box = { w: area.w * width, h: area.h * width, left: area.cx * width - (area.w * width) / 2, top: area.cy * height - (area.h * width) / 2 };
+    }
+  }
 
   const lookup = React.useCallback((el: DesignElement) => {
     const u = imageUrl(el);
@@ -136,6 +140,13 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
   function toLocal(clientX: number, clientY: number): { x: number; y: number } | null {
     const node = areaRef.current;
     if (!node || !box) return null;
+    if (quadCss) {
+      // inverse homography: frame point → flat print-area coordinates (origin moved to the box center)
+      const wr = wrapRef.current?.getBoundingClientRect();
+      if (!wr) return null;
+      const [fx, fy] = quadToFlat(quadCss, box.w, box.h, clientX - wr.left, clientY - wr.top);
+      return { x: fx - box.w / 2, y: fy - box.h / 2 };
+    }
     const r = node.getBoundingClientRect();
     const dx = clientX - (r.left + r.width / 2);
     const dy = clientY - (r.top + r.height / 2);
@@ -256,7 +267,14 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
             }}
           />
         ))}
-      {hasElements && box && !useBlank && !photo.plain && area.patch && (
+      {hasElements && box && !useBlank && !photo.plain && area.patch && quadCss && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{ background: area.patch, clipPath: `polygon(${quadCss.map(([x, y]) => `${x}px ${y}px`).join(",")})` }}
+        />
+      )}
+      {hasElements && box && !useBlank && !photo.plain && area.patch && !quadCss && (
         <div
           aria-hidden="true"
           className="absolute rounded-[18%]"
@@ -287,7 +305,11 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
         <div
           ref={areaRef}
           className="absolute"
-          style={{ left: box.left, top: box.top, width: box.w, height: box.h, transform: `rotate(${area.rot}deg)` }}
+          style={
+            quadCss
+              ? { left: 0, top: 0, width: box.w, height: box.h, transformOrigin: "0 0", transform: cssMatrix3d(quadCss, box.w, box.h) }
+              : { left: box.left, top: box.top, width: box.w, height: box.h, transform: `rotate(${area.rot}deg)` }
+          }
           data-testid="design-overlay"
         >
           {elements.map((el) => {

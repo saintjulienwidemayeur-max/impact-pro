@@ -19,6 +19,10 @@ const base = (o) => ({
   currency: "HTG",
   colors: [],
   sizes: [],
+  colorLabel: "Couleur",
+  sizeLabel: "Taille",
+  colorsRequired: true,
+  sizesRequired: true,
   images: [],
   pricingMode: "PER_PIECE",
   supportsLogo: true,
@@ -88,6 +92,8 @@ const PRODUCTS = [
     basePrice: "7500.00",
     minQty: 1,
     unitLabel: "roll-up",
+    sizeLabel: "Format",
+    sizes: ["85 × 200 cm", "100 × 200 cm", "120 × 200 cm"],
     placements: ["FRONT"],
     supportsArtwork: true,
     artworkRequired: true,
@@ -108,6 +114,65 @@ const PRODUCTS = [
     ],
   }),
 ];
+
+PRODUCTS.push(
+  base({
+    slug: "t-shirt-personnalise",
+    name: "T-shirt personnalisé",
+    category: { slug: "t-shirts-polos", name: "T-shirts & polos" },
+    basePrice: "750.00",
+    minQty: 12,
+    unitLabel: "pièce",
+    colors: ["Rouge", "Bleu royal", "Noir", "Blanc"],
+    sizes: ["S", "M", "L", "XL", "XXL"],
+    placements: ["FRONT", "BACK", "CHEST_LEFT", "SLEEVE"],
+    priceTiers: [
+      { minQty: 12, unitPrice: "750.00" },
+      { minQty: 50, unitPrice: "650.00" },
+    ],
+  }),
+  base({
+    slug: "ballon-football",
+    name: "Ballon de football personnalisé",
+    description: "Ballon de football taille 5 (taille officielle).",
+    category: { slug: "ballons", name: "Ballons" },
+    basePrice: "1800.00",
+    minQty: 10,
+    unitLabel: "ballon",
+    placements: ["FRONT", "BACK"],
+    priceTiers: [
+      { minQty: 10, unitPrice: "1800.00" },
+      { minQty: 50, unitPrice: "1500.00" },
+    ],
+  }),
+  base({
+    slug: "coque-telephone",
+    name: "Coque de téléphone personnalisée",
+    category: { slug: "accessoires", name: "Accessoires" },
+    basePrice: "650.00",
+    minQty: 5,
+    unitLabel: "coque",
+    sizeLabel: "Modèle du téléphone",
+    sizes: ["iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "Samsung A14", "Samsung A54", "Tecno Spark 10"],
+    placements: ["FRONT"],
+    priceTiers: [{ minQty: 5, unitPrice: "650.00" }],
+  }),
+  base({
+    slug: "tente-pliante-3x3",
+    name: "Tente pliante personnalisée",
+    category: { slug: "tentes", name: "Tentes" },
+    basePrice: "38000.00",
+    minQty: 1,
+    unitLabel: "tente",
+    colorLabel: "Couleur du toit",
+    colors: ["Blanc", "Bleu", "Rouge"],
+    sizeLabel: "Dimensions",
+    sizes: ["3 × 3 m", "3 × 4,5 m", "3 × 6 m"],
+    placements: ["TOP", "FRONT", "SIDE", "BACK"],
+    supportsArtwork: true,
+    priceTiers: [{ minQty: 1, unitPrice: "38000.00" }],
+  }),
+);
 
 const uploads = new Map(); // id -> { buf, mime, name, purpose, at }
 const orders = new Map(); // ref -> order
@@ -165,13 +230,14 @@ function parseMultipart(buf, contentType) {
 function handleUpload(req, res, purpose, buf) {
   const part = parseMultipart(buf, req.headers["content-type"]);
   if (!part || !part.data.length) return fail(res, 422, "VALIDATION_ERROR", "Fichier manquant.", [{ field: "file", messages: ["file is required"] }]);
-  const limit = purpose === "ARTWORK" ? 25 * 1024 * 1024 : 10 * 1024 * 1024;
+  const limit = purpose === "ARTWORK" ? 25 * 1024 * 1024 : purpose === "PREVIEW" ? 3 * 1024 * 1024 : 10 * 1024 * 1024;
   if (part.data.length > limit) return fail(res, 413, "PAYLOAD_TOO_LARGE", "Fichier trop volumineux.");
   const mime = sniff(part.data);
   if (!mime) return fail(res, 422, "UNSUPPORTED_FILE_TYPE", "Format accepté : PNG, JPG, WEBP ou PDF.");
   const id = crypto.randomUUID();
   uploads.set(id, { buf: part.data, mime, name: part.name, purpose, at: Date.now() });
-  const kind = purpose === "ARTWORK" ? "artwork" : "logos";
+  if (purpose === "PREVIEW" && !["image/png", "image/jpeg"].includes(mime)) return fail(res, 422, "UNSUPPORTED_FILE_TYPE", "Aperçu : PNG ou JPEG.");
+  const kind = purpose === "ARTWORK" ? "artwork" : purpose === "PREVIEW" ? "previews" : "logos";
   return ok(res, { id, url: `/api/v1/uploads/${kind}/${id}`, mimeType: mime, size: part.data.length, originalName: part.name }, 201);
 }
 
@@ -195,6 +261,19 @@ function buildItem(raw, i, res) {
   const p = PRODUCTS.find((x) => x.slug === raw.productSlug);
   if (!p) return { error: () => fail(res, 404, "PRODUCT_NOT_FOUND", `Produit introuvable : ${raw.productSlug}`) };
   if (!Number.isInteger(raw.quantity) || raw.quantity < p.minQty) return { error: () => fail(res, 422, "QUANTITY_BELOW_MINIMUM", "Quantité sous le minimum.") };
+  // product parameters (contract §7.1)
+  if (p.colors.length) {
+    if (raw.color && !p.colors.includes(raw.color)) return { error: () => fail(res, 422, "INVALID_OPTION", "Option invalide.") };
+    if (p.colorsRequired && !raw.color) return { error: () => fail(res, 422, "COLOR_REQUIRED", "Couleur requise.") };
+  } else if (raw.color) return { error: () => fail(res, 422, "INVALID_OPTION", "Ce produit n'a pas de couleur.") };
+  if (p.sizes.length && !p.customSize) {
+    if (raw.size && !p.sizes.includes(raw.size)) return { error: () => fail(res, 422, "INVALID_OPTION", "Option invalide.") };
+    if (p.sizesRequired && !raw.size) return { error: () => fail(res, 422, "SIZE_REQUIRED", "Taille requise.") };
+  } else if (raw.size && !p.customSize) return { error: () => fail(res, 422, "INVALID_OPTION", "Ce produit n'a pas de taille.") };
+  const prevs = Array.isArray(raw.previews) ? raw.previews : [];
+  if (prevs.length > 12 || prevs.some((x) => uploads.get(x?.uploadId)?.purpose !== "PREVIEW")) {
+    return { error: () => fail(res, 422, "UPLOAD_NOT_FOUND", "Aperçu introuvable.") };
+  }
   const els = raw.elements;
   if (!Array.isArray(els) || els.length < 1 || els.length > 30) {
     return { error: () => fail(res, 422, "VALIDATION_ERROR", "Validation failed", [{ field: `items.${i}.elements`, messages: ["elements must contain 1..30 elements"] }]) };
@@ -245,6 +324,7 @@ function buildItem(raw, i, res) {
       heightCm: raw.heightCm ?? null,
       areaM2: areaM2 === undefined ? null : money(areaM2),
       placement: els[0].placement,
+      previews: prevs.map((x) => ({ placement: x.placement, url: `/api/v1/uploads/previews/${x.uploadId}` })),
       logoUrl: (() => {
         const e = els.find((x) => x.uploadId);
         return e ? `/api/v1/uploads/${uploads.get(e.uploadId).purpose === "ARTWORK" ? "artwork" : "logos"}/${e.uploadId}` : null;
@@ -283,10 +363,10 @@ const server = http.createServer(async (req, res) => {
       const p = PRODUCTS.find((x) => x.slug === decodeURIComponent(m[1]));
       return p ? ok(res, p) : fail(res, 404, "NOT_FOUND", "Produit introuvable.");
     }
-    if (req.method === "POST" && (path === "/uploads/logos" || path === "/uploads/artwork")) {
-      return handleUpload(req, res, path.endsWith("artwork") ? "ARTWORK" : "LOGO", await readBody(req));
+    if (req.method === "POST" && (path === "/uploads/logos" || path === "/uploads/artwork" || path === "/uploads/previews")) {
+      return handleUpload(req, res, path.endsWith("artwork") ? "ARTWORK" : path.endsWith("previews") ? "PREVIEW" : "LOGO", await readBody(req));
     }
-    m = /^\/uploads\/(logos|artwork)\/([^/]+)$/.exec(path);
+    m = /^\/uploads\/(logos|artwork|previews)\/([^/]+)$/.exec(path);
     if (req.method === "GET" && m) {
       const u = uploads.get(m[2]);
       if (!u) return fail(res, 404, "NOT_FOUND", "Fichier introuvable.");

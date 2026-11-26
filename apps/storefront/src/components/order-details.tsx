@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Check, FileText, Type } from "lucide-react";
 import { orderStatusLabels, placementLabels, resolveApiUrl, type CustomOrder, type CustomOrderElement, type CustomOrderItem, type CustomOrderStatus } from "@/lib/api";
-import { fontById } from "@/lib/design";
+import { describeOptions, fontById } from "@/lib/design";
+import { OrderMockups } from "./order-mockups";
 import { toNumber } from "@/lib/pricing";
 import { cn, formatHTG } from "@/lib/utils";
 
@@ -77,7 +78,7 @@ export function ItemDesign({ item }: { item: CustomOrderItem }) {
                 <li key={i} className="flex items-center gap-1.5">
                   {e.logoUrl && !/\.pdf$/i.test(e.originalName ?? "") ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={resolveApiUrl(e.logoUrl)} alt="" className="size-8 shrink-0 rounded border border-ip-line bg-white object-contain" />
+                    <img src={resolveApiUrl(e.logoUrl)} crossOrigin="anonymous" alt="" className="size-8 shrink-0 rounded border border-ip-line bg-white object-contain" />
                   ) : (
                     <FileText className="size-4 shrink-0 text-ip-teal" aria-hidden="true" />
                   )}
@@ -99,7 +100,7 @@ export function ItemDesign({ item }: { item: CustomOrderItem }) {
   );
 }
 
-export function OrderDetails({ order }: { order: CustomOrder }) {
+export function OrderDetails({ order, labels = {} }: { order: CustomOrder; labels?: Record<string, { colorLabel?: string; sizeLabel?: string }> }) {
   const created = order.createdAt ? new Date(order.createdAt) : null;
   return (
     <div className="space-y-6">
@@ -136,11 +137,12 @@ export function OrderDetails({ order }: { order: CustomOrder }) {
                   <Link href={`/produits/${it.productSlug}`} className="font-semibold hover:text-ip-teal">
                     {it.productName}
                   </Link>
-                  <p className="text-xs text-ip-muted">
-                    {[it.color, it.size, it.widthCm && it.heightCm ? `${it.widthCm} × ${it.heightCm} cm` : null].filter(Boolean).join(" · ")}
+                  <p className="text-xs text-ip-muted" data-testid="order-options">
+                    {describeOptions({ color: it.color, size: it.size, widthCm: it.widthCm, heightCm: it.heightCm, ...labels[it.productSlug] }).join(" · ")}
                   </p>
                 </td>
                 <td className="px-4 py-3">
+                  <OrderMockups item={it} />
                   <ItemDesign item={it} />
                 </td>
                 <td className="px-4 py-3 text-right">{it.quantity}</td>
