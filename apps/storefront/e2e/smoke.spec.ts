@@ -35,6 +35,17 @@ async function addLogo(page: Page, file = LOGO, opts: { keepDialog?: boolean } =
   await expect(page.getByTestId("layer-item")).toHaveCount(before + 1, { timeout: 15_000 });
 }
 
+/** Downloads an uploaded file through the page (CORS-enabled fetch) and reports its size and the alpha of its top-left pixel. */
+async function inspectUploaded(page: Page, url: string) {
+  return page.evaluate(async (u) => {
+    const bmp = await createImageBitmap(await (await fetch(u)).blob());
+    const c = new OffscreenCanvas(bmp.width, bmp.height);
+    const ctx = c.getContext("2d")!;
+    ctx.drawImage(bmp, 0, 0);
+    return { w: bmp.width, h: bmp.height, cornerAlpha: ctx.getImageData(0, 0, 1, 1).data[3] };
+  }, url);
+}
+
 async function fillCheckout(page: Page, email = "e2e@example.com") {
   await page.locator("#fullName").fill("Marie Joseph");
   await page.locator("#phone").fill("+509 3712-3456");
@@ -57,7 +68,7 @@ test.describe("storefront", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText(/sur tout/i);
     await expect(page.getByRole("heading", { name: "Produits populaires" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Personnalisez tout" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Ballons/ }).first()).toHaveAttribute("href", "/personnaliser/ballon-personnalise");
+    await expect(page.locator('section[aria-labelledby="everything-title"]').getByRole("link", { name: /Ballons/ })).toHaveAttribute("href", "/personnaliser/ballon-personnalise");
     await expect(page.getByRole("heading", { name: "Votre logo sur tout votre kit" })).toBeVisible();
     await expect(page.locator('img[src*="kit-promotionnel"]').first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Comment ça marche" })).toBeVisible();
@@ -135,11 +146,12 @@ test.describe("studio", () => {
     await addLogo(page, LOGO_WHITE_BG, { keepDialog: true });
     const sw = page.getByTestId("bg-switch");
     await expect(sw).toBeChecked(); // opaque, uniform white border → on by default
+    // -1 while the preview canvas has not been drawn yet (0×0 canvas), so expect.poll simply retries
     const alphaAt = (x: number, y: number) =>
-      page.getByTestId("bg-preview").evaluate((c: HTMLCanvasElement, [px, py]) => c.getContext("2d")!.getImageData(px, py, 1, 1).data[3], [x, y]);
+      page.getByTestId("bg-preview").evaluate((c: HTMLCanvasElement, [px, py]) => (c.width < 2 ? -1 : c.getContext("2d")!.getImageData(px, py, 1, 1).data[3]), [x, y]);
     await expect.poll(() => alphaAt(2, 2)).toBe(0); // corner background removed
-    expect(await alphaAt(85, 85)).toBe(255); // enclosed white hole of the disc is kept (edge mode)
-    expect(await alphaAt(60, 60)).toBe(255); // red ring kept
+    await expect.poll(() => alphaAt(85, 85)).toBe(255); // enclosed white hole of the disc is kept (edge mode)
+    await expect.poll(() => alphaAt(60, 60)).toBe(255); // red ring kept
 
     await page.getByText("Supprimer cette couleur partout").click(); // global mode
     await expect.poll(() => alphaAt(85, 85)).toBe(0);
@@ -154,13 +166,16 @@ test.describe("studio", () => {
     await page.getByTestId("bg-preview").click({ position: { x: 5, y: 5 } });
     await expect(page.getByText(/Couleur retirée #ffffff/i)).toBeVisible();
 
-    const uploadReq = page.waitForRequest((r) => r.url().includes("/uploads/logos") && r.method() === "POST");
     await page.getByTestId("bg-confirm").click();
-    const body = (await uploadReq).postDataBuffer()!;
-    expect(body.includes(Buffer.from("filename=\"logo-white-bg.png\""))).toBe(true);
-    expect(body.includes(Buffer.from([0x89, 0x50, 0x4e, 0x47]))).toBe(true); // a PNG (with alpha) is uploaded
     await expect(page.getByTestId("layer-item")).toHaveCount(1, { timeout: 15_000 });
-    await expect(page.getByTestId("layer-item").locator("img")).toBeVisible();
+    await expect(page.getByTestId("layer-item")).toContainText("logo-white-bg.png");
+    const thumb = page.getByTestId("layer-item").locator("img");
+    await expect(thumb).toBeVisible();
+    // what reached the server is a transparent PNG, trimmed to the logo (the original is 240 × 180 on white)
+    const up = await inspectUploaded(page, (await thumb.getAttribute("src"))!);
+    expect(up.cornerAlpha).toBe(0);
+    expect(up.w).toBeLessThan(240);
+    expect(up.h).toBeLessThan(180);
   });
 
   test("dialog can be cancelled and the original sent as-is when the switch is off", async ({ page }) => {
@@ -173,10 +188,10 @@ test.describe("studio", () => {
     await addLogo(page, LOGO_WHITE_BG, { keepDialog: true });
     await page.getByTestId("bg-switch").uncheck();
     await expect(page.getByTestId("bg-confirm")).toHaveText("Utiliser le logo tel quel");
-    const req = page.waitForRequest((r) => r.url().includes("/uploads/logos") && r.method() === "POST");
     await page.getByTestId("bg-confirm").click();
-    expect((await req).postDataBuffer()!.includes(Buffer.from("filename=\"logo-white-bg.png\""))).toBe(true);
     await expect(page.getByTestId("layer-item")).toHaveCount(1, { timeout: 15_000 });
+    const up = await inspectUploaded(page, (await page.getByTestId("layer-item").locator("img").getAttribute("src"))!);
+    expect(up).toMatchObject({ w: 240, h: 180, cornerAlpha: 255 }); // the untouched original
   });
 
   test("PDF logos skip the background dialog", async ({ page }) => {
@@ -205,7 +220,8 @@ test.describe("studio", () => {
     const b2 = (await el.boundingBox())!;
     expect(b2.width).toBeGreaterThan(b1.width);
 
-    // drag with the pointer
+    // drag with the pointer (make sure the element is inside the viewport: mouse events outside it are ignored)
+    await el.scrollIntoViewIfNeeded();
     const b3 = (await el.boundingBox())!;
     await page.mouse.move(b3.x + b3.width / 2, b3.y + b3.height / 2);
     await page.mouse.down();
@@ -307,7 +323,7 @@ test.describe("studio", () => {
   });
 
   test("banner: artwork required, custom size, area pricing, fit/fill", async ({ page }) => {
-    test.skip(REAL, "relies on the mock catalog (banderole-pvc, PER_AREA)");
+    // banderole-pvc: PER_AREA at 2 800 HTG/m², customSize 50–1000 × 50–500 cm, minimum billable 1 m² (same in seed and mock)
     await page.goto("/personnaliser/banderole-pvc");
     await page.getByRole("button", { name: "Ajouter au panier" }).click();
     await expect(page.getByText("Importez votre fichier prêt à imprimer pour continuer.")).toBeVisible();
@@ -318,19 +334,20 @@ test.describe("studio", () => {
     await expect(page.getByTestId("design-canvas")).toHaveCSS("opacity", "1", { timeout: 10_000 });
     await expect(page.getByTestId("bg-dialog")).toHaveCount(0); // no background removal for artwork
 
-    // default 300 × 120 cm = 3.6 m² at 2 500 HTG/m²
+    // default 300 × 120 cm = 3.6 m² at 2 800 HTG/m²
     await expect(page.getByTestId("custom-size")).toContainText("3.60 m²");
-    await expect(page.getByTestId("line-estimate")).toHaveText(/9\s?000 HTG/);
+    await expect(page.getByTestId("line-estimate")).toHaveText(/10\s?080 HTG/);
     await page.locator("#cz-width").fill("200");
     await page.locator("#cz-height").fill("100");
-    await expect(page.getByTestId("line-estimate")).toHaveText(/5\s?000 HTG/);
+    await expect(page.getByTestId("line-estimate")).toHaveText(/5\s?600 HTG/);
     await page.locator("#cz-width").fill("60");
-    await page.locator("#cz-height").fill("60"); // 0.36 m² → minimum billable 0.5 m²
-    await expect(page.getByTestId("line-estimate")).toHaveText(/1\s?250 HTG/);
+    await page.locator("#cz-height").fill("60"); // 0.36 m² → minimum billable 1 m²
+    await expect(page.getByTestId("line-estimate")).toHaveText(/2\s?800 HTG/);
     await page.locator("#cz-width").fill("20");
     await expect(page.getByTestId("line-estimate")).toHaveText("—");
     await page.getByRole("button", { name: "Ajouter au panier" }).click();
-    await expect(page.getByText(/Largeur 50–600 cm/)).toBeVisible();
+    await expect(page.getByText(/Largeur 50–1000 cm/)).toBeVisible();
+    await expect(page.locator("#cz-size")).toHaveCount(0); // sizes are quick-pick dimensions, not a separate select
 
     await page.getByRole("button", { name: /300 × 120 cm/ }).click();
     await page.getByTestId("artwork-cover").click();
@@ -340,17 +357,19 @@ test.describe("studio", () => {
 
     await page.goto("/panier");
     await expect(page.getByTestId("cart-line")).toContainText("300 × 120 cm");
-    await expect(page.getByTestId("cart-total")).toHaveText(/9\s?000 HTG/);
+    await expect(page.getByTestId("cart-total")).toHaveText(/10\s?080 HTG/);
     await page.getByRole("link", { name: "Passer la commande" }).click();
     await fillCheckout(page);
     await page.getByRole("button", { name: "Confirmer la commande" }).click();
     await page.waitForURL(/\/commande\/confirmation/, { timeout: 15_000 });
-    await expect(page.getByTestId("order-subtotal")).toHaveText(/9\s?000 HTG/);
+    await expect(page.getByTestId("order-subtotal")).toHaveText(/10\s?080 HTG/);
     await expect(page.getByTestId("order-design")).toContainText("Fichier prêt à imprimer");
 
-    const item = (await lastOrderPayload(page)).items[0];
-    expect(item).toMatchObject({ productSlug: "banderole-pvc", widthCm: 300, heightCm: 120, quantity: 1 });
-    expect(item.elements[0]).toMatchObject({ placement: "FRONT", kind: "ARTWORK", scale: 1 });
+    if (!REAL) {
+      const item = (await lastOrderPayload(page)).items[0];
+      expect(item).toMatchObject({ productSlug: "banderole-pvc", widthCm: 300, heightCm: 120, quantity: 1 });
+      expect(item.elements[0]).toMatchObject({ placement: "FULL", kind: "ARTWORK", scale: 1 });
+    }
   });
 
   test("products without photography use a plain print-area frame; PDF artwork is accepted", async ({ page }) => {

@@ -360,8 +360,8 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
         </div>
       )}
 
-      {hasElements && !compact && (
-        <span className="pointer-events-none absolute bottom-2 left-2 rounded-full bg-ip-ink/85 px-3 py-1 text-xs font-semibold text-white">
+      {(hasElements || indicative) && !compact && !(indicative && !zoneLabel) && (
+        <span className="pointer-events-none absolute bottom-2 left-2 max-w-[92%] truncate rounded-full bg-ip-ink/85 px-3 py-1 text-xs font-semibold text-white">
           {indicative && zoneLabel ? `Aperçu indicatif de l'emplacement : ${zoneLabel}` : "Aperçu indicatif"}
         </span>
       )}

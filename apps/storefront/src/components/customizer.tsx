@@ -190,7 +190,7 @@ export function Customizer({ product }: { product: Product }) {
     else if (elements.some((e) => e.kind === "TEXT" && !(e.text ?? "").trim())) next.design = "Un de vos textes est vide : écrivez-le ou supprimez-le.";
     else if (elements.some((e) => e.kind === "TEXT" && e.color && !HEX_RE.test(e.color))) next.design = "Une couleur de texte est invalide.";
     if (product.colors.length && !color) next.color = "Choisissez une couleur.";
-    if (product.sizes.length && !size) next.size = "Choisissez une taille.";
+    if (product.sizes.length && !cs && !size) next.size = "Choisissez une taille.";
     if (!validQty) next.quantity = `Quantité minimale : ${product.minQty} ${product.unitLabel}.`;
     if (cs && !dimsValid) next.dimensions = `Largeur ${cs.minWidthCm}–${cs.maxWidthCm} cm, hauteur ${cs.minHeightCm}–${cs.maxHeightCm} cm.`;
     setErrors(next);
@@ -212,7 +212,7 @@ export function Customizer({ product }: { product: Product }) {
       customSize: cs,
       quantity: qty,
       color,
-      size,
+      size: cs ? undefined : size,
       widthCm: cs ? widthCm : undefined,
       heightCm: cs ? heightCm : undefined,
       elements,
@@ -223,6 +223,16 @@ export function Customizer({ product }: { product: Product }) {
 
   const quickSizes = React.useMemo(() => {
     if (!cs) return [];
+    // Product sizes such as « 3 × 1,2 m » become quick-pick dimensions when they fit the allowed range.
+    const parsed = product.sizes
+      .map((label) => {
+        const m = /^\s*(\d+(?:[.,]\d+)?)\s*[×x]\s*(\d+(?:[.,]\d+)?)\s*(m|cm)\s*$/i.exec(label);
+        if (!m) return null;
+        const f = m[3].toLowerCase() === "m" ? 100 : 1;
+        return { w: Math.round(Number(m[1].replace(",", ".")) * f), h: Math.round(Number(m[2].replace(",", ".")) * f) };
+      })
+      .filter((s): s is { w: number; h: number } => Boolean(s) && s!.w >= cs.minWidthCm && s!.w <= cs.maxWidthCm && s!.h >= cs.minHeightCm && s!.h <= cs.maxHeightCm);
+    if (parsed.length) return parsed;
     const mid = (a: number, b: number, t: number) => roundTo5(a + (b - a) * t);
     const all = [
       { w: cs.defaultWidthCm, h: cs.defaultHeightCm },
@@ -231,7 +241,7 @@ export function Customizer({ product }: { product: Product }) {
       { w: cs.maxWidthCm, h: cs.maxHeightCm },
     ];
     return all.filter((s, i) => all.findIndex((o) => o.w === s.w && o.h === s.h) === i);
-  }, [cs]);
+  }, [cs, product.sizes]);
 
   const showStudio = view === "studio";
   const mainPhoto = typeof view === "number" ? gallery[view] : null;
@@ -243,9 +253,12 @@ export function Customizer({ product }: { product: Product }) {
   return (
     <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr] lg:gap-12">
       {/* ---------- Visual ---------- */}
-      <div className="lg:sticky lg:top-28 lg:self-start">
+      {/* Desktop: the whole column is sticky. Phone: the column dissolves (`contents`) so that the zone tabs + live preview
+          stay pinned at the top (and the notes/gallery scroll away) while the customer edits below. */}
+      <div className="lg:sticky lg:top-28 lg:self-start max-lg:contents">
+        <div className="max-lg:sticky max-lg:top-[60px] max-lg:z-30 max-lg:-mx-4 max-lg:bg-white max-lg:px-4 max-lg:pb-2 max-lg:pt-2 max-lg:shadow-[0_6px_10px_-8px_rgba(14,42,46,0.35)]">
         {caps.zones.length > 1 && (
-          <div role="tablist" aria-label="Emplacements de personnalisation" className="mb-3 flex flex-wrap gap-2" data-testid="zone-tabs">
+          <div role="tablist" aria-label="Emplacements de personnalisation" className="mb-2 flex gap-2 overflow-x-auto pb-1 lg:mb-3 lg:flex-wrap" data-testid="zone-tabs">
             {caps.zones.map((z) => {
               const n = zoneCount(z.placement);
               return (
@@ -260,7 +273,7 @@ export function Customizer({ product }: { product: Product }) {
                   }}
                   data-testid={`zone-${z.placement}`}
                   className={cn(
-                    "inline-flex h-10 items-center gap-2 rounded-xl border-2 px-3 text-sm font-semibold transition-colors",
+                    "inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border-2 px-3 text-sm font-semibold transition-colors",
                     zone === z.placement ? "border-ip-teal bg-ip-teal text-white" : "border-ip-line bg-white hover:border-ip-teal/60",
                   )}
                 >
@@ -272,7 +285,10 @@ export function Customizer({ product }: { product: Product }) {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-[1.5rem] border border-ip-line bg-white">
+        <div
+          className="mx-auto overflow-hidden rounded-[1.5rem] border border-ip-line bg-white max-lg:max-w-[min(100%,calc(36vh*var(--ar)))] lg:!max-w-none"
+          style={{ "--ar": preview.photo.width / preview.photo.height } as React.CSSProperties}
+        >
           {showStudio ? (
             <DesignPreview
               preview={preview}
@@ -288,6 +304,7 @@ export function Customizer({ product }: { product: Product }) {
               <Image src={mainPhoto.src} alt={mainPhoto.alt} fill sizes="(min-width: 1024px) 50vw, 100vw" className="object-contain" />
             </div>
           ) : null}
+        </div>
         </div>
         {preview.photo.plain && !gallery.length && (
           <p className="mt-2 rounded-xl bg-ip-mist p-3 text-xs text-ip-muted">Photo du produit à venir : l&apos;aperçu montre la zone d&apos;impression. Votre maquette finale vous sera envoyée avant production.</p>
@@ -487,7 +504,7 @@ export function Customizer({ product }: { product: Product }) {
                   {errors.color && <p className="mt-1 text-xs text-red-700" role="alert">{errors.color}</p>}
                 </div>
               )}
-              {product.sizes.length > 0 && (
+              {product.sizes.length > 0 && !cs && (
                 <Field id="cz-size" label="Taille" required error={errors.size}>
                   <select
                     id="cz-size"

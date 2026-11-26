@@ -280,7 +280,7 @@ export function BackgroundDialog({ file, onConfirm, onCancel }: Props) {
         </p>
       )}
 
-      <div className="flex flex-col-reverse gap-3 border-t border-ip-line p-5 sm:flex-row sm:justify-end">
+      <div className="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-ip-line bg-white p-4 sm:flex-row sm:justify-end sm:p-5">
         <Button type="button" variant="ghost" onClick={onCancel}>
           Annuler
         </Button>

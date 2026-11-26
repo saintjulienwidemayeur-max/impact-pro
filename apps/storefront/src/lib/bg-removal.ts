@@ -107,6 +107,7 @@ export function removeBackground(img: RgbaImage, opts: RemoveOptions): RgbaImage
       push(y * w);
       push(y * w + w - 1);
     }
+    let seeded = sp;
     while (sp > 0) {
       const p = stack[--sp];
       const x = p % w;
@@ -115,6 +116,10 @@ export function removeBackground(img: RgbaImage, opts: RemoveOptions): RgbaImage
       if (p >= w) push(p - w);
       if (p < n - w) push(p + w);
     }
+    // A colour picked with the pipette that is not on the image border (e.g. a colour inside the artwork): remove it everywhere.
+    seeded = 0;
+    for (let p = 0; p < n; p++) seeded += isBg[p];
+    if (seeded === 0 && opts.bg) for (let p = 0; p < n; p++) if (d[p] <= hi) isBg[p] = 1;
   }
 
   // soft alpha on the background region (pixels between lo and hi keep partial alpha, un-premultiplied)
@@ -136,14 +141,65 @@ export function removeBackground(img: RgbaImage, opts: RemoveOptions): RgbaImage
     }
   }
 
+  refineBoundary(src, out, alpha, isBg, d, bg, w, h, lo);
   if (opts.feather > 0) blurAlpha(alpha, w, h, opts.feather);
   for (let p = 0, i = 3; p < n; p++, i += 4) out[i] = Math.round(alpha[p] * 255);
   return { data: out, width: w, height: h };
 }
 
+/**
+ * Anti-aliased boundary: a kept pixel next to the removed background is a mix of logo colour and background colour.
+ * Its coverage is |P − B| / |F − B| (F = the nearby solid logo colour); the colour is un-premultiplied toward F,
+ * so the edge is smooth and has no light halo.
+ */
+function refineBoundary(src: Uint8ClampedArray, out: Uint8ClampedArray, alpha: Float32Array, isBg: Uint8Array, d: Float32Array, bg: Rgb, w: number, h: number, lo: number) {
+  const n = w * h;
+  const touchesBg = (p: number) => {
+    const x = p % w;
+    return (x > 0 && alpha[p - 1] < 0.5 && isBg[p - 1] === 1) || (x < w - 1 && alpha[p + 1] < 0.5 && isBg[p + 1] === 1) || (p >= w && alpha[p - w] < 0.5 && isBg[p - w] === 1) || (p < n - w && alpha[p + w] < 0.5 && isBg[p + w] === 1);
+  };
+  const updates: { p: number; a: number }[] = [];
+  for (let p = 0; p < n; p++) {
+    if (isBg[p] || alpha[p] < 0.99 || !touchesBg(p)) continue;
+    const x = p % w;
+    const y = (p - x) / w;
+    let dF = d[p];
+    for (let yy = Math.max(0, y - 2); yy <= Math.min(h - 1, y + 2); yy++) {
+      for (let xx = Math.max(0, x - 2); xx <= Math.min(w - 1, x + 2); xx++) {
+        const q = yy * w + xx;
+        if (!isBg[q] && d[q] > dF) dF = d[q];
+      }
+    }
+    if (dF < lo * 1.2) continue; // low-contrast logo: nothing reliable to estimate
+    const a = Math.min(1, d[p] / dF);
+    if (a < 0.97) updates.push({ p, a });
+  }
+  for (const { p, a } of updates) {
+    const i = p * 4;
+    alpha[p] = a * (src[i + 3] / 255);
+    for (let c = 0; c < 3; c++) {
+      const v = (src[i + c] - (1 - a) * bg[c]) / Math.max(a, 0.05);
+      out[i + c] = v < 0 ? 0 : v > 255 ? 255 : v;
+    }
+  }
+}
+
 /** Choke 1 px then box-blur (2 passes) — softens jagged edges without growing the logo. */
 function blurAlpha(a: Float32Array, w: number, h: number, feather: number) {
   const radius = Math.max(1, Math.round(feather / 2));
+  // choke: shrink the alpha by one pixel so the blur does not make the logo grow
+  const eroded = new Float32Array(a.length);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let m = a[y * w + x];
+      if (x > 0) m = Math.min(m, a[y * w + x - 1]);
+      if (x < w - 1) m = Math.min(m, a[y * w + x + 1]);
+      if (y > 0) m = Math.min(m, a[(y - 1) * w + x]);
+      if (y < h - 1) m = Math.min(m, a[(y + 1) * w + x]);
+      eroded[y * w + x] = m;
+    }
+  }
+  a.set(eroded);
   const tmp = new Float32Array(a.length);
   const pass = (horizontal: boolean) => {
     const len = horizontal ? w : h;

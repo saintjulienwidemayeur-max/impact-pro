@@ -178,7 +178,9 @@ export function productPhotos(product: Pick<Product, "slug" | "name" | "images">
   if (local.length) return local;
   return (product.images ?? [])
     .map((img) => (typeof img === "string" ? { url: img, alt: undefined } : img))
-    .filter((img) => img?.url?.startsWith("/photos/"))
+    // Local photography (media[] / new-products-media.json) is canonical; API image paths are only trusted when absolute,
+    // so catalog entries whose photo does not exist yet fall back to the « Photo à venir » tile instead of a broken image.
+    .filter((img) => /^https?:\/\//.test(img?.url ?? ""))
     .map((img) => ({ src: img.url, alt: img.alt ?? product.name, width: 1200, height: 1200 }));
 }
 

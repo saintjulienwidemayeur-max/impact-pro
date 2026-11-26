@@ -64,19 +64,21 @@ const PRODUCTS = [
   }),
   base({
     slug: "banderole-pvc",
-    name: "Banderole PVC",
+    name: "Banderole PVC extérieure",
     category: { slug: "banderoles", name: "Banderoles" },
-    basePrice: "2500.00",
+    basePrice: "2800.00",
     minQty: 1,
     unitLabel: "banderole",
-    placements: ["FRONT"],
+    sizes: ["2 × 1 m", "3 × 1,2 m", "4 × 1,5 m"],
+    placements: ["FULL"],
     pricingMode: "PER_AREA",
     supportsArtwork: true,
     artworkRequired: true,
-    customSize: { minWidthCm: 50, maxWidthCm: 600, minHeightCm: 50, maxHeightCm: 300, defaultWidthCm: 300, defaultHeightCm: 120, minBillableM2: 0.5 },
+    customSize: { minWidthCm: 50, maxWidthCm: 1000, minHeightCm: 50, maxHeightCm: 500, defaultWidthCm: 300, defaultHeightCm: 120, minBillableM2: 1 },
     priceTiers: [
-      { minQty: 1, unitPrice: "2500.00" },
-      { minQty: 5, unitPrice: "2200.00" },
+      { minQty: 1, unitPrice: "2800.00" },
+      { minQty: 5, unitPrice: "2500.00" },
+      { minQty: 10, unitPrice: "2200.00" },
     ],
   }),
   base({
@@ -174,6 +176,8 @@ function handleUpload(req, res, purpose, buf) {
 }
 
 const num = (v) => typeof v === "number" && Number.isFinite(v);
+
+const publicOrder = (o) => Object.fromEntries(Object.entries(o).filter(([k]) => !k.startsWith("_")));
 
 function validateOrder(body) {
   const errors = [];
@@ -306,15 +310,13 @@ const server = http.createServer(async (req, res) => {
       const reference = `IP-2026-${String(++orderSeq).padStart(6, "0")}`;
       const order = { reference, status: "RECEIVED", createdAt: new Date().toISOString(), currency: "HTG", subtotal: money(items.reduce((n, it) => n + Number(it.lineTotal), 0)), items, _email: body.customer.email.toLowerCase(), _raw: body };
       orders.set(reference, order);
-      const { _email, _raw, ...pub } = order;
-      return ok(res, pub, 201);
+      return ok(res, publicOrder(order), 201);
     }
     m = /^\/custom-orders\/([^/]+)$/.exec(path);
     if (req.method === "GET" && m) {
       const o = orders.get(decodeURIComponent(m[1]));
       if (!o || o._email !== (url.searchParams.get("email") || "").toLowerCase()) return fail(res, 404, "ORDER_NOT_FOUND", "Commande introuvable.");
-      const { _email, _raw, ...pub } = o;
-      return ok(res, pub);
+      return ok(res, publicOrder(o));
     }
     // test helper: last raw order payload received (to assert the exact contract payload)
     if (req.method === "GET" && path === "/__test/last-order") {
