@@ -63,7 +63,7 @@ const products: SeedProduct[] = [
     tiers: [[12, '650.00'], [50, '575.00'], [100, '495.00']],
     colors: ['Blanc'],
     placements: [FRONT, WRAP],
-    images: ['/photos/tasse-11oz.jpg', '/photos/tasses-serie.jpg'],
+    images: ['/photos/tasse-11oz.webp', '/photos/tasses-serie.webp'],
     leadTimeDays: 5,
   },
   {
@@ -80,7 +80,7 @@ const products: SeedProduct[] = [
     colors: ['Teal', 'Blanc', 'Noir', 'Bleu royal'],
     sizes: SIZES,
     placements: [CHEST_LEFT, BACK, SLEEVE],
-    images: ['/photos/polo-equipe-teal.jpg', '/photos/polo-blanc-brode.jpg'],
+    images: ['/photos/polo-equipe-teal.webp', '/photos/polo-blanc-brode.webp'],
     leadTimeDays: 7,
   },
   {
@@ -97,7 +97,7 @@ const products: SeedProduct[] = [
     colors: ['Blanc', 'Noir', 'Teal', 'Cyan', 'Jaune'],
     sizes: SIZES,
     placements: [FRONT, BACK, CHEST_LEFT],
-    images: ['/photos/polo-blanc-brode.jpg'],
+    images: ['/photos/polo-blanc-brode.webp'],
     leadTimeDays: 5,
   },
   {
@@ -113,7 +113,7 @@ const products: SeedProduct[] = [
     tiers: [[12, '850.00'], [50, '750.00'], [100, '650.00']],
     colors: ['Blanc', 'Noir', 'Teal', 'Bleu royal'],
     placements: [FRONT],
-    images: ['/photos/casquette-brodee.jpg'],
+    images: ['/photos/casquette-brodee.webp'],
     leadTimeDays: 7,
   },
   {
@@ -145,7 +145,7 @@ const products: SeedProduct[] = [
     colors: ['Blanc', 'Teal', 'Jaune'],
     sizes: ['2,8 m', '3,5 m'],
     placements: [FULL],
-    images: ['/photos/drapeaux-plume.jpg'],
+    images: ['/photos/drapeaux-plume.webp'],
     leadTimeDays: 7,
   },
   {
@@ -190,7 +190,7 @@ const products: SeedProduct[] = [
     tiers: [[10, '1100.00'], [50, '950.00'], [100, '850.00']],
     colors: ['Teal', 'Noir', 'Bleu'],
     placements: [FRONT],
-    images: ['/photos/carnet-a5.jpg'],
+    images: ['/photos/carnet-a5.webp'],
     leadTimeDays: 7,
   },
   {
@@ -205,7 +205,7 @@ const products: SeedProduct[] = [
     tiers: [[50, '95.00'], [250, '80.00'], [500, '70.00']],
     colors: ['Blanc', 'Bleu', 'Noir'],
     placements: [FRONT],
-    images: ['/photos/stylos.jpg'],
+    images: ['/photos/stylos.webp'],
     leadTimeDays: 5,
   },
   {
@@ -249,7 +249,7 @@ const products: SeedProduct[] = [
     basePrice: '4500.00',
     tiers: [[10, '4500.00'], [50, '3950.00'], [100, '3500.00']],
     placements: [FRONT],
-    images: ['/photos/kit-promotionnel.jpg'],
+    images: ['/photos/kit-promotionnel.webp'],
     leadTimeDays: 10,
   },
 ];

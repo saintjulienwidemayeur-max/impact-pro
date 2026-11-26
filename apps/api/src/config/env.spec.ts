@@ -16,4 +16,10 @@ describe('loadEnv', () => {
   it('fails fast listing every invalid variable', () => {
     expect(() => loadEnv({ COOKIE_SECRET: 'short' })).toThrow(/DATABASE_URL[\s\S]*REDIS_URL[\s\S]*COOKIE_SECRET/);
   });
+
+  it('treats empty optional variables as unset (hosting dashboards / .env.example)', () => {
+    const env = loadEnv({ ...base, S3_ENDPOINT: '', S3_BUCKET: '', CORS_ORIGINS: '' });
+    expect(env.S3_ENDPOINT).toBeUndefined();
+    expect(env.CORS_ORIGINS).toEqual([]);
+  });
 });

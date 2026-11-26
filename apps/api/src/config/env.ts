@@ -39,7 +39,9 @@ export type Env = z.infer<typeof envSchema>;
 
 /** Parses process.env and throws a readable error listing every invalid variable (fail fast). */
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
-  const parsed = envSchema.safeParse(source);
+  // Hosting dashboards and .env files often leave optional variables empty (e.g. `S3_ENDPOINT=`): treat them as unset.
+  const cleaned = Object.fromEntries(Object.entries(source).filter(([, v]) => v !== undefined && v !== ''));
+  const parsed = envSchema.safeParse(cleaned);
   if (!parsed.success) {
     const issues = parsed.error.issues.map((i) => `  - ${i.path.join('.')}: ${i.message}`).join('\n');
     throw new Error(`Invalid environment configuration:\n${issues}`);

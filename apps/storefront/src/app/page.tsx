@@ -156,13 +156,13 @@ export default async function HomePage() {
                 />
               </div>
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-white">
-                <Image src={photos.tasses.src} alt={photos.tasses.alt} fill priority sizes="(min-width: 1024px) 20vw, 40vw" className="object-cover" />
+                <Image src={photos.tasses.src} alt={photos.tasses.alt} fill priority sizes="(min-width: 1024px) 20vw, 40vw" className="object-contain p-2" />
               </div>
               <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem] bg-white">
-                <Image src={photos.casquette.src} alt={photos.casquette.alt} fill sizes="(min-width: 1024px) 20vw, 40vw" className="object-cover" />
+                <Image src={photos.casquette.src} alt={photos.casquette.alt} fill sizes="(min-width: 1024px) 20vw, 40vw" className="object-contain p-2" />
               </div>
-              <div className="relative col-span-2 aspect-[16/7] overflow-hidden rounded-[1.25rem] bg-black">
-                <Image src={photos.poloTeal.src} alt={photos.poloTeal.alt} fill sizes="(min-width: 1024px) 45vw, 95vw" className="object-cover" />
+              <div className="relative col-span-2 aspect-[16/7] overflow-hidden rounded-[1.25rem] bg-white">
+                <Image src={photos.poloTeal.src} alt={photos.poloTeal.alt} fill sizes="(min-width: 1024px) 45vw, 95vw" className="object-contain p-2" />
               </div>
             </div>
             <Link
@@ -283,6 +283,59 @@ export default async function HomePage() {
                   Devis sur mesure
                 </Link>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PRINT SERVICES */}
+      <section aria-labelledby="print-title" className="pb-16">
+        <div className="container-ip">
+          <div className="relative grid items-center gap-8 overflow-hidden rounded-[1.5rem] bg-ip-teal p-6 text-white sm:p-10 lg:grid-cols-[1fr_1.1fr] lg:gap-12">
+            <div className="pointer-events-none absolute -right-24 -top-24 size-[28rem] rounded-full border-[3rem] border-white/[0.06]" aria-hidden="true" />
+            <div className="relative">
+              <p className="text-sm font-semibold uppercase tracking-wide text-ip-cyan">Impression grand format &amp; numérique</p>
+              <h2 id="print-title" className="mt-1 text-3xl font-bold leading-tight sm:text-4xl">
+                Tout ce qui s&apos;imprime, on l&apos;imprime pour vous
+              </h2>
+              <span className="mt-3 block h-1 w-14 rounded bg-ip-sun" aria-hidden="true" />
+              <p className="mt-4 text-white/85">
+                Banderoles et roll-up, covering de véhicules, flyers, brochures, dépliants, cartes, textiles imprimés : une chaîne d&apos;impression
+                complète pour que votre marque soit visible partout.
+              </p>
+              <ul className="mt-5 grid gap-2 text-sm sm:grid-cols-2">
+                {["Banderoles & roll-up", "Covering véhicule", "Flyers, brochures & dépliants", "T-shirts & textiles imprimés"].map((t) => (
+                  <li key={t} className="flex items-center gap-2">
+                    <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-ip-sun text-ip-ink">
+                      <Check className="size-3" aria-hidden="true" />
+                    </span>
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/devis"
+                  className="inline-flex h-12 items-center gap-2 rounded-xl bg-ip-sun px-6 text-sm font-bold uppercase tracking-wide text-ip-ink hover:bg-ip-sun-600"
+                >
+                  Demander un devis <ArrowRight className="size-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/personnaliser"
+                  className="inline-flex h-12 items-center rounded-xl border-2 border-white/80 px-6 text-sm font-bold uppercase tracking-wide text-white hover:bg-white hover:text-ip-teal"
+                >
+                  Personnaliser un produit
+                </Link>
+              </div>
+            </div>
+            <div className="relative aspect-[1472/1370] w-full">
+              <Image
+                src={photos.equipements.src}
+                alt={photos.equipements.alt}
+                fill
+                sizes="(min-width: 1024px) 50vw, 92vw"
+                className="object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.25)]"
+              />
             </div>
           </div>
         </div>

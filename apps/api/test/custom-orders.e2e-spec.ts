@@ -62,7 +62,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
         compareAtPrice: '900.00',
         colors: ['Blanc'],
         placements: [PrintPlacement.FRONT, PrintPlacement.WRAP],
-        images: ['/photos/tasse-11oz.jpg'],
+        images: ['/photos/tasse-11oz.webp'],
       },
     });
     await prisma.productVariant.create({
@@ -204,7 +204,7 @@ describe('Uploads, catalog & custom orders (e2e)', () => {
           { minQty: 50, unitPrice: '575.00' },
           { minQty: 100, unitPrice: '495.00' },
         ],
-        images: ['/photos/tasse-11oz.jpg'],
+        images: ['/photos/tasse-11oz.webp'],
       });
     });
 

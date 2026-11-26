@@ -131,3 +131,6 @@ At the end of each phase: run tests, verify migrations, verify API, fix errors, 
 - Customize & order (2026-11-26): real product photos (packages/brand/photos), logo upload API (`/api/v1/uploads/logos`), public catalog API (`/api/v1/catalog/products`), custom orders + tracking (`/api/v1/custom-orders`), storefront customizer `/personnaliser/[slug]` with live logo preview, cart, `/commande`, confirmation, `/suivi`. Validation errors are 422 everywhere.
 - Placeholders: HTG prices/tiers in seed, phone, email. No T-shirt photo yet (uses polo photos). S3/MinIO upload path untested; newsletter/contact endpoints still don't persist.
 - **Next: Phase 2** — authentication & organizations.
+- Backgrounds removed (rembg isnet) from product photos → transparent WebP in packages/brand/photos + storefront/public/photos (originals kept in packages/brand/photos/originals; banderole & photocall are scene photos, kept as JPG). New homepage section « Impression grand format & numérique » (equipements-impression.webp).
+- CI fix: turbo strict env mode stripped DATABASE_URL/TEST_DATABASE_URL → `envMode: loose` in turbo.json. API env loader treats empty vars as unset.
+- Render deploy: `render.yaml` + docs/deploy-render.md (API start via `apps/api/scripts/start.sh`: migrate deploy, optional AUTO_SEED). Uploads need a Disk or S3 for real use.
