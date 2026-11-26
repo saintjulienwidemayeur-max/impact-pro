@@ -42,3 +42,11 @@ watermark (Freepik free licence requires attribution; remove the watermark only 
 | 29 | Phone case with a printed photo of two people (small « Magvision » watermark) | reference only — identifiable people; shows « photo printing » as a feature |
 
 Rule: photos showing another company's brand or identifiable people are never published on the storefront.
+
+## Batch 4
+
+| File | What | Use |
+|---|---|---|
+| 31 | Aluminium bottles in 6 colours (black, white, red, blue, green, grey), third-party « SIGN-UP » logo printed, bottles overlap, 750×500 | possible colour variants for gourde-aluminium (black, blue fully visible; red/green/white/grey partly hidden) after removing the printed logo — low resolution |
+| 30 | Blue tent, 4 angles, printed demo design (« Free Gazebo Mockup », mockups-design.com) | reference for tent angles/zones (roof, valance, side wall); not blank, third-party text → not published |
+| 32 | Two guest badges + lanyards with printed third-party designs | reference only |
