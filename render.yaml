@@ -28,7 +28,7 @@ services:
       - key: COOKIE_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        sync: false       # set to the storefront URL, e.g. https://impact-pro-storefront.onrender.com
+        value: https://impact-pro-storefront.onrender.com   # change if Render assigns a different URL (e.g. custom domain)
       - key: AUTO_SEED
         value: "true"     # first deploy only: loads the catalog. Set to "false" afterwards.
       - key: UPLOAD_DIR
@@ -45,8 +45,8 @@ services:
       - key: NODE_VERSION
         value: 22
       - key: NEXT_PUBLIC_API_URL
-        sync: false       # public URL of the API, e.g. https://impact-pro-api.onrender.com (inlined at build time)
+        value: https://impact-pro-api.onrender.com   # inlined at build time; change + redeploy if the API URL differs
       - key: NEXT_PUBLIC_SITE_URL
-        sync: false       # public URL of the storefront
+        value: https://impact-pro-storefront.onrender.com
       - key: NEXT_PUBLIC_WHATSAPP_NUMBER
         sync: false
