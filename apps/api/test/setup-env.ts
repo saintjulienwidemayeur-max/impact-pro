@@ -1,3 +1,6 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 // Test environment. Always uses a dedicated test database so tests never touch dev data.
 export const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? 'postgresql://impact:impact_dev@localhost:5432/impact_pro_test?schema=public';
@@ -8,3 +11,8 @@ process.env.REDIS_URL ??= 'redis://localhost:6379';
 process.env.CORS_ORIGINS ??= 'http://localhost:3000';
 process.env.COOKIE_SECRET ??= 'test-only-cookie-secret-0123456789abcdef';
 process.env.THROTTLE_LIMIT ??= '1000';
+process.env.ORDER_THROTTLE_LIMIT ??= '1000';
+process.env.UPLOAD_THROTTLE_LIMIT ??= '1000';
+// Uploads go to a throw-away directory, never the dev upload folder.
+process.env.UPLOAD_DIR ??= join(tmpdir(), `impact-pro-test-uploads-${process.pid}`);
+delete process.env.S3_ENDPOINT;
