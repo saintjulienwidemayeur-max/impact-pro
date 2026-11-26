@@ -1,0 +1,328 @@
+// Impact Pro — Prisma schema v1 (Phase 1 foundation)
+// See CLAUDE.md §6 for database rules.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ───────────────────────────── Identity & tenancy ─────────────────────────────
+
+enum Role {
+  PLATFORM_ADMIN // Impact Pro staff with full access
+  STAFF // Impact Pro operations staff
+  ORG_OWNER
+  ORG_ADMIN
+  ORG_MEMBER
+  ORG_VIEWER
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+model Organization {
+  id          String             @id @default(cuid())
+  name        String
+  slug        String             @unique
+  status      OrganizationStatus @default(ACTIVE)
+  taxId       String?
+  phone       String?
+  email       String?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  memberships Membership[]
+  auditLogs   AuditLog[]
+
+  @@index([status])
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  passwordHash  String? // Argon2id; null for invited users without password yet
+  firstName     String?
+  lastName      String?
+  phone         String?
+  status        UserStatus   @default(ACTIVE)
+  isStaff       Boolean      @default(false)
+  emailVerified DateTime?
+  lastLoginAt   DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  memberships   Membership[]
+  sessions      Session[]
+  auditLogs     AuditLog[]
+}
+
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           Role         @default(ORG_MEMBER)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model Session {
+  id               String    @id @default(cuid())
+  userId           String
+  refreshTokenHash String    @unique // SHA-256 of the opaque refresh token; raw token never stored
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model AuditLog {
+  id             String        @id @default(cuid())
+  actorId        String?
+  organizationId String?
+  action         String // e.g. "inventory.reserve"
+  entityType     String
+  entityId       String?
+  metadata       Json?
+  ipAddress      String?
+  requestId      String?
+  createdAt      DateTime      @default(now())
+  actor          User?         @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([entityType, entityId])
+  @@index([actorId])
+}
+
+// ───────────────────────────────── Catalog ─────────────────────────────────
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  imageUrl    String?
+  sortOrder   Int        @default(0)
+  parentId    String?
+  parent      Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[] @relation("CategoryTree")
+  products    Product[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([parentId])
+}
+
+model Product {
+  id               String             @id @default(cuid())
+  name             String
+  slug             String             @unique
+  description      String?
+  categoryId       String
+  status           ProductStatus      @default(DRAFT)
+  minOrderQty      Int                @default(1)
+  decorationMethod String? // sublimation, broderie, sérigraphie, tampographie…
+  leadTimeDays     Int?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  category         Category           @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  variants         ProductVariant[]
+  attributes       ProductAttribute[]
+
+  @@index([categoryId, status])
+}
+
+model ProductAttribute {
+  id        String                  @id @default(cuid())
+  productId String
+  name      String // e.g. "Couleur", "Taille"
+  createdAt DateTime                @default(now())
+  updatedAt DateTime                @updatedAt
+  product   Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  values    ProductAttributeValue[]
+
+  @@unique([productId, name])
+}
+
+model ProductAttributeValue {
+  id          String                    @id @default(cuid())
+  attributeId String
+  value       String
+  attribute   ProductAttribute          @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  variants    VariantAttributeValue[]
+
+  @@unique([attributeId, value])
+}
+
+model ProductVariant {
+  id              String                  @id @default(cuid())
+  productId       String
+  sku             String                  @unique
+  name            String
+  basePrice       Decimal                 @db.Decimal(14, 2)
+  currency        String                  @default("HTG") @db.Char(3)
+  weightGrams     Int?
+  isActive        Boolean                 @default(true)
+  createdAt       DateTime                @default(now())
+  updatedAt       DateTime                @updatedAt
+  product         Product                 @relation(fields: [productId], references: [id], onDelete: Cascade)
+  attributeValues VariantAttributeValue[]
+  priceTiers      PriceTier[]
+  inventoryItems  InventoryItem[]
+
+  @@index([productId])
+}
+
+model VariantAttributeValue {
+  variantId        String
+  attributeValueId String
+  variant          ProductVariant        @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  attributeValue   ProductAttributeValue @relation(fields: [attributeValueId], references: [id], onDelete: Cascade)
+
+  @@id([variantId, attributeValueId])
+}
+
+model PriceTier {
+  id        String         @id @default(cuid())
+  variantId String
+  minQty    Int
+  unitPrice Decimal        @db.Decimal(14, 2)
+  currency  String         @default("HTG") @db.Char(3)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  variant   ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, minQty])
+}
+
+// ─────────────────────────────── Warehousing ───────────────────────────────
+
+model Warehouse {
+  id        String              @id @default(cuid())
+  code      String              @unique
+  name      String
+  address   String?
+  city      String?
+  country   String              @default("HT") @db.Char(2)
+  isActive  Boolean             @default(true)
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  locations WarehouseLocation[]
+}
+
+model WarehouseLocation {
+  id             String          @id @default(cuid())
+  warehouseId    String
+  code           String // e.g. "A-01-03"
+  name           String?
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  warehouse      Warehouse       @relation(fields: [warehouseId], references: [id], onDelete: Restrict)
+  inventoryItems InventoryItem[]
+
+  @@unique([warehouseId, code])
+}
+
+// ──────────────────────────────── Inventory ────────────────────────────────
+
+model InventoryItem {
+  id           String                 @id @default(cuid())
+  variantId    String
+  locationId   String
+  // Invariants (enforced in InventoryService + DB CHECK constraints in migration):
+  //   onHand >= 0, reserved >= 0, damaged >= 0, inTransit >= 0
+  //   reserved + damaged <= onHand   →   available = onHand - reserved - damaged >= 0
+  onHand       Int                    @default(0)
+  reserved     Int                    @default(0)
+  damaged      Int                    @default(0)
+  inTransit    Int                    @default(0)
+  reorderPoint Int?
+  version      Int                    @default(0)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  variant      ProductVariant         @relation(fields: [variantId], references: [id], onDelete: Restrict)
+  location     WarehouseLocation      @relation(fields: [locationId], references: [id], onDelete: Restrict)
+  movements    InventoryMovement[]
+  reservations InventoryReservation[]
+
+  @@unique([variantId, locationId])
+  @@index([locationId])
+}
+
+enum InventoryMovementType {
+  RECEIPT
+  RESERVE
+  RELEASE
+  ISSUE
+  ADJUSTMENT
+  DAMAGE
+  TRANSFER_OUT
+  TRANSFER_IN
+}
+
+/// Immutable ledger. Rows are only ever inserted (UPDATE/DELETE blocked by DB trigger).
+model InventoryMovement {
+  id              String                @id @default(cuid())
+  inventoryItemId String
+  type            InventoryMovementType
+  quantity        Int // signed delta applied to the affected bucket
+  bucket          String // "onHand" | "reserved" | "damaged" | "inTransit"
+  reference       String? // order id, PO id, reservation id…
+  reason          String?
+  actorId         String?
+  createdAt       DateTime              @default(now())
+  inventoryItem   InventoryItem         @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryItemId, createdAt])
+  @@index([reference])
+}
+
+enum ReservationStatus {
+  ACTIVE
+  RELEASED
+  CONSUMED
+  EXPIRED
+}
+
+model InventoryReservation {
+  id              String            @id @default(cuid())
+  inventoryItemId String
+  quantity        Int
+  reference       String // order / program / cart reference
+  status          ReservationStatus @default(ACTIVE)
+  expiresAt       DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  inventoryItem   InventoryItem     @relation(fields: [inventoryItemId], references: [id], onDelete: Restrict)
+
+  @@index([inventoryItemId, status])
+  @@index([reference])
+}
