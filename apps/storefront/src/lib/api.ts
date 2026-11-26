@@ -144,7 +144,10 @@ export async function parseError(res: Response): Promise<ApiError> {
 async function request<T>(path: string, init: RequestInit & { next?: { revalidate?: number | false } } = {}): Promise<T> {
   let res: Response;
   try {
+    // Never hang: a sleeping/unreachable API must not block page rendering or `next build` (60 s/page limit).
+    const timeoutMs = !init.method || init.method === "GET" ? 15_000 : 30_000;
     res = await fetch(`${apiBaseUrl()}/api/v1${path}`, {
+      signal: AbortSignal.timeout(timeoutMs),
       ...init,
       headers: { Accept: "application/json", ...(init.headers ?? {}) },
     });
