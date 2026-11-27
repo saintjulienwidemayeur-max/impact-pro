@@ -18,6 +18,14 @@ Supabase Storage is S3-compatible and can hold customer logos (`S3_ENDPOINT=http
 5. Check `https://<api>.onrender.com/api/v1/health` (→ `database: up`) and `/api/docs`, then open the storefront URL.
 6. After the first successful deploy set `AUTO_SEED=false` on the API (the seed only loads the placeholder catalog; it upserts by slug, so keeping it on would reset catalog edits).
 
+## Admin dashboard (`impact-pro-admin`)
+The back-office (`apps/admin`, staff only) is a third Render service defined in `render.yaml`.
+1. Create it with the blueprint (or **New → Web Service**, same repo, build/start commands from `render.yaml`). Set `API_URL` to the API's public URL **before the build** (the rewrites that keep the session cookie first-party are baked at build time).
+2. On the **API** service add the admin origin to `CORS_ORIGINS` (comma-separated) and set `ADMIN_BOOTSTRAP_EMAIL` + `ADMIN_BOOTSTRAP_PASSWORD` (≥ 12 characters, secret — enter it only in the Render dashboard, never in the repo). On first start the API creates a SUPER_ADMIN that must change its password at first login; then remove `ADMIN_BOOTSTRAP_PASSWORD`.
+3. Open `https://impact-pro-admin.onrender.com/login`. The admin is `noindex` and sends security headers; the session idles out after 30 minutes in the browser (`NEXT_PUBLIC_IDLE_MINUTES`) and server-side per the API settings.
+4. E-mail sending needs the mail module (see `docs/mail-server.md`); until then the Messagerie page explains the setup and « Marquer comme envoyé » records documents sent another way.
+5. Tests: `pnpm --filter @impact-pro/admin test:e2e` (contract-faithful mock API, port 4101); `E2E_REAL_API=1 API_URL=http://localhost:4000` runs the same suite against the real API.
+
 ## Limits of the free plan (read before going live)
 - Free web services sleep after ~15 min idle (first request takes ~30–60 s).
 - **No persistent disk**: uploaded logos in `/tmp/uploads` are lost on every restart/redeploy. For real customers use a paid instance with a **Disk** (set `UPLOAD_DIR` to its mount path) or S3-compatible storage (Cloudflare R2, Backblaze B2, AWS S3) via `S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY` (the S3 path is implemented but not yet tested against a real bucket).

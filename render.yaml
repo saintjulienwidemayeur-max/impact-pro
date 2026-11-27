@@ -45,3 +45,18 @@ services:
         value: https://impact-pro-storefront.onrender.com
       - key: NEXT_PUBLIC_WHATSAPP_NUMBER
         sync: false
+
+  - type: web
+    name: impact-pro-admin
+    runtime: node
+    plan: free
+    rootDir: .
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @impact-pro/admin build
+    startCommand: pnpm --filter @impact-pro/admin start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=360   # free instances have 512 MB
+      - key: API_URL
+        value: https://impact-pro-api.onrender.com   # read at build time by the Next rewrites (/api/v1/auth|admin|uploads → API)

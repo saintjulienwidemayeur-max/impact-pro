@@ -1,0 +1,35 @@
+[
+  {
+    "name": "single line, no tax",
+    "input": { "lines": [{ "quantity": 12, "unitPrice": "650.00", "discountPercent": 0 }], "discountAmount": 0, "shippingAmount": 0, "taxRate": 0 },
+    "expected": { "lineTotals": ["7800.00"], "subtotal": "7800.00", "taxTotal": "0.00", "total": "7800.00" }
+  },
+  {
+    "name": "line discount, document discount, shipping and tax",
+    "input": {
+      "lines": [
+        { "quantity": 3, "unitPrice": "100.00", "discountPercent": 10 },
+        { "quantity": 2.5, "unitPrice": "40.00", "discountPercent": 0 }
+      ],
+      "discountAmount": "20.00",
+      "shippingAmount": "15.00",
+      "taxRate": 7
+    },
+    "expected": { "lineTotals": ["270.00", "100.00"], "subtotal": "370.00", "taxTotal": "24.50", "total": "389.50" }
+  },
+  {
+    "name": "half away from zero on cents",
+    "input": { "lines": [{ "quantity": 1, "unitPrice": "0.125", "discountPercent": 0 }, { "quantity": 3, "unitPrice": "0.335", "discountPercent": 0 }], "taxRate": 0 },
+    "expected": { "lineTotals": ["0.13", "1.01"], "subtotal": "1.14", "taxTotal": "0.00", "total": "1.14" }
+  },
+  {
+    "name": "discount larger than subtotal clamps the base to zero",
+    "input": { "lines": [{ "quantity": 1, "unitPrice": "50.00" }], "discountAmount": "80.00", "shippingAmount": "10.00", "taxRate": 10 },
+    "expected": { "lineTotals": ["50.00"], "subtotal": "50.00", "taxTotal": "0.00", "total": "10.00" }
+  },
+  {
+    "name": "payments reduce the balance",
+    "input": { "lines": [{ "quantity": 2, "unitPrice": "1250.00" }], "taxRate": 0, "payments": ["1000.00", "500.50"] },
+    "expected": { "subtotal": "2500.00", "total": "2500.00", "amountPaid": "1500.50", "balance": "999.50" }
+  }
+]
