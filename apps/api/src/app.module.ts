@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { AppConfigModule, ENV } from './config/config.module';
 import type { Env } from './config/env';
 import { CatalogModule } from './catalog/catalog.module';
@@ -27,6 +28,7 @@ import { UploadsModule } from './uploads/uploads.module';
     CatalogModule,
     UploadsModule,
     CustomOrdersModule,
+    BillingModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

@@ -1,0 +1,750 @@
+{
+ "description": "Shared billing vectors (independent Python Decimal implementation): lineTotal = round2(qty*unitPrice*(1-disc/100)); subtotal = sum; base = max(0, subtotal - discountAmount); tax = round2(base*taxRate/100); total = base + shipping + tax; balance = total - amountPaid. Rounding is half away from zero.",
+ "cases": [
+  {
+   "name": "empty document",
+   "input": {
+    "lines": [],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [],
+    "subtotal": "0.00",
+    "taxTotal": "0.00",
+    "total": "0.00",
+    "balance": "0.00"
+   }
+  },
+  {
+   "name": "single line",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "100.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "100.00"
+    ],
+    "subtotal": "100.00",
+    "taxTotal": "0.00",
+    "total": "100.00",
+    "balance": "100.00"
+   }
+  },
+  {
+   "name": "quantity x price",
+   "input": {
+    "lines": [
+     {
+      "quantity": "12",
+      "unitPrice": "650.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "7800.00"
+    ],
+    "subtotal": "7800.00",
+    "taxTotal": "0.00",
+    "total": "7800.00",
+    "balance": "7800.00"
+   }
+  },
+  {
+   "name": "percent discount",
+   "input": {
+    "lines": [
+     {
+      "quantity": "10",
+      "unitPrice": "100.00",
+      "discountPercent": "10"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "900.00"
+    ],
+    "subtotal": "900.00",
+    "taxTotal": "0.00",
+    "total": "900.00",
+    "balance": "900.00"
+   }
+  },
+  {
+   "name": "discount half-up .5",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "0.05",
+      "discountPercent": "50"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.03"
+    ],
+    "subtotal": "0.03",
+    "taxTotal": "0.00",
+    "total": "0.03",
+    "balance": "0.03"
+   }
+  },
+  {
+   "name": "discount rounding down",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "0.04",
+      "discountPercent": "50"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.02"
+    ],
+    "subtotal": "0.02",
+    "taxTotal": "0.00",
+    "total": "0.02",
+    "balance": "0.02"
+   }
+  },
+  {
+   "name": "fractional quantity",
+   "input": {
+    "lines": [
+     {
+      "quantity": "2.5",
+      "unitPrice": "19.99",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "49.98"
+    ],
+    "subtotal": "49.98",
+    "taxTotal": "0.00",
+    "total": "49.98",
+    "balance": "49.98"
+   }
+  },
+  {
+   "name": "three decimals qty",
+   "input": {
+    "lines": [
+     {
+      "quantity": "0.333",
+      "unitPrice": "10.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "3.33"
+    ],
+    "subtotal": "3.33",
+    "taxTotal": "0.00",
+    "total": "3.33",
+    "balance": "3.33"
+   }
+  },
+  {
+   "name": "thirds",
+   "input": {
+    "lines": [
+     {
+      "quantity": "3",
+      "unitPrice": "33.33",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "99.99"
+    ],
+    "subtotal": "99.99",
+    "taxTotal": "0.00",
+    "total": "99.99",
+    "balance": "99.99"
+   }
+  },
+  {
+   "name": "many lines rounding",
+   "input": {
+    "lines": [
+     {
+      "quantity": "7",
+      "unitPrice": "1.11",
+      "discountPercent": "3"
+     },
+     {
+      "quantity": "5",
+      "unitPrice": "2.22",
+      "discountPercent": "7"
+     },
+     {
+      "quantity": "9",
+      "unitPrice": "3.33",
+      "discountPercent": "11"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "7.54",
+     "10.32",
+     "26.67"
+    ],
+    "subtotal": "44.53",
+    "taxTotal": "0.00",
+    "total": "44.53",
+    "balance": "44.53"
+   }
+  },
+  {
+   "name": "document discount",
+   "input": {
+    "lines": [
+     {
+      "quantity": "2",
+      "unitPrice": "500.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "100.00",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "1000.00"
+    ],
+    "subtotal": "1000.00",
+    "taxTotal": "0.00",
+    "total": "900.00",
+    "balance": "900.00"
+   }
+  },
+  {
+   "name": "discount larger than subtotal",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "50.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "80.00",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "50.00"
+    ],
+    "subtotal": "50.00",
+    "taxTotal": "0.00",
+    "total": "0.00",
+    "balance": "0.00"
+   }
+  },
+  {
+   "name": "shipping only",
+   "input": {
+    "lines": [],
+    "discountAmount": "0",
+    "shippingAmount": "25.00",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [],
+    "subtotal": "0.00",
+    "taxTotal": "0.00",
+    "total": "25.00",
+    "balance": "25.00"
+   }
+  },
+  {
+   "name": "tax 6%",
+   "input": {
+    "lines": [
+     {
+      "quantity": "3",
+      "unitPrice": "100.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "6",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "300.00"
+    ],
+    "subtotal": "300.00",
+    "taxTotal": "18.00",
+    "total": "318.00",
+    "balance": "318.00"
+   }
+  },
+  {
+   "name": "tax 7.5% rounding",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "19.99",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "7.5",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "19.99"
+    ],
+    "subtotal": "19.99",
+    "taxTotal": "1.50",
+    "total": "21.49",
+    "balance": "21.49"
+   }
+  },
+  {
+   "name": "tax half-up",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "0.50",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "5",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.50"
+    ],
+    "subtotal": "0.50",
+    "taxTotal": "0.03",
+    "total": "0.53",
+    "balance": "0.53"
+   }
+  },
+  {
+   "name": "tax on discounted base",
+   "input": {
+    "lines": [
+     {
+      "quantity": "10",
+      "unitPrice": "100.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "200.00",
+    "shippingAmount": "0",
+    "taxRate": "10",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "1000.00"
+    ],
+    "subtotal": "1000.00",
+    "taxTotal": "80.00",
+    "total": "880.00",
+    "balance": "880.00"
+   }
+  },
+  {
+   "name": "shipping not taxed",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "100.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "50.00",
+    "taxRate": "10",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "100.00"
+    ],
+    "subtotal": "100.00",
+    "taxTotal": "10.00",
+    "total": "160.00",
+    "balance": "160.00"
+   }
+  },
+  {
+   "name": "all combined",
+   "input": {
+    "lines": [
+     {
+      "quantity": "12",
+      "unitPrice": "650.00",
+      "discountPercent": "5"
+     },
+     {
+      "quantity": "24",
+      "unitPrice": "495.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "500.00",
+    "shippingAmount": "350.00",
+    "taxRate": "6.25",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "7410.00",
+     "11880.00"
+    ],
+    "subtotal": "19290.00",
+    "taxTotal": "1174.38",
+    "total": "20314.38",
+    "balance": "20314.38"
+   }
+  },
+  {
+   "name": "large amounts",
+   "input": {
+    "lines": [
+     {
+      "quantity": "100",
+      "unitPrice": "9999999.99",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "999999999.00"
+    ],
+    "subtotal": "999999999.00",
+    "taxTotal": "0.00",
+    "total": "999999999.00",
+    "balance": "999999999.00"
+   }
+  },
+  {
+   "name": "large with tax",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1000",
+      "unitPrice": "123456.78",
+      "discountPercent": "2.5"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "1000.00",
+    "taxRate": "4.5",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "120370360.50"
+    ],
+    "subtotal": "120370360.50",
+    "taxTotal": "5416666.22",
+    "total": "125788026.72",
+    "balance": "125788026.72"
+   }
+  },
+  {
+   "name": "zero price",
+   "input": {
+    "lines": [
+     {
+      "quantity": "5",
+      "unitPrice": "0.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.00"
+    ],
+    "subtotal": "0.00",
+    "taxTotal": "0.00",
+    "total": "0.00",
+    "balance": "0.00"
+   }
+  },
+  {
+   "name": "100 percent discount",
+   "input": {
+    "lines": [
+     {
+      "quantity": "4",
+      "unitPrice": "250.00",
+      "discountPercent": "100"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.00"
+    ],
+    "subtotal": "0.00",
+    "taxTotal": "0.00",
+    "total": "0.00",
+    "balance": "0.00"
+   }
+  },
+  {
+   "name": "partial payment",
+   "input": {
+    "lines": [
+     {
+      "quantity": "2",
+      "unitPrice": "500.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "400.00"
+   },
+   "expected": {
+    "lineTotals": [
+     "1000.00"
+    ],
+    "subtotal": "1000.00",
+    "taxTotal": "0.00",
+    "total": "1000.00",
+    "balance": "600.00"
+   }
+  },
+  {
+   "name": "fully paid",
+   "input": {
+    "lines": [
+     {
+      "quantity": "2",
+      "unitPrice": "500.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "10",
+    "amountPaid": "1100.00"
+   },
+   "expected": {
+    "lineTotals": [
+     "1000.00"
+    ],
+    "subtotal": "1000.00",
+    "taxTotal": "100.00",
+    "total": "1100.00",
+    "balance": "0.00"
+   }
+  },
+  {
+   "name": "cents",
+   "input": {
+    "lines": [
+     {
+      "quantity": "1",
+      "unitPrice": "0.01",
+      "discountPercent": "0"
+     },
+     {
+      "quantity": "1",
+      "unitPrice": "0.01",
+      "discountPercent": "0"
+     },
+     {
+      "quantity": "1",
+      "unitPrice": "0.01",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "0.01",
+     "0.01",
+     "0.01"
+    ],
+    "subtotal": "0.03",
+    "taxTotal": "0.00",
+    "total": "0.03",
+    "balance": "0.03"
+   }
+  },
+  {
+   "name": "HTG typical order",
+   "input": {
+    "lines": [
+     {
+      "quantity": "12",
+      "unitPrice": "650.00",
+      "discountPercent": "0"
+     },
+     {
+      "quantity": "50",
+      "unitPrice": "575.00",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "1500.00",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "7800.00",
+     "28750.00"
+    ],
+    "subtotal": "36550.00",
+    "taxTotal": "0.00",
+    "total": "38050.00",
+    "balance": "38050.00"
+   }
+  },
+  {
+   "name": "USD fractional tax",
+   "input": {
+    "lines": [
+     {
+      "quantity": "3",
+      "unitPrice": "45.50",
+      "discountPercent": "0"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "6.5",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "136.50"
+    ],
+    "subtotal": "136.50",
+    "taxTotal": "8.87",
+    "total": "145.37",
+    "balance": "145.37"
+   }
+  },
+  {
+   "name": "discount percent 33.33",
+   "input": {
+    "lines": [
+     {
+      "quantity": "3",
+      "unitPrice": "10.00",
+      "discountPercent": "33.33"
+     }
+    ],
+    "discountAmount": "0",
+    "shippingAmount": "0",
+    "taxRate": "0",
+    "amountPaid": "0"
+   },
+   "expected": {
+    "lineTotals": [
+     "20.00"
+    ],
+    "subtotal": "20.00",
+    "taxTotal": "0.00",
+    "total": "20.00",
+    "balance": "20.00"
+   }
+  }
+ ]
+}

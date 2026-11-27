@@ -193,3 +193,23 @@ Other codes: `CSRF_INVALID`, `ORIGIN_NOT_ALLOWED` (403).
 | GET | /audit-logs | ADMIN | – |
 | POST | /files/presign · POST /files/:id/complete · GET /files/:id/url | user | ✔ |
 | GET/PATCH | /settings | SUPER_ADMIN | – |
+
+## 4. Billing module (`src/billing`) — quotes, proformas, invoices
+
+Staff-only admin API (`/api/v1/admin/...`, cookie session + CSRF + `StaffGuard`) and a token-based public API. Contract: `docs/admin-contract.md` §0/§3/§5.
+
+| Endpoint | Permission | Notes |
+|---|---|---|
+| `GET/POST /admin/documents` | `quotes.*` (QUOTE, PROFORMA) / `invoices.*` (INVOICE) | filters `type,status,q,customerId,orderId,from,to,overdue`; `POST` accepts `orderId` to prefill from a custom order |
+| `GET/PATCH/DELETE /admin/documents/:id` | per type | draft: full edit/delete; after send: notes/dates/terms only (invoices: internal notes only) |
+| `POST /admin/documents/:id/convert` `{to}` | per type | QUOTE→PROFORMA/INVOICE, PROFORMA→INVOICE; new linked draft |
+| `POST …/duplicate`, `…/void {reason}`, `…/status {ACCEPTED\|REJECTED}` | per type | void is final and refused while payments are active |
+| `POST …/send` | per type | PDF e-mailed through the `DOCUMENT_MAILER` port; 503 `MAIL_NOT_CONFIGURED` by default; `markAsSentOnly` records another channel |
+| `POST …/payments`, `…/payments/:pid/void` | `payments.write` | row-locked; `OVERPAYMENT` guard; status PARTIALLY_PAID/PAID derived |
+| `GET …/:id/pdf` | per type | pdfkit; PROFORMA label, VOID watermark, paginated lines |
+| `GET /admin/documents/export.csv` | `reports.read` | UTF-8 BOM, spreadsheet-formula safe |
+| `GET/PUT /admin/billing/settings` | `billing.settings` | singleton; defaults Impact Pro LLC (Miami, Florida, USA) |
+| `GET /admin/reports/revenue`, `/aging` | `reports.read` | per currency |
+| `GET /public/documents/:token`, `…/pdf`, `POST …/accept` | token | throttled (`PUBLIC_DOC_THROTTLE_LIMIT`), limited view, idempotent accept |
+
+Rules: numbers `DEV|PRO|FAC-YYYY-NNNN` are gap-free (row-locked `DocumentCounter`; deleting the latest draft releases its number). Totals are always computed server-side (`computation.ts`, vectors in `apps/api/test/fixtures/billing-vectors.json` are shared with the admin UI). `isOverdue` and quote `EXPIRED` are computed, no scheduler. Every mutation writes an `AuditLog` row and a `DocumentEvent`. `BillingStatsService` (`revenueByCurrency`, `documentCounts`, `balancesByCustomer`) feeds the dashboard and customer pages.
