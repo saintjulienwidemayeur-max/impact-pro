@@ -5,6 +5,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuditModule } from './common/audit.service';
 import { CustomersModule } from './customers/customers.module';
 import { AuthModule } from './auth/auth.module';
+import { BillingModule } from './billing/billing.module';
 import { AppConfigModule, ENV } from './config/config.module';
 import type { Env } from './config/env';
 import { CatalogModule } from './catalog/catalog.module';
@@ -33,6 +34,7 @@ import { UploadsModule } from './uploads/uploads.module';
     CatalogModule,
     UploadsModule,
     CustomOrdersModule,
+    BillingModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

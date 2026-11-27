@@ -42,6 +42,10 @@ export const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
   SESSION_ABSOLUTE_TTL_DAYS: z.coerce.number().int().positive().default(90),
   /** Account endpoints rate limits per IP: sign-ups per hour, logins per 15 minutes. */
+  /** Public origin of this API, used in the links sent with documents (e.g. https://impact-pro-api.onrender.com). */
+  PUBLIC_API_URL: z.string().url().optional(),
+  /** Public document links (view / PDF / accept): requests per THROTTLE_TTL_MS per IP. */
+  PUBLIC_DOC_THROTTLE_LIMIT: z.coerce.number().int().positive().default(30),
   REGISTER_THROTTLE_LIMIT: z.coerce.number().int().positive().default(5),
   LOGIN_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
   /** Failed logins per email (15 min window) before an increasing lockout starts. In-memory: single API instance. */

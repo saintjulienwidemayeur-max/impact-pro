@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
+import { BillingModule } from '../billing/billing.module';
+import { BillingStatsProviderImpl } from '../billing/billing-stats.provider';
 import { CustomersModule } from '../customers/customers.module';
 import { AdminMeController } from './admin-me.controller';
 import { AdminAuditController } from './audit/admin-audit.controller';
@@ -10,7 +12,7 @@ import { AdminDashboardController } from './dashboard/admin-dashboard.controller
 import { AdminDashboardService } from './dashboard/admin-dashboard.service';
 import { AdminOrdersController } from './orders/admin-orders.controller';
 import { AdminOrdersService } from './orders/admin-orders.service';
-import { BILLING_STATS, ZeroBillingStatsProvider } from './ports/billing-stats.port';
+import { BILLING_STATS } from './ports/billing-stats.port';
 import { AdminProductsController } from './products/admin-products.controller';
 import { AdminProductsService } from './products/admin-products.service';
 import { StaffGuard } from './staff.guard';
@@ -18,7 +20,7 @@ import { AdminUsersController } from './users/admin-users.controller';
 import { AdminUsersService } from './users/admin-users.service';
 
 @Module({
-  imports: [AuthModule, CustomersModule],
+  imports: [AuthModule, CustomersModule, BillingModule],
   controllers: [
     AdminMeController,
     AdminDashboardController,
@@ -36,8 +38,8 @@ import { AdminUsersService } from './users/admin-users.service';
     AdminProductsService,
     AdminUsersService,
     AdminDashboardService,
-    // Rebind to the real billing statistics once the billing module is merged (see ports/billing-stats.port.ts).
-    { provide: BILLING_STATS, useClass: ZeroBillingStatsProvider },
+    // Real billing statistics (billing module merged).
+    { provide: BILLING_STATS, useExisting: BillingStatsProviderImpl },
   ],
   exports: [BILLING_STATS],
 })
