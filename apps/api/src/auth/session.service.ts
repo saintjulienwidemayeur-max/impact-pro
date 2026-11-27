@@ -5,12 +5,14 @@ import { ENV } from '../config/config.module';
 import type { Env } from '../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthContext, AuthUser } from './auth.types';
+import { toAuthUser } from './auth-user';
 
 export const SESSION_COOKIE = 'ip_session';
 export const CSRF_COOKIE = 'ip_csrf';
 export const CSRF_HEADER = 'x-csrf-token';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 /** A used session is only written back (sliding expiry) when it was last touched more than this long ago. */
 const TOUCH_INTERVAL_MS = 10 * 60 * 1000;
 
@@ -28,17 +30,25 @@ export class SessionService {
     @Inject(ENV) private readonly env: Env,
   ) {}
 
-  async create(userId: string, meta: { ipAddress?: string; userAgent?: string }): Promise<string> {
+  /** Idle / absolute lifetimes in ms: short for back-office staff, long for customers. */
+  private lifetimes(staff: boolean): { idle: number; absolute: number } {
+    return staff
+      ? { idle: this.env.STAFF_SESSION_IDLE_HOURS * HOUR_MS, absolute: this.env.STAFF_SESSION_ABSOLUTE_HOURS * HOUR_MS }
+      : { idle: this.env.SESSION_TTL_DAYS * DAY_MS, absolute: this.env.SESSION_ABSOLUTE_TTL_DAYS * DAY_MS };
+  }
+
+  async create(userId: string, meta: { ipAddress?: string; userAgent?: string }, opts: { staff?: boolean } = {}): Promise<string> {
     const token = randomBytes(32).toString('base64url');
     const now = Date.now();
+    const { idle, absolute } = this.lifetimes(Boolean(opts.staff));
     await this.prisma.session.create({
       data: {
         userId,
         refreshTokenHash: sha256Hex(token),
         userAgent: meta.userAgent?.slice(0, 300) ?? null,
         ipAddress: meta.ipAddress ?? null,
-        expiresAt: new Date(now + this.env.SESSION_TTL_DAYS * DAY_MS),
-        absoluteExpiresAt: new Date(now + this.env.SESSION_ABSOLUTE_TTL_DAYS * DAY_MS),
+        expiresAt: new Date(now + idle),
+        absoluteExpiresAt: new Date(now + absolute),
         lastUsedAt: new Date(now),
       },
     });
@@ -57,21 +67,12 @@ export class SessionService {
 
     if (now - session.lastUsedAt.getTime() > TOUCH_INTERVAL_MS) {
       // Sliding expiry: extend by the idle window, never past the absolute limit.
-      let next = now + this.env.SESSION_TTL_DAYS * DAY_MS;
+      let next = now + this.lifetimes(session.user.isStaff).idle;
       if (session.absoluteExpiresAt) next = Math.min(next, session.absoluteExpiresAt.getTime());
       await this.prisma.session.update({ where: { id: session.id }, data: { lastUsedAt: new Date(now), expiresAt: new Date(next) } });
     }
 
-    const u = session.user;
-    const user: AuthUser = {
-      id: u.id,
-      email: u.email,
-      fullName: u.fullName ?? ([u.firstName, u.lastName].filter(Boolean).join(' ') || null),
-      phone: u.phone,
-      role: u.isStaff ? 'STAFF' : 'CUSTOMER',
-      emailVerified: Boolean(u.emailVerified),
-      createdAt: u.createdAt.toISOString(),
-    };
+    const user: AuthUser = toAuthUser(session.user);
     return { sessionId: session.id, token, csrfToken: this.csrfFor(token), user };
   }
 
@@ -112,9 +113,9 @@ export class SessionService {
     return ctx && this.isCsrfValid(req, ctx) ? ctx : null;
   }
 
-  setCookies(res: Response, token: string): void {
+  setCookies(res: Response, token: string, opts: { staff?: boolean } = {}): void {
     const secure = this.env.NODE_ENV === 'production';
-    const maxAge = this.env.SESSION_TTL_DAYS * DAY_MS;
+    const maxAge = this.lifetimes(Boolean(opts.staff)).idle;
     res.cookie(SESSION_COOKIE, token, { httpOnly: true, secure, sameSite: 'lax', path: '/', maxAge });
     res.cookie(CSRF_COOKIE, this.csrfFor(token), { httpOnly: false, secure, sameSite: 'lax', path: '/', maxAge });
   }

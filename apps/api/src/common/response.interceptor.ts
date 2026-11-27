@@ -5,7 +5,7 @@ import { Observable, map } from 'rxjs';
 export class Paginated<T> {
   constructor(
     readonly items: T[],
-    readonly meta: { page: number; pageSize: number; total: number },
+    readonly meta: { page: number; pageSize: number; total: number; totalPages?: number },
   ) {}
 }
 

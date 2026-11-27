@@ -42,6 +42,10 @@ export const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(30),
   SESSION_ABSOLUTE_TTL_DAYS: z.coerce.number().int().positive().default(90),
   /** Account endpoints rate limits per IP: sign-ups per hour, logins per 15 minutes. */
+  /** Public origin of this API, used in the links sent with documents (e.g. https://impact-pro-api.onrender.com). */
+  PUBLIC_API_URL: z.string().url().optional(),
+  /** Public document links (view / PDF / accept): requests per THROTTLE_TTL_MS per IP. */
+  PUBLIC_DOC_THROTTLE_LIMIT: z.coerce.number().int().positive().default(30),
   REGISTER_THROTTLE_LIMIT: z.coerce.number().int().positive().default(5),
   LOGIN_THROTTLE_LIMIT: z.coerce.number().int().positive().default(10),
   /** Failed logins per email (15 min window) before an increasing lockout starts. In-memory: single API instance. */
@@ -49,6 +53,15 @@ export const envSchema = z.object({
   /** Argon2id cost. Defaults follow OWASP (>= 19 MiB, t = 2, p = 1) and cannot be lowered. */
   ARGON2_MEMORY_KIB: z.coerce.number().int().min(19456).default(19456),
   ARGON2_TIME_COST: z.coerce.number().int().min(2).default(2),
+  /** Back-office (staff) sessions are much shorter than customer sessions: idle and absolute limits, in hours. */
+  STAFF_SESSION_IDLE_HOURS: z.coerce.number().positive().default(8),
+  STAFF_SESSION_ABSOLUTE_HOURS: z.coerce.number().positive().default(24),
+  /**
+   * First back-office administrator, created at API start when NO staff account exists yet (SUPER_ADMIN, must change the
+   * password at first login). Set both as secrets in the hosting dashboard; never commit them. The password is never logged.
+   */
+  ADMIN_BOOTSTRAP_EMAIL: z.string().email().optional(),
+  ADMIN_BOOTSTRAP_PASSWORD: z.string().min(12, 'ADMIN_BOOTSTRAP_PASSWORD must be at least 12 characters').max(128).optional(),
   /** Number of reverse-proxy hops to trust for req.ip (Render load balancer = 1). 0 disables. */
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
 });

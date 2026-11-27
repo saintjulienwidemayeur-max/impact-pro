@@ -1,3 +1,4 @@
+import type { StaffRole } from '@prisma/client';
 import type { Request } from 'express';
 
 export interface AuthUser {
@@ -5,11 +6,16 @@ export interface AuthUser {
   email: string;
   fullName: string | null;
   phone: string | null;
-  /** Customers are `CUSTOMER`; Impact Pro employees are `STAFF` (staff tools come in later phases). */
+  /** Customers are `CUSTOMER`; Impact Pro employees are `STAFF`. */
   role: 'CUSTOMER' | 'STAFF';
   /** No e-mail service yet: always false until verification ships. */
   emailVerified: boolean;
   createdAt: string;
+  /** Staff only (omitted for customers): back-office role, permissions and the forced-password-change flag. */
+  isStaff?: true;
+  staffRole?: StaffRole | null;
+  permissions?: string[];
+  mustChangePassword?: boolean;
 }
 
 export interface AuthContext {

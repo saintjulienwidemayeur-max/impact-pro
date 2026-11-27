@@ -2,7 +2,9 @@ import { ConflictException, HttpException, HttpStatus, Injectable, UnauthorizedE
 import { Prisma, type User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import type { AuthUser } from './auth.types';
+import { toAuthUser } from './auth-user';
 import type { ChangePasswordDto, LoginDto, RegisterDto, UpdateMeDto } from './dto/auth.dto';
+import { CustomersService } from '../customers/customers.service';
 import { LoginAttemptsService } from './login-attempts.service';
 import { PASSWORD_MESSAGES, PasswordService, checkPasswordPolicy } from './password.service';
 import { SessionService, sha256Hex } from './session.service';
@@ -13,15 +15,7 @@ export interface RequestMeta {
   requestId?: string;
 }
 
-export const toAuthUser = (u: User): AuthUser => ({
-  id: u.id,
-  email: u.email,
-  fullName: u.fullName ?? ([u.firstName, u.lastName].filter(Boolean).join(' ') || null),
-  phone: u.phone,
-  role: u.isStaff ? 'STAFF' : 'CUSTOMER',
-  emailVerified: Boolean(u.emailVerified),
-  createdAt: u.createdAt.toISOString(),
-});
+export { toAuthUser };
 
 /** Same message for unknown e-mail, wrong password and disabled account: nothing to enumerate. */
 const invalidCredentials = () =>
@@ -42,6 +36,7 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly sessions: SessionService,
     private readonly attempts: LoginAttemptsService,
+    private readonly customers: CustomersService,
   ) {}
 
   async register(dto: RegisterDto, meta: RequestMeta): Promise<{ user: AuthUser; token: string }> {
@@ -62,6 +57,7 @@ export class AuthService {
       if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') throw this.emailTaken();
       throw e;
     }
+    await this.customers.upsertFromAccount(user);
     const token = await this.sessions.create(user.id, meta);
     await this.audit('auth.register', user.id, meta);
     return { user: toAuthUser(user), token };
@@ -96,8 +92,8 @@ export class AuthService {
       const prev = await this.sessions.resolve(previousToken);
       if (prev) await this.sessions.revoke(prev.sessionId);
     }
-    const token = await this.sessions.create(user.id, meta);
-    await this.audit('auth.login', user.id, meta);
+    const token = await this.sessions.create(user.id, meta, { staff: user.isStaff });
+    await this.audit('auth.login', user.id, meta, user.isStaff ? { staff: true } : undefined);
     return { user: toAuthUser(updated), token };
   }
 
@@ -136,7 +132,7 @@ export class AuthService {
     if (dto.newPassword === dto.currentPassword) {
       throw new UnprocessableEntityException({ code: 'PASSWORD_UNCHANGED', message: 'Le nouveau mot de passe doit être différent de l’ancien.' });
     }
-    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.passwords.hash(dto.newPassword) } });
+    await this.prisma.user.update({ where: { id: userId }, data: { passwordHash: await this.passwords.hash(dto.newPassword), mustChangePassword: false } });
     const revokedSessions = await this.sessions.revokeAllForUser(userId, currentSessionId);
     await this.audit('auth.password_change', userId, meta, { revokedSessions });
     return { revokedSessions };
