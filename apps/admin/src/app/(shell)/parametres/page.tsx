@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { Gate } from "@/components/gate";
 import { Button } from "@/components/ui/button";
-import { Field, Input, Textarea } from "@/components/ui/field";
+import { Field, Input, Select, Textarea } from "@/components/ui/field";
 import { Card, ErrorState, PageHeader, Skeleton } from "@/components/ui/kit";
 import { ApiError, put } from "@/lib/api";
 import { useFetch } from "@/lib/hooks";
@@ -28,11 +28,15 @@ function Loader() {
 }
 
 const prefix = z.string().trim().min(2, "2 à 6 caractères.").max(6, "2 à 6 caractères.").regex(/^[A-Za-z0-9]+$/, "Lettres et chiffres uniquement.");
+const required = (label: string) => z.string().trim().min(1, `${label} requis.`);
 const schema = z.object({
   legalName: z.string().trim().min(2, "Raison sociale requise."),
   address: z.string().trim().min(2, "Adresse requise."),
-  email: z.union([z.literal(""), z.string().trim().email("E-mail invalide.")]),
-  defaultCurrency: z.string().trim().length(3, "Code devise sur 3 lettres (HTG, USD)."),
+  city: required("Ville"),
+  country: required("Pays"),
+  phone: required("Téléphone"),
+  email: z.string().trim().email("E-mail invalide."),
+  defaultCurrency: z.enum(["HTG", "USD"], { message: "HTG ou USD." }),
   defaultTaxRate: z.coerce.number().min(0, "Entre 0 et 100.").max(100, "Entre 0 et 100."),
   paymentTermsDays: z.coerce.number().int().min(0, "Nombre de jours ≥ 0."),
   quoteValidityDays: z.coerce.number().int().min(1, "Au moins 1 jour."),
@@ -84,10 +88,10 @@ function Form({ initial, onSaved }: { initial: BillingSettings; onSaved: () => v
       await put("/admin/billing/settings", {
         legalName: parsed.data.legalName,
         address: parsed.data.address,
-        city: nz(s.city),
-        country: nz(s.country),
-        phone: nz(s.phone),
-        email: nz(s.email),
+        city: parsed.data.city,
+        country: parsed.data.country,
+        phone: parsed.data.phone,
+        email: parsed.data.email,
         website: nz(s.website),
         taxId: nz(s.taxId),
         defaultCurrency: parsed.data.defaultCurrency.toUpperCase(),
@@ -131,16 +135,16 @@ function Form({ initial, onSaved }: { initial: BillingSettings; onSaved: () => v
             <Input id="s-addr" value={s.address} onChange={set("address")} />
           </Field>
           <div className="grid grid-cols-2 gap-3">
-            <Field id="s-city" label="Ville">
+            <Field id="s-city" label="Ville" required error={errors.city}>
               <Input id="s-city" value={s.city} onChange={set("city")} />
             </Field>
-            <Field id="s-country" label="Pays">
+            <Field id="s-country" label="Pays" required error={errors.country}>
               <Input id="s-country" value={s.country} onChange={set("country")} />
             </Field>
-            <Field id="s-phone" label="Téléphone">
+            <Field id="s-phone" label="Téléphone" required error={errors.phone}>
               <Input id="s-phone" value={s.phone} onChange={set("phone")} />
             </Field>
-            <Field id="s-email" label="E-mail" error={errors.email}>
+            <Field id="s-email" label="E-mail" required error={errors.email}>
               <Input id="s-email" type="email" value={s.email} onChange={set("email")} />
             </Field>
             <Field id="s-web" label="Site web">
@@ -156,7 +160,10 @@ function Form({ initial, onSaved }: { initial: BillingSettings; onSaved: () => v
           <h2 className="font-heading text-lg font-bold">Facturation</h2>
           <div className="grid grid-cols-2 gap-3">
             <Field id="s-cur" label="Devise par défaut" error={errors.defaultCurrency}>
-              <Input id="s-cur" value={s.defaultCurrency} onChange={set("defaultCurrency")} maxLength={3} />
+              <Select id="s-cur" value={s.defaultCurrency} onChange={(e) => setS((p) => ({ ...p, defaultCurrency: e.target.value }))}>
+                <option value="HTG">HTG — gourde</option>
+                <option value="USD">USD — dollar</option>
+              </Select>
             </Field>
             <Field id="s-tax-rate" label="Taxe par défaut (%)" error={errors.defaultTaxRate}>
               <Input id="s-tax-rate" inputMode="decimal" value={s.defaultTaxRate} onChange={set("defaultTaxRate")} data-testid="set-taxRate" />

@@ -17,7 +17,7 @@ const schema = z.object({
   phone: z.string().trim().optional(),
   address: z.string().trim().optional(),
   city: z.string().trim().optional(),
-  country: z.string().trim().optional(),
+  country: z.string().trim().max(2, "Code pays sur 2 lettres (HT, US).").optional(),
   taxId: z.string().trim().optional(),
   notes: z.string().trim().optional(),
 });
@@ -57,7 +57,11 @@ export function CustomerFormDialog({ open, onClose, customer, onSaved }: { open:
     }
     setBusy(true);
     try {
-      const body = Object.fromEntries(Object.entries(parsed.data).map(([k, val]) => [k, val === "" ? null : val]));
+      // The API treats the e-mail as the customer's identity (not updatable) and `country` as a 2-letter code (never null).
+      const body: Record<string, unknown> = Object.fromEntries(Object.entries(parsed.data).map(([k, val]) => [k, val === "" ? null : val]));
+      if (customer) delete body.email;
+      if (body.country === null) delete body.country;
+      else if (typeof body.country === "string") body.country = body.country.toUpperCase();
       const saved = customer ? await patch<Customer>(`/admin/customers/${customer.id}`, body) : await post<Customer>("/admin/customers", body);
       toast.success(customer ? "Client mis à jour." : "Client créé.");
       onSaved(saved);
@@ -93,7 +97,7 @@ export function CustomerFormDialog({ open, onClose, customer, onSaved }: { open:
           <Input id="c-name" value={v.fullName} onChange={set("fullName")} aria-invalid={Boolean(errors.fullName)} />
         </Field>
         <Field id="c-email" label="E-mail" error={errors.email} required>
-          <Input id="c-email" type="email" value={v.email} onChange={set("email")} aria-invalid={Boolean(errors.email)} />
+          <Input id="c-email" type="email" value={v.email} onChange={set("email")} aria-invalid={Boolean(errors.email)} disabled={Boolean(customer)} />
         </Field>
         <Field id="c-company" label="Société" error={errors.company}>
           <Input id="c-company" value={v.company} onChange={set("company")} />

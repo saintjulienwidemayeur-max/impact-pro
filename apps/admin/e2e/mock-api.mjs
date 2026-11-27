@@ -67,7 +67,7 @@ function reset() {
       website: null,
       taxId: null,
       defaultCurrency: "HTG",
-      defaultTaxRate: 0,
+      defaultTaxRate: "0.00",
       paymentTermsDays: 15,
       quoteValidityDays: 30,
       prefixes: { quote: "DEV", proforma: "PRO", invoice: "FAC" },
@@ -107,8 +107,8 @@ function reset() {
     S.orders.push(o);
     return o;
   };
-  mkOrder("IP-2026-0001", c1, "RECEIVED", [{ productId: "prod_mug", slug: "tasse-sublimation", name: "Tasse sublimation", qty: 24, price: "450.00", color: "Blanc" }, { productId: "prod_tee", slug: "t-shirt", name: "T-shirt brodé", qty: 12, price: "650.00", color: "Rouge", size: "M" }]);
-  mkOrder("IP-2026-0002", c2, "APPROVED", [{ productId: "prod_tee", slug: "t-shirt", name: "T-shirt brodé", qty: 30, price: "650.00", color: "Noir", size: "L" }]);
+  mkOrder("IP-2026-000001", c1, "RECEIVED", [{ productId: "prod_mug", slug: "tasse-sublimation", name: "Tasse sublimation", qty: 24, price: "450.00", color: "Blanc" }, { productId: "prod_tee", slug: "t-shirt", name: "T-shirt brodé", qty: 12, price: "650.00", color: "Rouge", size: "M" }]);
+  mkOrder("IP-2026-000002", c2, "APPROVED", [{ productId: "prod_tee", slug: "t-shirt", name: "T-shirt brodé", qty: 30, price: "650.00", color: "Noir", size: "L" }]);
 }
 reset();
 
@@ -151,7 +151,7 @@ function nextNumber(type) {
 function fullDoc(d) {
   const o = d.orderId ? S.orders.find((x) => x.id === d.orderId) : null;
   const parent = d.parentId ? S.documents.find((x) => x.id === d.parentId) : null;
-  return { ...d, isOverdue: isOverdue(d), orderReference: o?.reference ?? null, parentNumber: parent?.number ?? null, children: S.documents.filter((x) => x.parentId === d.id).map((x) => ({ id: x.id, type: x.type, number: x.number })), publicUrl: d.publicToken ? `/api/v1/public/documents/${d.publicToken}/pdf` : null };
+  return { ...d, isOverdue: isOverdue(d), orderReference: o?.reference ?? null, parentNumber: parent?.number ?? null, children: S.documents.filter((x) => x.parentId === d.id).map((x) => ({ id: x.id, type: x.type, number: x.number })), publicUrl: d.publicToken ? `/api/v1/public/documents/${d.publicToken}` : null };
 }
 const needsPerm = (type, write) => (type === "INVOICE" ? (write ? "invoices.write" : "invoices.read") : write ? "quotes.write" : "quotes.read");
 
@@ -168,10 +168,10 @@ function newDocument(user, body) {
     id: id("doc"), type, number: nextNumber(type), status: "DRAFT", currency: body.currency ?? order?.currency ?? S.settings.defaultCurrency,
     issueDate: body.issueDate ?? day(), dueDate: body.dueDate ?? (type === "INVOICE" ? day(S.settings.paymentTermsDays) : null), validUntil: body.validUntil ?? (type === "QUOTE" ? day(S.settings.quoteValidityDays) : null),
     customerId: cust?.id ?? null, customer, orderId: order?.id ?? null, parentId: body.parentId ?? null,
-    lines: (lines ?? []).map((l, i) => ({ id: id("lin"), position: i + 1, description: l.description, sku: l.sku ?? null, productId: l.productId ?? null, quantity: Number(l.quantity), unit: l.unit ?? null, unitPrice: String(l.unitPrice), discountPercent: Number(l.discountPercent ?? 0) })),
-    discountAmount: fx(Number(body.discountAmount ?? 0)), shippingAmount: fx(Number(body.shippingAmount ?? 0)), taxRate: Number(body.taxRate ?? S.settings.defaultTaxRate),
+    lines: (lines ?? []).map((l, i) => ({ id: id("lin"), position: i + 1, description: l.description, sku: l.sku ?? null, productId: l.productId ?? null, quantity: String(l.quantity), unit: l.unit ?? null, unitPrice: String(l.unitPrice), discountPercent: fx(Number(l.discountPercent ?? 0)) })),
+    discountAmount: fx(Number(body.discountAmount ?? 0)), shippingAmount: fx(Number(body.shippingAmount ?? 0)), taxRate: fx(Number(body.taxRate ?? S.settings.defaultTaxRate)),
     notes: body.notes ?? null, internalNotes: body.internalNotes ?? null, terms: body.terms ?? S.settings.defaultTerms, paymentInstructions: body.paymentInstructions ?? S.settings.paymentInstructions,
-    sentAt: null, sentTo: null, acceptedAt: null, publicToken: randomBytes(16).toString("base64url"), createdBy: who(user), createdAt: now(), updatedAt: now(), payments: [], events: [],
+    sentAt: null, sentTo: [], acceptedAt: null, publicToken: null, createdBy: who(user), createdAt: now(), updatedAt: now(), payments: [], events: [],
   };
   totals(d);
   docEvent(d, user, "CREATED", `${d.number} créé`);
@@ -320,17 +320,17 @@ const server = http.createServer(async (req, res) => {
       if (!o) return fail(res, 404, "NOT_FOUND", "Commande introuvable.");
       if (!m[2] && method === "GET") {
         const c = S.customers.find((x) => x.id === o.customerId);
-        return ok(res, { ...orderItem(o), city: o.city, address: o.address, deliveryMethod: o.deliveryMethod, notes: o.notes, customer: c ? customerItem(c) : null, items: o.items, documents: S.documents.filter((d) => d.orderId === o.id).map(summary), events: o.events });
+        return ok(res, { ...orderItem(o), city: o.city, address: o.address, deliveryMethod: o.deliveryMethod, notes: o.notes, customer: c ? { id: c.id, email: c.email, fullName: c.fullName, company: c.company, phone: c.phone } : null, items: o.items, documents: S.documents.filter((d) => d.orderId === o.id).map(summary), events: o.events });
       }
       if (m[2] === "status") {
         const to = body.status;
         const from = o.status;
         const fi = ORDER_FLOW.indexOf(from);
-        const allowed = (to === "CANCELLED" && from !== "DELIVERED" && from !== "CANCELLED") || (from === "CANCELLED" && to === "RECEIVED" && ["SUPER_ADMIN", "ADMIN"].includes(user.staffRole)) || (fi >= 0 && ORDER_FLOW[fi + 1] === to);
+        const allowed = (to === "CANCELLED" && from !== "DELIVERED" && from !== "CANCELLED") || (from === "CANCELLED" && to === "RECEIVED" && ["SUPER_ADMIN", "ADMIN"].includes(user.staffRole)) || (fi >= 0 && ORDER_FLOW.indexOf(to) > fi);
         if (!allowed) return fail(res, 409, "INVALID_TRANSITION", `Transition ${from} → ${to} non autorisée.`);
         o.status = to;
         orderEvent(o, user, "STATUS", `Statut : ${from} → ${to}${body.note ? ` — ${body.note}` : ""}`);
-        audit(user, "order.status", "CustomOrder", o.id, { from, to });
+        audit(user, "order.status_change", "CustomOrder", o.id, { from, to });
         return ok(res, orderItem(o));
       }
       if (m[2] === "notes") {
@@ -361,7 +361,10 @@ const server = http.createServer(async (req, res) => {
       const c = S.customers.find((x) => x.id === m[1]);
       if (!need(method === "GET" ? "customers.read" : "customers.write")) return;
       if (!c) return fail(res, 404, "NOT_FOUND", "Client introuvable.");
-      if (method === "PATCH") Object.assign(c, body);
+      if (method === "PATCH") {
+        if ("email" in body || body.country === null) return fail(res, 422, "VALIDATION_ERROR", "Validation failed", [{ field: "email" in body ? "email" : "country", messages: ["property email should not exist"] }]);
+        Object.assign(c, body);
+      }
       return ok(res, { ...customerItem(c), orders: S.orders.filter((o) => o.customerId === c.id).map(orderItem), documents: S.documents.filter((d) => d.customerId === c.id).map(summary) });
     }
 
@@ -401,6 +404,7 @@ const server = http.createServer(async (req, res) => {
       const term = (q.get("q") ?? "").toLowerCase();
       const list = S.documents.filter((d) => (!type || d.type === type) && (!q.get("status") || d.status === q.get("status")) && (!q.get("customerId") || d.customerId === q.get("customerId")) && (q.get("overdue") !== "true" || isOverdue(d)) && (!term || d.number.toLowerCase().includes(term) || d.customer.name.toLowerCase().includes(term)));
       const [items, meta] = paginate([...list].reverse().map(summary), q);
+      delete meta.totalPages; // the real documents endpoint omits it
       return ok(res, items, meta);
     }
     if (route === "/admin/documents" && method === "POST") {
@@ -424,15 +428,19 @@ const server = http.createServer(async (req, res) => {
           return ok(res, { deleted: true });
         }
         if (method === "PATCH") {
+          const bad = [...Object.keys(body).filter((k) => k === "type"), ...(body.lines ?? []).flatMap((l) => Object.keys(l).filter((k) => k === "position"))];
+          if (bad.length) return fail(res, 422, "VALIDATION_ERROR", "Validation failed", bad.map((f) => ({ field: f, messages: [`property ${f} should not exist`] })));
           const locked = d.status !== "DRAFT";
-          if (locked && (d.type === "INVOICE" || d.status === "VOID")) return fail(res, 409, "CONFLICT", "Une facture envoyée n'est plus modifiable.");
-          const keys = locked ? ["notes", "dueDate", "validUntil", "terms"] : ["customerId", "customer", "currency", "issueDate", "dueDate", "validUntil", "lines", "taxRate", "discountAmount", "shippingAmount", "notes", "internalNotes", "terms", "paymentInstructions"];
+          if (d.status === "VOID") return fail(res, 409, "DOCUMENT_LOCKED", "A voided document cannot be edited");
+          if (locked && d.type === "INVOICE" && Object.keys(body).some((k) => k !== "internalNotes")) return fail(res, 409, "DOCUMENT_LOCKED", "A sent facture can only change: internalNotes", Object.keys(body).filter((k) => k !== "internalNotes").map((f) => ({ field: f, messages: ["locked after sending"] })));
+          const keys = locked ? ["notes", "dueDate", "validUntil", "terms", "internalNotes"] : ["customerId", "customer", "currency", "issueDate", "dueDate", "validUntil", "lines", "taxRate", "discountAmount", "shippingAmount", "notes", "internalNotes", "terms", "paymentInstructions"];
           for (const k of keys) if (k in body) d[k] = body[k];
-          if (!locked && body.lines) d.lines = body.lines.map((l, i) => ({ id: id("lin"), position: i + 1, description: l.description, sku: l.sku ?? null, productId: l.productId ?? null, quantity: Number(l.quantity), unit: l.unit ?? null, unitPrice: String(l.unitPrice), discountPercent: Number(l.discountPercent ?? 0) }));
+          if (!locked && body.lines) d.lines = body.lines.map((l, i) => ({ id: id("lin"), position: i + 1, description: l.description, sku: l.sku ?? null, productId: l.productId ?? null, quantity: String(l.quantity), unit: l.unit ?? null, unitPrice: String(l.unitPrice), discountPercent: fx(Number(l.discountPercent ?? 0)) }));
           if (!locked && body.customerId) {
             const c = S.customers.find((x) => x.id === body.customerId);
             if (c) d.customer = { name: c.fullName, company: c.company, email: c.email, phone: c.phone, address: c.address, city: c.city, country: c.country, taxId: c.taxId };
           }
+          d.taxRate = fx(Number(d.taxRate));
           totals(d);
           d.updatedAt = now();
           return ok(res, fullDoc(d));
@@ -459,7 +467,7 @@ const server = http.createServer(async (req, res) => {
         return send(res, 201, { data: fullDoc(r.doc) });
       }
       if (sub === "void" && !m[3]) {
-        if (!String(body.reason ?? "").trim()) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "reason", messages: ["Motif requis."] }]);
+        if (String(body.reason ?? "").trim().length < 3) return fail(res, 422, "VALIDATION_ERROR", "Validation failed", [{ field: "reason", messages: ["reason must be longer than or equal to 3 characters"] }]);
         if (d.status === "DRAFT" || d.status === "VOID") return fail(res, 409, "INVALID_TRANSITION", "Annulation impossible.");
         d.status = "VOID";
         docEvent(d, user, "VOID", `Annulé : ${body.reason}`);
@@ -476,6 +484,7 @@ const server = http.createServer(async (req, res) => {
         if (!body.markAsSentOnly && !S.mail) return fail(res, 503, "MAIL_NOT_CONFIGURED", "La messagerie n'est pas configurée.");
         if (d.status === "VOID") return fail(res, 409, "INVALID_TRANSITION", "Document annulé.");
         if (d.status === "DRAFT") d.status = "SENT";
+        d.publicToken ??= randomBytes(16).toString("base64url");
         d.sentAt = now();
         d.sentTo = body.markAsSentOnly ? [d.customer.email] : (body.to ?? [d.customer.email]);
         docEvent(d, user, "SENT", body.markAsSentOnly ? "Marqué comme envoyé" : `Envoyé à ${d.sentTo.join(", ")}`);
@@ -494,7 +503,7 @@ const server = http.createServer(async (req, res) => {
           const amount = Number(body.amount);
           if (d.type !== "INVOICE" || ["DRAFT", "VOID", "PAID"].includes(d.status)) return fail(res, 409, "CONFLICT", "Paiement impossible sur ce document.");
           if (!(amount > 0)) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "amount", messages: ["Montant invalide."] }]);
-          if (amount > Number(d.balance) + 0.0001) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "amount", messages: ["Le montant dépasse le solde."] }]);
+          if (amount > Number(d.balance) + 0.0001) return fail(res, 422, "OVERPAYMENT", `Amount exceeds the balance due (${d.balance} ${d.currency})`, [{ field: "amount", messages: ["exceeds the balance due"] }]);
           d.payments.push({ id: id("pay"), amount: fx(amount), currency: d.currency, method: body.method ?? "OTHER", paidAt: body.paidAt ?? day(), reference: body.reference ?? null, notes: body.notes ?? null, voidedAt: null, voidReason: null, recordedBy: who(user) });
           audit(user, "payment.record", "Payment", d.id, { amount: fx(amount) });
         }
@@ -510,9 +519,13 @@ const server = http.createServer(async (req, res) => {
     if (route === "/admin/billing/settings") {
       if (!need("billing.settings")) return;
       if (method === "PUT") {
-        if (!body.legalName || !body.prefixes?.invoice) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "legalName", messages: ["Champ requis."] }]);
-        S.settings = { ...S.settings, ...body };
-        audit(user, "settings.update", "BillingSettings", "singleton");
+        const errs = [];
+        for (const f of ["legalName", "address", "city", "country", "phone", "email"]) if (!body[f] || String(body[f]).length < 1) errs.push({ field: f, messages: [`${f} must be longer than or equal to 1 characters`] });
+        if (!["HTG", "USD"].includes(body.defaultCurrency)) errs.push({ field: "defaultCurrency", messages: ["defaultCurrency must be one of the following values: HTG, USD"] });
+        if (!(Number(body.defaultTaxRate) >= 0 && Number(body.defaultTaxRate) <= 100)) errs.push({ field: "defaultTaxRate", messages: ["defaultTaxRate must be between 0 and 100"] });
+        if (errs.length) return fail(res, 422, "VALIDATION_ERROR", "Validation failed", errs);
+        S.settings = { ...S.settings, ...body, defaultTaxRate: fx(Number(body.defaultTaxRate)) };
+        audit(user, "billing.settings.update", "BillingSettings", "singleton");
       }
       return ok(res, S.settings);
     }
@@ -554,7 +567,7 @@ const server = http.createServer(async (req, res) => {
         const password = tempPw();
         const u = { id: id("usr"), email: String(body.email).toLowerCase(), fullName: body.fullName, staffRole: body.staffRole, status: "ACTIVE", isStaff: true, password, mustChangePassword: true, lastLoginAt: null, createdAt: now() };
         S.users.push(u);
-        audit(user, "user.create", "User", u.id);
+        audit(user, "staff.create", "User", u.id);
         return send(res, 201, { data: { ...pub(u), temporaryPassword: password } });
       }
       m = route.match(/^\/admin\/users\/([^/]+)(\/reset-password)?$/);
@@ -584,7 +597,8 @@ const server = http.createServer(async (req, res) => {
     // --- mail ---
     if (route === "/admin/mail/status") {
       if (!need("mail.read")) return;
-      return ok(res, S.mail ? { configured: true, provider: "resend", fromAddress: "contact@example.com", lastSyncAt: now(), unread: 0 } : { configured: false });
+      if (!S.mail) return fail(res, 404, "NOT_FOUND", "Cannot GET /api/v1/admin/mail/status"); // stage-2 module absent
+      return ok(res, { configured: true, provider: "resend", fromAddress: "contact@example.com", lastSyncAt: now(), unread: 0 });
     }
 
     return fail(res, 404, "NOT_FOUND", `Route inconnue : ${method} ${route}`);

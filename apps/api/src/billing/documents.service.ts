@@ -722,7 +722,7 @@ export class DocumentsService {
       return { customerId: r.id, name: r.fullName ?? r.email ?? '', company: r.company ?? null, email: r.email ?? '', phone: r.phone ?? null, address: r.address ?? null, city: r.city ?? null, country: r.country ?? null, taxId: r.taxId ?? null };
     }
     if (order) {
-      return { customerId: null, name: order.customerName, company: order.company, email: order.email, phone: order.phone, address: order.address, city: order.city, country: null, taxId: null };
+      return { customerId: order.customerId ?? null, name: order.customerName, company: order.company, email: order.email, phone: order.phone, address: order.address, city: order.city, country: null, taxId: null };
     }
     if (requireSource || src.customerId !== undefined) {
       throw new UnprocessableEntityException({ code: 'VALIDATION_ERROR', message: 'Validation failed', details: [{ field: 'customer', messages: ['provide `customer` (name, email…) — the customer directory is not available'] }] });

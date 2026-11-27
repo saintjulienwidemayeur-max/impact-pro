@@ -100,8 +100,10 @@ export async function api<T = unknown>(path: string, opts: Opts = {}): Promise<{
     throw new ApiError(friendly(code, body.error?.message ?? `Erreur ${res.status}`), res.status, code, body.error?.details);
   }
   if (res.status === 204) return { data: undefined as T };
-  const json = (await res.json()) as { data: T; meta?: Meta };
-  return json;
+  const json = (await res.json()) as { data: T; meta?: Partial<Meta> & { page: number; pageSize: number; total: number } };
+  // Some endpoints (documents) omit totalPages: derive it.
+  const meta = json.meta ? ({ ...json.meta, totalPages: json.meta.totalPages ?? Math.max(1, Math.ceil(json.meta.total / (json.meta.pageSize || 1))) } as Meta) : undefined;
+  return { data: json.data, meta };
 }
 
 export const get = <T>(path: string, query?: Opts["query"]) => api<T>(path, { query }).then((r) => r.data);

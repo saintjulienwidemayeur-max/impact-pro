@@ -47,7 +47,7 @@ function Inner({ doc, reload }: { doc: BillingDocument; reload: () => void }) {
   const canPay = isInvoice && can("payments.write") && ["SENT", "PARTIALLY_PAID"].includes(doc.status) && Number(doc.balance) > 0;
   const canConvert = canWrite && doc.status !== "VOID" && doc.type !== "INVOICE" && !isDraft;
   const canVoid = canWrite && doc.status !== "VOID" && !(isInvoice && doc.status === "PAID" && false);
-  const publicLink = doc.publicToken ? `${typeof window !== "undefined" ? "" : ""}${doc.publicUrl ?? `/api/v1/public/documents/${doc.publicToken}/pdf`}` : null;
+  const publicLink = doc.publicToken ? `${doc.publicUrl ?? `/api/v1/public/documents/${doc.publicToken}`}/pdf` : null;
 
   async function run<T>(fn: () => Promise<T>, ok: string, after?: (r: T) => void) {
     setBusy(true);
@@ -130,7 +130,7 @@ function Inner({ doc, reload }: { doc: BillingDocument; reload: () => void }) {
                         {l.quantity} {l.unit ?? ""}
                       </td>
                       <td className="py-2 text-right tabular-nums">{money(l.unitPrice, doc.currency)}</td>
-                      <td className="py-2 text-right tabular-nums">{l.discountPercent ? `${l.discountPercent} %` : "—"}</td>
+                      <td className="py-2 text-right tabular-nums">{Number(l.discountPercent) > 0 ? `${Number(l.discountPercent)} %` : "—"}</td>
                       <td className="py-2 text-right font-semibold tabular-nums">{money(l.lineTotal ?? 0, doc.currency)}</td>
                     </tr>
                   ))}
@@ -155,7 +155,7 @@ function Inner({ doc, reload }: { doc: BillingDocument; reload: () => void }) {
                 </div>
               )}
               <div className="flex justify-between">
-                <dt className="text-ip-muted">Taxe ({doc.taxRate} %)</dt>
+                <dt className="text-ip-muted">Taxe ({Number(doc.taxRate)} %)</dt>
                 <dd className="tabular-nums">{money(doc.taxTotal, doc.currency)}</dd>
               </div>
               <div className="flex justify-between border-t border-ip-line pt-1.5">

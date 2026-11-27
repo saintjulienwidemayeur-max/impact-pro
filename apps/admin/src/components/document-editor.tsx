@@ -163,7 +163,8 @@ function Inner({ type, doc }: { type: DocumentType; doc: BillingDocument | null 
       const body: Record<string, unknown> = locked
         ? { notes: notes || null, terms: terms || null, dueDate: dueDate || null, validUntil: validUntil || null }
         : {
-            type,
+            // `type` is create-only: the API rejects it on PATCH (forbidNonWhitelisted).
+            ...(doc ? {} : { type }),
             ...(cust.id ? { customerId: cust.id } : {}),
             customer: { name: cust.name, company: cust.company || null, email: cust.email, phone: cust.phone || null, address: cust.address || null, city: cust.city || null, country: cust.country || null, taxId: cust.taxId || null },
             ...(orderId && !doc ? { orderId } : {}),
@@ -171,7 +172,7 @@ function Inner({ type, doc }: { type: DocumentType; doc: BillingDocument | null 
             issueDate,
             dueDate: dueDate || null,
             validUntil: validUntil || null,
-            lines: lines.map((l, i) => ({ position: i + 1, description: l.description, sku: l.sku || null, productId: l.productId, quantity: Number(l.quantity), unit: l.unit || null, unitPrice: Number(l.unitPrice).toFixed(2), discountPercent: Number(l.discountPercent) })),
+            lines: lines.map((l) => ({ description: l.description, sku: l.sku || null, productId: l.productId, quantity: Number(l.quantity), unit: l.unit || null, unitPrice: Number(l.unitPrice).toFixed(2), discountPercent: Number(l.discountPercent) })),
             discountAmount: Number(discountAmount || 0).toFixed(2),
             shippingAmount: Number(shippingAmount || 0).toFixed(2),
             taxRate: Number(taxRate || 0),

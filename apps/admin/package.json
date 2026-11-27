@@ -8,7 +8,8 @@
     "start": "next start -p ${PORT:-3001}",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test --trace off"
+    "test:e2e": "playwright test --trace off",
+    "test:e2e:real": "playwright test -c playwright.real.config.ts --trace off"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

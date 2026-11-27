@@ -77,7 +77,7 @@ test.describe("orders", () => {
     await page.getByTestId("orders-search").fill("Marie");
     await expect(page.getByTestId("orders-rows").getByRole("row")).toHaveCount(1);
     await page.getByTestId("orders-search").fill("");
-    await page.getByRole("link", { name: "IP-2026-0001" }).click();
+    await page.getByRole("link", { name: "IP-2026-000001" }).click();
 
     await expect(page.getByTestId("status-stepper")).toBeVisible();
     await expect(page.getByTestId("order-item")).toHaveCount(2);
@@ -96,7 +96,7 @@ test.describe("orders", () => {
   test("production role can change status but sees no billing buttons", async ({ page }) => {
     await loginAs(page, "production");
     await page.goto("/commandes");
-    await page.getByRole("link", { name: "IP-2026-0002" }).click();
+    await page.getByRole("link", { name: "IP-2026-000002" }).click();
     await expect(page.getByTestId("to-IN_PRODUCTION")).toBeVisible();
     await expect(page.getByTestId("create-quote")).toHaveCount(0);
     await expect(page.getByTestId("create-invoice")).toHaveCount(0);
@@ -107,7 +107,7 @@ test.describe("billing", () => {
   test("order → quote → proforma → invoice → send (mail off) → payment → PDF", async ({ page }) => {
     await loginAs(page, "admin");
     await page.goto("/commandes");
-    await page.getByRole("link", { name: "IP-2026-0001" }).click();
+    await page.getByRole("link", { name: "IP-2026-000001" }).click();
     await page.getByTestId("create-quote").click();
     await expect(page.getByTestId("from-order")).toBeVisible();
     await page.getByTestId("create-from-order").click();

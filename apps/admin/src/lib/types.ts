@@ -87,7 +87,7 @@ export interface OrderDetail extends OrderListItem {
   address?: string | null;
   deliveryMethod: "PICKUP" | "DELIVERY";
   notes?: string | null;
-  customer: CustomerListItem | null;
+  customer: Pick<Customer, "id" | "email" | "fullName" | "company" | "phone"> | null;
   items: OrderItem[];
   documents: DocumentSummary[];
   events: OrderEvent[];
@@ -147,10 +147,10 @@ export interface DocumentLine {
   description: string;
   sku?: string | null;
   productId?: string | null;
-  quantity: number;
+  quantity: number | string;
   unit?: string | null;
   unitPrice: string;
-  discountPercent: number;
+  discountPercent: number | string;
   lineTotal?: string;
 }
 export interface DocumentCustomer {
@@ -202,7 +202,7 @@ export interface BillingDocument {
   lines: DocumentLine[];
   discountAmount: string;
   shippingAmount: string;
-  taxRate: number;
+  taxRate: number | string;
   subtotal: string;
   taxTotal: string;
   total: string;
@@ -234,7 +234,7 @@ export interface BillingSettings {
   website?: string | null;
   taxId?: string | null;
   defaultCurrency: string;
-  defaultTaxRate: number;
+  defaultTaxRate: number | string;
   paymentTermsDays: number;
   quoteValidityDays: number;
   prefixes: { quote: string; proforma: string; invoice: string };
