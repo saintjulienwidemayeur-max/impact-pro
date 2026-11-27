@@ -61,7 +61,7 @@ export class AuthController {
   @ApiTooManyRequestsResponse({ description: 'TOO_MANY_ATTEMPTS (per-e-mail lockout) or 10 logins / 15 min / IP' })
   async login(@Body() dto: LoginDto, @Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response): Promise<SessionPayload> {
     const { user, token } = await this.auth.login(dto, metaOf(req), this.sessions.tokenFromRequest(req));
-    this.sessions.setCookies(res, token);
+    this.sessions.setCookies(res, token, { staff: user.role === 'STAFF' });
     return { user, csrfToken: this.sessions.csrfFor(token) };
   }
 
@@ -87,7 +87,7 @@ export class AuthController {
   async me(@Req() req: AuthedRequest, @Res({ passthrough: true }) res: Response): Promise<{ user: AuthUser | null; csrfToken: string | null }> {
     const ctx = await this.sessions.resolve(this.sessions.tokenFromRequest(req));
     if (!ctx) return { user: null, csrfToken: null };
-    this.sessions.setCookies(res, ctx.token);
+    this.sessions.setCookies(res, ctx.token, { staff: ctx.user.role === 'STAFF' });
     return { user: ctx.user, csrfToken: ctx.csrfToken };
   }
 

@@ -193,3 +193,17 @@ Other codes: `CSRF_INVALID`, `ORIGIN_NOT_ALLOWED` (403).
 | GET | /audit-logs | ADMIN | – |
 | POST | /files/presign · POST /files/:id/complete · GET /files/:id/url | user | ✔ |
 | GET/PATCH | /settings | SUPER_ADMIN | – |
+
+### Admin core (as built) — see `docs/admin-contract.md` §0–§2
+All under `/api/v1/admin`, staff session + permission (`StaffGuard`), lists use `?page&pageSize&sort=field:asc|desc&q` and return `{ data, meta:{page,pageSize,total,totalPages} }`.
+| Method | Path | Permission |
+|---|---|---|
+| GET | /admin/me | any staff (works while a password change is pending) |
+| GET | /admin/dashboard | dashboard.read |
+| GET | /admin/orders · /admin/orders/:id · /admin/orders/:id/events | orders.read |
+| PATCH | /admin/orders/:id/status · POST /admin/orders/:id/notes | orders.write |
+| GET/POST/PATCH | /admin/customers[/:id] | customers.read / customers.write |
+| GET/POST/PATCH | /admin/products[/:id] | products.read / products.write |
+| GET/POST/PATCH | /admin/users[/:id] · POST /admin/users/:id/reset-password | users.manage |
+| GET | /admin/audit-logs | audit.read |
+Order statuses move forward only (skipping ahead is allowed), `CANCELLED` from any non-delivered state, `CANCELLED → RECEIVED` for ADMIN/SUPER_ADMIN; otherwise 409 `INVALID_TRANSITION`. The `Customer` directory is filled automatically from orders and accounts (staff edits are never overwritten). Dashboard billing figures come from the `BILLING_STATS` port (`ZeroBillingStatsProvider` until billing is merged).

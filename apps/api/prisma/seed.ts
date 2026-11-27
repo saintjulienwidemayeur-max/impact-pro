@@ -6,6 +6,7 @@
  * ⚠️ ALL PRICES BELOW ARE PLACEHOLDERS (HTG) chosen to look realistic for development.
  *    Real prices must be entered by Impact Pro staff (admin dashboard, Phase 5) before launch.
  */
+import { Algorithm, hash } from '@node-rs/argon2';
 import { PricingMode, Prisma, PrismaClient, ProductStatus } from '@prisma/client';
 import { categories, optionFlags, products } from './seed-data';
 
@@ -107,6 +108,33 @@ async function main(): Promise<void> {
       (archived.count ? ` (archived ${archived.count} obsolete product(s))` : '') +
       '. Prices are placeholders.',
   );
+
+  await seedDemoStaff();
+}
+
+/** One demo staff account per role. Development/test only, password from DEV_STAFF_PASSWORD (never committed). */
+async function seedDemoStaff(): Promise<void> {
+  if (process.env.NODE_ENV === 'production') return;
+  const password = process.env.DEV_STAFF_PASSWORD;
+  if (!password) {
+    console.log('Demo staff accounts skipped: set DEV_STAFF_PASSWORD (min 12 chars) to create one account per role.');
+    return;
+  }
+  if (password.length < 12) {
+    console.log('Demo staff accounts skipped: DEV_STAFF_PASSWORD must have at least 12 characters.');
+    return;
+  }
+  const passwordHash = await hash(password, { algorithm: Algorithm.Argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
+  const roles = ['SUPER_ADMIN', 'ADMIN', 'SALES', 'ACCOUNTING', 'PRODUCTION', 'SUPPORT'] as const;
+  for (const role of roles) {
+    const email = `${role.toLowerCase().replace('_', '-')}@dev.impactpro.test`;
+    await prisma.user.upsert({
+      where: { email },
+      update: { isStaff: true, staffRole: role, passwordHash, mustChangePassword: false },
+      create: { email, fullName: `Démo ${role}`, isStaff: true, staffRole: role, passwordHash },
+    });
+  }
+  console.log(`Demo staff accounts ready (${roles.length}): <role>@dev.impactpro.test, e.g. super-admin@dev.impactpro.test`);
 }
 
 main()

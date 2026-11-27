@@ -27,6 +27,16 @@ enum OrganizationStatus {
   ARCHIVED
 }
 
+/// Impact Pro employee role (back-office RBAC). Customers have `staffRole = null`.
+enum StaffRole {
+  SUPER_ADMIN
+  ADMIN
+  SALES
+  ACCOUNTING
+  PRODUCTION
+  SUPPORT
+}
+
 enum UserStatus {
   ACTIVE
   INVITED
@@ -60,6 +70,10 @@ model User {
   phone         String?
   status        UserStatus    @default(ACTIVE)
   isStaff       Boolean       @default(false)
+  /// Back-office role; set only when `isStaff` is true.
+  staffRole     StaffRole?
+  /// Staff accounts created by an admin start with a temporary password that must be changed at first login.
+  mustChangePassword Boolean   @default(false)
   emailVerified DateTime?
   lastLoginAt   DateTime?
   createdAt     DateTime      @default(now())
@@ -68,6 +82,8 @@ model User {
   sessions      Session[]
   auditLogs     AuditLog[]
   customOrders  CustomOrder[]
+  customer      Customer?
+  orderEvents   CustomOrderEvent[]
 }
 
 model Membership {
@@ -440,13 +456,66 @@ model CustomOrder {
   /// Set when the order was placed (or later claimed) by a signed-in customer; null for guest orders.
   userId         String?
   user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// Entry of the back-office customer directory (matched by e-mail), set when the order is created.
+  customerId     String?
+  customer       Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
   items          CustomOrderItem[]
+  events         CustomOrderEvent[]
 
   @@index([userId, createdAt])
   @@index([email])
   @@index([status, createdAt])
+  @@index([customerId, createdAt])
+}
+
+/// Back-office customer directory. Created automatically from orders and account sign-ups (matched by lower-cased e-mail)
+/// or by hand by staff; also used as the billing counterpart.
+model Customer {
+  id        String        @id @default(cuid())
+  email     String        @unique // stored lower-cased
+  fullName  String
+  company   String?
+  phone     String?
+  address   String?
+  city      String?
+  country   String        @default("HT")
+  taxId     String?
+  notes     String?
+  /// Link to the customer's web account, when they have one.
+  userId    String?       @unique
+  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  /// 'ORDER' | 'ADMIN' | 'ACCOUNT'
+  source    String        @default("ORDER")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  orders    CustomOrder[]
+
+  @@index([fullName])
+  @@index([createdAt])
+}
+
+enum OrderEventType {
+  STATUS
+  NOTE
+  DOCUMENT
+  EMAIL
+}
+
+/// Timeline of an order (status changes, internal notes, documents, e-mails).
+model CustomOrderEvent {
+  id        String         @id @default(cuid())
+  orderId   String
+  type      OrderEventType
+  message   String
+  data      Json?
+  actorId   String?
+  createdAt DateTime       @default(now())
+  order     CustomOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  actor     User?          @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([orderId, createdAt])
 }
 
 model CustomOrderItem {
