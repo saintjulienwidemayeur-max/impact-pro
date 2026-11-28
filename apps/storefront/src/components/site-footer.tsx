@@ -2,21 +2,26 @@ import Image from "next/image";
 import { PaymentLogos } from "./payment-logos";
 import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
-import { navCategories as categories } from "@/config/navigation";
+import { promoCategories } from "@/config/offer";
 import { site, socialLinks, whatsappHref } from "@/lib/site";
 import { SocialIcon } from "./social-icons";
 
-const quickLinks = [
-  { label: "Accueil", href: "/" },
+const promoLinks = [
+  ...promoCategories.map((c) => ({ label: c.name, href: `/articles-promotionnels/${c.slug}` })),
+  { label: "Studio en ligne", href: "/personnaliser" },
+  { label: "Boutique en ligne", href: "/produits" },
+];
+
+const serviceLinks = [
+  { label: "Articles promotionnels", href: "/articles-promotionnels" },
+  { label: "Achats & sourcing", href: "/sourcing" },
+  { label: "Événements & conseil", href: "/evenements-conseil" },
   { label: "À propos", href: "/a-propos" },
-  { label: "Produits", href: "/produits" },
-  { label: "Personnaliser", href: "/personnaliser" },
   { label: "Offres", href: "/offres" },
-  { label: "Contact", href: "/contact" },
 ];
 
 const customerLinks = [
-  { label: "Demander un devis", href: "/devis" },
+  { label: "Demander une proforma", href: "/devis" },
   { label: "Mon panier", href: "/panier" },
   { label: "Espace client", href: "/compte" },
   { label: "Créer un compte", href: "/inscription" },
@@ -47,12 +52,12 @@ export function SiteFooter() {
   const wa = whatsappHref();
   const waExternal = wa.startsWith("http");
   return (
-    <footer className="bg-ip-deep text-white">
+    <footer className="bg-ip-ink text-white">
       <div className="container-ip grid grid-cols-2 gap-x-6 gap-y-10 py-14 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.3fr]">
         <div className="col-span-2 lg:col-span-1">
           <Image src="/brand/logo-impact-pro-inverse.png" alt="Impact Pro" width={1116} height={349} className="h-12 w-auto" />
           <p className="mt-4 max-w-xs text-sm text-white/80">
-            Votre partenaire en articles promotionnels personnalisés. Tasses, textiles, banderoles, cartes et photocalls — on met votre marque partout.
+            Le guichet unique pour promouvoir, équiper et faire vivre votre marque : articles promotionnels, sourcing, événements et conseil. Basés à Miami, au service d&apos;Haïti.
           </p>
           <div className="mt-5 flex gap-2">
             {socialLinks.map((s) => (
@@ -77,8 +82,8 @@ export function SiteFooter() {
             </a>
           </div>
         </div>
-        <FooterCol title="Liens rapides" links={quickLinks} />
-        <FooterCol title="Nos services" links={categories.map((c) => ({ label: c.name, href: `/produits?categorie=${c.slug}` }))} />
+        <FooterCol title="Nos services" links={serviceLinks} />
+        <FooterCol title="Articles promo" links={promoLinks} />
         <FooterCol title="Service client" links={customerLinks} />
         <div className="col-span-2 sm:col-span-1">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-ip-sun">Contact</h2>

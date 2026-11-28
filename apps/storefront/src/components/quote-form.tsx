@@ -8,12 +8,21 @@ import { useCart } from "./cart-provider";
 import { LogoUploader } from "./logo-uploader";
 import { Button } from "./ui/button";
 import { Field, Input, Textarea } from "./ui/field";
+import { projectSizes, quoteServices, type ProjectSize, type ServiceId } from "@/config/offer";
 import type { UploadedLogo } from "@/lib/api";
 import { fieldErrors, quoteSchema } from "@/lib/schemas";
 
 type Errors = Record<string, string>;
 
-export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
+export function QuoteForm({
+  fromCart = false,
+  defaultService = "articles",
+  defaultSize,
+}: {
+  fromCart?: boolean;
+  defaultService?: ServiceId;
+  defaultSize?: ProjectSize;
+}) {
   const { lines, ready } = useCart();
   const formRef = React.useRef<HTMLFormElement>(null);
   const [errors, setErrors] = React.useState<Errors>({});
@@ -37,7 +46,7 @@ export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
     const form = e.currentTarget;
     const data = new FormData(form);
     const values = Object.fromEntries(
-      ["name", "company", "phone", "email", "products", "quantity", "message", "logoUploadId"].map((k) => [k, data.get(k)?.toString() ?? ""]),
+      ["service", "size", "name", "company", "phone", "email", "products", "quantity", "message", "logoUploadId"].map((k) => [k, data.get(k)?.toString() ?? ""]),
     );
     const parsed = quoteSchema.safeParse(values);
     const next: Errors = parsed.success ? {} : fieldErrors(parsed.error);
@@ -63,7 +72,7 @@ export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
         throw new Error(body?.error?.message ?? "Envoi impossible pour le moment.");
       }
       setDone(body.data.reference);
-      toast.success("Demande de devis envoyée !", { description: `Référence : ${body.data.reference}` });
+      toast.success("Demande de proforma envoyée !", { description: `Référence : ${body.data.reference}` });
       form.reset();
       setLogo(null);
     } catch (err) {
@@ -96,7 +105,38 @@ export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
   const describedBy = (id: string) => ({ "aria-describedby": `${id}-msg`, "aria-invalid": Boolean(errors[id]) });
 
   return (
-    <form ref={formRef} onSubmit={onSubmit} noValidate className="grid gap-5 sm:grid-cols-2" aria-label="Demande de devis">
+    <form ref={formRef} onSubmit={onSubmit} noValidate className="grid gap-5 sm:grid-cols-2" aria-label="Demande de proforma">
+      <Field id="service" label="Service souhaité" required error={errors.service}>
+        <select
+          id="service"
+          name="service"
+          defaultValue={defaultService}
+          {...describedBy("service")}
+          className="h-11 w-full rounded-xl border border-ip-line bg-white px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+        >
+          {quoteServices.map((s) => (
+            <option key={s.id} value={s.id}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <Field id="size" label="Taille du projet" error={errors.size} hint="Facultatif">
+        <select
+          id="size"
+          name="size"
+          defaultValue={defaultSize ?? ""}
+          {...describedBy("size")}
+          className="h-11 w-full rounded-xl border border-ip-line bg-white px-3 text-sm focus:border-ip-teal focus:outline-none focus:ring-2 focus:ring-ip-cyan/50"
+        >
+          <option value="">Je ne sais pas encore</option>
+          {projectSizes.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.long}
+            </option>
+          ))}
+        </select>
+      </Field>
       <Field id="name" label="Nom complet" required error={errors.name}>
         <Input id="name" name="name" autoComplete="name" {...describedBy("name")} />
       </Field>
@@ -109,10 +149,10 @@ export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
       <Field id="email" label="Courriel" required error={errors.email}>
         <Input id="email" name="email" type="email" autoComplete="email" {...describedBy("email")} />
       </Field>
-      <Field id="products" label="Produits souhaités" required error={errors.products} className="sm:col-span-2" hint="Ex. 50 polos teal brodés, 100 tasses…">
+      <Field id="products" label="Votre projet" required error={errors.products} className="sm:col-span-2" hint="Ex. 300 t-shirts et 50 casquettes pour le carnaval, un produit à trouver, un événement à organiser…">
         <Textarea id="products" name="products" rows={3} {...describedBy("products")} />
       </Field>
-      <Field id="quantity" label="Quantité totale" required error={errors.quantity}>
+      <Field id="quantity" label="Quantité totale" error={errors.quantity} hint="Facultatif">
         <Input id="quantity" name="quantity" type="number" min={1} inputMode="numeric" {...describedBy("quantity")} />
       </Field>
       <div className="sm:col-span-2">
@@ -126,7 +166,7 @@ export function QuoteForm({ fromCart = false }: { fromCart?: boolean }) {
         <Textarea id="message" name="message" rows={4} {...describedBy("message")} />
       </Field>
       <div className="flex flex-col gap-3 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-xs text-ip-muted">* Champs obligatoires. Vos données servent uniquement à préparer votre devis.</p>
+        <p className="text-xs text-ip-muted">* Champs obligatoires. Vos données servent uniquement à préparer votre proforma.</p>
         <Button type="submit" variant="sun" size="lg" disabled={pending}>
           {pending && <Loader2 className="animate-spin" aria-hidden="true" />}
           Envoyer ma demande

@@ -4,7 +4,7 @@ export const site = {
   legalName: "Impact Pro LLC",
   tagline: "Votre marque, partout.",
   description:
-    "Impact Pro personnalise vos articles promotionnels en Haïti : tasses, t-shirts, polos, casquettes, banderoles, drapeaux, cartes de visite et photocalls à votre image.",
+    "Impact Pro, le guichet unique de votre marque : articles promotionnels (giveaways, cadeaux corporate, carnaval), achats et sourcing de produits, événements et conseil. Basés à Miami, au service d'Haïti.",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
   phoneDisplay: "+509 [XXXX-XXXX]",
   email: "contact@impactpro.ht",

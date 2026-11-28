@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { navCategories } from "@/config/navigation";
+import { promoCategories } from "@/config/offer";
 import { listProducts, type Product } from "@/lib/api";
 import { site } from "@/lib/site";
 
@@ -8,7 +9,7 @@ export const revalidate = 3600;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url.replace(/\/$/, "");
   const now = new Date();
-  const staticPages = ["", "/produits", "/personnaliser", "/offres", "/a-propos", "/contact", "/devis", "/suivi", "/conditions"].map((p) => ({
+  const staticPages = ["", "/articles-promotionnels", ...promoCategories.map((c) => `/articles-promotionnels/${c.slug}`), "/sourcing", "/evenements-conseil", "/produits", "/personnaliser", "/offres", "/a-propos", "/contact", "/devis", "/suivi", "/conditions"].map((p) => ({
     url: `${base}${p}`,
     lastModified: now,
     changeFrequency: "weekly" as const,

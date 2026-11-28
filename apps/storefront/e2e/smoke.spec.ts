@@ -62,18 +62,45 @@ async function lastOrderPayload(page: Page) {
 }
 
 test.describe("storefront", () => {
-  test("homepage renders key sections with real photos", async ({ page }) => {
+  test("homepage presents the one-stop shop: services, promo categories, selector", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/Impact Pro/);
     await expect(page.getByRole("img", { name: "Impact Pro" }).first()).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/sur tout/i);
-    await expect(page.getByRole("heading", { name: "Produits populaires" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Personnalisez tout" })).toBeVisible();
-    await expect(page.locator('section[aria-labelledby="everything-title"]').getByRole("link", { name: /Ballons de fête/ })).toHaveAttribute("href", "/personnaliser/ballon-personnalise");
-    await expect(page.getByRole("heading", { name: "Votre logo sur tout votre kit" })).toBeVisible();
-    await expect(page.locator('img[src*="kit-promotionnel"]').first()).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Comment ça marche" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/faire vivre/i);
+    await expect(page.getByRole("heading", { name: "Que souhaitez-vous réaliser ?" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Un seul interlocuteur/ })).toBeVisible();
+    for (const name of ["Articles promotionnels", "Achats & sourcing de produits", "Événements & conseil"]) {
+      await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+    }
+    await expect(page.getByRole("link", { name: "Voir la catégorie Événements de masse" })).toHaveAttribute("href", "/articles-promotionnels/evenements-de-masse");
+    await expect(page.getByRole("heading", { name: "Simple, du premier message à la livraison" })).toBeVisible();
     await expect(page.locator("footer")).toContainText("Impact Pro LLC");
+
+    // The selector preselects the quote form.
+    const selector = page.getByTestId("service-selector");
+    await selector.getByRole("radio", { name: /Événement/ }).click();
+    await selector.getByRole("radio", { name: "Plus de 1 000 pièces" }).click();
+    await expect(page.getByTestId("selector-cta")).toHaveAttribute("href", "/devis?service=evenement&taille=grand");
+    await page.getByTestId("selector-cta").click();
+    await expect(page.getByLabel(/Service souhaité/)).toHaveValue("evenement");
+    await expect(page.getByLabel(/Taille du projet/)).toHaveValue("grand");
+  });
+
+  test("mega menu and service pages", async ({ page, isMobile }) => {
+    test.skip(isMobile, "desktop navigation");
+    await page.goto("/");
+    await page.getByRole("button", { name: /Articles promotionnels/ }).click();
+    const mega = page.locator("#mega-articles");
+    await expect(mega).toBeVisible();
+    await mega.getByRole("link", { name: "Cadeaux corporate" }).first().click();
+    await expect(page).toHaveURL(/\/articles-promotionnels\/cadeaux-corporate$/);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Cadeaux corporate");
+    await page.goto("/sourcing");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("trouvé et livré");
+    await page.goto("/evenements-conseil");
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("dernier invité");
+    await page.goto("/articles-promotionnels/inconnue");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Page introuvable");
   });
 
   test("quote form validates required fields and submits", async ({ page }) => {
@@ -86,7 +113,7 @@ test.describe("storefront", () => {
     await page.getByLabel(/Nom complet/).fill("Marie Joseph");
     await page.getByLabel(/Téléphone/).fill("+509 3700 0000");
     await page.getByLabel(/Courriel/).fill("marie@example.com");
-    await page.getByLabel(/Produits souhaités/).fill("50 polos brodés");
+    await page.getByLabel(/Votre projet/).fill("50 polos brodés");
     await page.getByLabel(/Quantité totale/).fill("50");
     await page.getByRole("button", { name: "Envoyer ma demande" }).click();
     await expect(page.getByText("Merci, votre demande est bien reçue !")).toBeVisible();

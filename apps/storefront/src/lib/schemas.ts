@@ -31,16 +31,19 @@ const phone = z
   .regex(phoneRegex, "Numéro de téléphone invalide (ex. +509 3712-3456).");
 
 export const quoteSchema = z.object({
+  service: z.enum(["articles", "sourcing", "evenement", "conseil"], { errorMap: () => ({ message: "Choisissez un service." }) }),
+  size: z.enum(["petit", "moyen", "grand"]).optional().or(z.literal("")),
   name: z.string().trim().min(2, "Indiquez votre nom.").max(120),
   company: z.string().trim().max(160).optional().or(z.literal("")),
   phone,
   email: z.string().trim().email("Adresse courriel invalide."),
-  products: z.string().trim().min(2, "Indiquez les produits souhaités.").max(2000),
-  quantity: z.coerce
-    .number({ invalid_type_error: "Indiquez une quantité." })
-    .int("Quantité entière uniquement.")
-    .min(1, "La quantité minimale est 1.")
-    .max(1_000_000),
+  products: z.string().trim().min(2, "Décrivez votre projet.").max(2000),
+  quantity: z
+    .union([
+      z.literal(""),
+      z.coerce.number({ invalid_type_error: "Quantité invalide." }).int("Quantité entière uniquement.").min(1, "La quantité minimale est 1.").max(1_000_000),
+    ])
+    .optional(),
   message: z.string().trim().max(4000).optional().or(z.literal("")),
   logoUploadId: z.string().uuid("Logo invalide, téléversez-le à nouveau.").optional().or(z.literal("")),
 });

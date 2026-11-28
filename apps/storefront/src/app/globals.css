@@ -73,3 +73,13 @@
 @utility brand-stripe {
   background: linear-gradient(90deg, var(--color-ip-cyan) 0 78%, var(--color-ip-sun) 78% 100%);
 }
+
+/* Slow marquee for the homepage service tapes (disabled by prefers-reduced-motion above). */
+@keyframes ip-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
