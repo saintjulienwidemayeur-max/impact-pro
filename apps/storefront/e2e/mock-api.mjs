@@ -164,7 +164,7 @@ PRODUCTS.push(
     minQty: 5,
     unitLabel: "coque",
     sizeLabel: "Modèle du téléphone",
-    sizes: ["iPhone 11", "iPhone 12", "iPhone 13", "iPhone 14", "Samsung A14", "Samsung A54", "Tecno Spark 10"],
+    sizes: ["iPhone 13", "iPhone 15 Pro", "Samsung Galaxy S24", "Samsung Galaxy A54", "Tecno Spark 10", "Tecno Camon 20", "Autre modèle (précisez en notes)"],
     placements: ["FRONT"],
     priceTiers: [{ minQty: 5, unitPrice: "650.00" }],
   }),

@@ -491,6 +491,62 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await expect(page.getByTestId("cart-line")).toContainText(`Modèle du téléphone : ${models[2]}`);
   });
 
+  test("phone case: the chosen model switches the case template (camera island)", async ({ page }) => {
+    await page.goto("/personnaliser/coque-telephone");
+    const tpl = page.locator("[data-template]").first();
+    const expected: Record<string, string> = {
+      "iPhone 13": "iphone-dual",
+      "iPhone 15 Pro": "iphone-triple",
+      "Samsung Galaxy S24": "samsung-s",
+      "Samsung Galaxy A54": "samsung-a",
+      "Tecno Spark 10": "android-module",
+      "Tecno Camon 20": "android-round",
+      "Autre modèle (précisez en notes)": "iphone-dual",
+    };
+    for (const [model, template] of Object.entries(expected)) {
+      await page.locator("#cz-size").selectOption({ label: model });
+      await expect(tpl).toHaveAttribute("data-template", template);
+      await expect(tpl.locator("img").first()).toHaveAttribute("src", new RegExp(`phone-case-${template}\\.webp`));
+    }
+  });
+
+  test("phone case: « Ajouter ma photo » fills the case window, no background dialog; other products keep « Ajouter un logo »", async ({ page }) => {
+    await page.goto("/personnaliser/coque-telephone");
+    await page.locator("#cz-size").selectOption({ label: "Samsung Galaxy S24" });
+    await expect(page.getByTestId("add-photo")).toHaveText(/Ajouter ma photo/);
+    await expect(page.getByTestId("add-logo")).toHaveCount(0);
+    await expect(page.getByText(/remplit tout le dos de la coque/)).toBeVisible();
+    await page.getByTestId("logo-input").setInputFiles(fx("sample-landscape.png"));
+    await expect(page.getByTestId("layer-item")).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.getByTestId("bg-dialog")).toHaveCount(0);
+    const canvas = page.getByTestId("design-canvas").first();
+    await expect(canvas).toBeVisible();
+    // default « Remplir »: the (landscape) photo is scaled up to cover the whole portrait window
+    const scale = page.locator("#el-scale");
+    expect(Number(await scale.inputValue())).toBeGreaterThan(1.5);
+    // « Ajuster » is still available
+    await page.getByTestId("artwork-contain").click();
+    expect(Number(await scale.inputValue())).toBeLessThanOrEqual(1.01);
+    await page.getByTestId("artwork-cover").click();
+    expect(Number(await scale.inputValue())).toBeGreaterThan(1.5);
+    // regular products are unchanged
+    await page.goto("/personnaliser/polo-brode");
+    await expect(page.getByTestId("add-logo")).toHaveText(/Ajouter un logo/);
+    await expect(page.getByTestId("add-photo")).toHaveCount(0);
+  });
+
+  test("phone case: cart mock-up uses the template of the chosen model", async ({ page }) => {
+    await page.goto("/personnaliser/coque-telephone");
+    await page.locator("#cz-size").selectOption({ label: "Tecno Camon 20" });
+    await page.getByTestId("logo-input").setInputFiles(fx("sample-landscape.png"));
+    await expect(page.getByTestId("layer-item")).toHaveCount(1, { timeout: 15_000 });
+    await page.locator("#cz-quantity").fill(await minQty(page));
+    await page.getByRole("button", { name: "Ajouter au panier" }).click();
+    await expect(page.getByTestId("cart-count")).toHaveText("1");
+    await page.goto("/panier");
+    await expect(page.getByTestId("cart-mockup").first().locator("[data-template]")).toHaveAttribute("data-template", "android-round");
+  });
+
   test("tent: only the dimensions are asked (no colour choice: the photo shows one colour)", async ({ page }) => {
     await page.goto("/personnaliser/tente-pliante-3x3");
     await expect(page.getByTestId("option-size")).toContainText("Dimensions");

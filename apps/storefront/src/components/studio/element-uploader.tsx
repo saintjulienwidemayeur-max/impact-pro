@@ -13,6 +13,8 @@ interface Props {
   disabled?: boolean;
   /** Visually emphasized (e.g. artwork-required products). */
   primary?: boolean;
+  /** Phone cases: « Ajouter ma photo » — the photo fills the whole print area, no background removal. */
+  photoMode?: boolean;
   onUploaded: (upload: UploadRef) => void;
 }
 
@@ -22,7 +24,7 @@ const toRef = (u: UploadedLogo): UploadRef => ({ id: u.id, url: u.url, mimeType:
  * Adds a logo (image → background-removal dialog first, PDF → straight upload) or a ready-to-print artwork file
  * (POST /uploads/logos, resp. /uploads/artwork) with progress, error and retry.
  */
-export function ElementUploader({ kind, disabled, primary, onUploaded }: Props) {
+export function ElementUploader({ kind, disabled, primary, photoMode, onUploaded }: Props) {
   const inputRef = React.useRef<HTMLInputElement>(null);
   const abortRef = React.useRef<AbortController | null>(null);
   const [pending, setPending] = React.useState<File | null>(null); // image waiting for the background dialog
@@ -59,7 +61,7 @@ export function ElementUploader({ kind, disabled, primary, onUploaded }: Props) 
       return;
     }
     setFailure(null);
-    if (isLogo && file.type.startsWith("image/")) setPending(file);
+    if (isLogo && !photoMode && file.type.startsWith("image/")) setPending(file);
     else void upload(file);
   }
 
@@ -76,7 +78,7 @@ export function ElementUploader({ kind, disabled, primary, onUploaded }: Props) 
         tabIndex={-1}
         onChange={(e) => onFiles(e.target.files)}
         data-testid={isLogo ? "logo-input" : "artwork-input"}
-        aria-label={isLogo ? "Choisir un logo" : "Choisir votre fichier prêt à imprimer"}
+        aria-label={photoMode ? "Choisir ma photo" : isLogo ? "Choisir un logo" : "Choisir votre fichier prêt à imprimer"}
       />
       <Button
         type="button"
@@ -85,10 +87,10 @@ export function ElementUploader({ kind, disabled, primary, onUploaded }: Props) 
         disabled={disabled || uploading}
         onClick={() => inputRef.current?.click()}
         className={primary ? "w-full" : undefined}
-        data-testid={isLogo ? "add-logo" : "add-artwork"}
+        data-testid={photoMode ? "add-photo" : isLogo ? "add-logo" : "add-artwork"}
       >
         {uploading ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Icon aria-hidden="true" />}
-        {uploading ? `Téléversement… ${progress} %` : isLogo ? "Ajouter un logo" : "Importer mon fichier prêt à imprimer"}
+        {uploading ? `Téléversement… ${progress} %` : photoMode ? "Ajouter ma photo" : isLogo ? "Ajouter un logo" : "Importer mon fichier prêt à imprimer"}
       </Button>
       {uploading && (
         <span className="mt-1.5 block h-1.5 w-full overflow-hidden rounded-full bg-ip-mist" role="progressbar" aria-valuenow={progress ?? 0} aria-valuemin={0} aria-valuemax={100} aria-label="Progression du téléversement">
@@ -97,7 +99,7 @@ export function ElementUploader({ kind, disabled, primary, onUploaded }: Props) 
       )}
       {!uploading && (
         <p className="mt-1 text-[11px] text-ip-muted">
-          {isLogo ? "PNG, JPG, WEBP ou PDF · 10 Mo max." : "PNG, JPG, WEBP ou PDF · 25 Mo max."}
+          {photoMode ? "Votre photo remplit tout le dos de la coque · JPG ou PNG, 10 Mo max." : isLogo ? "PNG, JPG, WEBP ou PDF · 10 Mo max." : "PNG, JPG, WEBP ou PDF · 25 Mo max."}
         </p>
       )}
       {failure && (

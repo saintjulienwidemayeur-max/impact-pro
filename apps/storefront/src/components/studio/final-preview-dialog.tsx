@@ -13,6 +13,7 @@ interface Props {
   productName: string;
   productSlug: string;
   color?: string;
+  size?: string;
   elements: DesignElement[];
   onClose: () => void;
 }
@@ -21,7 +22,7 @@ interface Props {
  * « Voir le rendu final »: every zone of the design rendered large, without handles or selection,
  * exactly as the customer will see it in the cart and in the mock-up we send back.
  */
-export function FinalPreviewDialog({ productName, productSlug, color, elements, onClose }: Props) {
+export function FinalPreviewDialog({ productName, productSlug, color, size, elements, onClose }: Props) {
   const ref = React.useRef<HTMLDialogElement>(null);
   const [busy, setBusy] = React.useState(false);
   const [note, setNote] = React.useState<string | null>(null);
@@ -36,7 +37,7 @@ export function FinalPreviewDialog({ productName, productSlug, color, elements, 
     setBusy(true);
     setNote(null);
     try {
-      const ok = await downloadMockupSheet({ productName, slug: productSlug, color, elements });
+      const ok = await downloadMockupSheet({ productName, slug: productSlug, color, size, elements });
       if (!ok) setNote("Le téléchargement n'est pas disponible pour ce design (un de vos fichiers ne peut pas être exporté). Faites une capture d'écran de l'aperçu.");
     } catch {
       setNote("Le téléchargement a échoué. Faites une capture d'écran de l'aperçu.");
@@ -71,7 +72,7 @@ export function FinalPreviewDialog({ productName, productSlug, color, elements, 
 
       <div className={zones.length > 1 ? "grid gap-5 p-5 sm:grid-cols-2 sm:p-7" : "mx-auto max-w-2xl p-5 sm:p-7"}>
         {zones.map((z) => {
-          const pv = previewFor(productSlug, z, color);
+          const pv = previewFor(productSlug, z, color, size);
           return (
             <figure key={z} className="overflow-hidden rounded-2xl border border-ip-line bg-white" data-testid="final-zone">
               <figcaption className="border-b border-ip-line bg-ip-mist px-4 py-2 text-sm font-semibold text-ip-teal">

@@ -7,6 +7,7 @@ import printAreasJson from "./print-areas.json";
 import showcaseJson from "./showcase.json";
 import newMediaJson from "./new-products-media.json";
 import { quadBox, type Quad } from "@/lib/quad";
+import { templateForModel } from "./phone-models";
 
 export interface PrintArea {
   /** Center, as a fraction of the photo width / height. */
@@ -74,6 +75,10 @@ export interface ProductMedia {
   previews: Partial<Record<Placement, Photo>>;
   /** Overrides by color keyword (matched case/accent-insensitively against the selected color). */
   colorPreviews?: Record<string, Partial<Record<Placement, Photo>>>;
+  /** Overrides by exact size string (e.g. phone model), accent/case-insensitive. */
+  sizePreviews?: Record<string, Partial<Record<Placement, Photo>>>;
+  /** Studio « photo mode »: the customer sends a photo that fills the whole print area (phone cases…). */
+  photoMode?: boolean;
   /** Placements previewed on a photo that does not really show that side (flagged « aperçu indicatif »). */
   approx?: Placement[];
   /** Same, for a given color keyword (overrides `approx` when that color is selected). */
@@ -132,6 +137,9 @@ interface ManifestProduct {
   previews?: Partial<Record<Placement, string>>;
   /** Color keyword (matched case/accent-insensitively against the selected color) → photo file per placement. */
   colorPreviews?: Record<string, Partial<Record<Placement, string>>>;
+  /** Size string (e.g. phone model) → photo file per placement. */
+  sizePreviews?: Record<string, Partial<Record<Placement, string>>>;
+  photoMode?: boolean;
   areas?: Record<string, Partial<Record<Placement, ManifestArea>>>;
   frame?: { aspect: number };
   approxPlacements?: Placement[];
@@ -180,6 +188,16 @@ function registerManifest(products: Record<string, ManifestProduct>) {
         }
         colorPreviews[key] = row;
       }
+      let sizePreviews: ProductMedia["sizePreviews"];
+      for (const [key, byPl] of Object.entries(m.sizePreviews ?? {})) {
+        sizePreviews ??= {};
+        const row: Partial<Record<Placement, Photo>> = {};
+        for (const [pl, file] of Object.entries(byPl)) {
+          const ph = byFile.get(file);
+          if (ph) row[pl as Placement] = ph;
+        }
+        sizePreviews[normalize(key)] = row;
+      }
       if (merge) {
         media[slug] = {
           // new photos first, then the previous ones (the existing photo becomes gallery #2…)
@@ -190,7 +208,7 @@ function registerManifest(products: Record<string, ManifestProduct>) {
           approxByColor: { ...(existing.approxByColor ?? {}), ...(m.approxPlacementsByColor ?? {}) },
         };
       } else {
-        media[slug] = { gallery, previews, colorPreviews, approx: m.approxPlacements, approxByColor: m.approxPlacementsByColor };
+        media[slug] = { gallery, previews, colorPreviews, sizePreviews, photoMode: m.photoMode, approx: m.approxPlacements, approxByColor: m.approxPlacementsByColor };
       }
     }
     for (const [file, areas] of Object.entries(m.areas ?? {})) {
@@ -273,13 +291,36 @@ function plainPreview(slug: string, placement: Placement): Preview {
   return { photo, area: { cx: 0.5, cy: 0.5, w: 0.9, h: 0.9 / aspect, rot: 0, patch: "#ffffff" }, indicative: true };
 }
 
+/** Phone cases: the template of the chosen model (see phone-models.ts) when it is in the gallery. */
+function templatePreview(slug: string, m: ProductMedia, size: string): Partial<Record<Placement, Photo>> | undefined {
+  if (slug !== "coque-telephone") return undefined;
+  const file = `phone-case-${templateForModel(size)}.webp`;
+  const ph = m.gallery.find((g) => fileOf(g) === file);
+  return ph ? { FRONT: ph, FULL: ph } : undefined;
+}
+
+/** True for products where the customer sends a photo that fills the whole print area. */
+export function isPhotoMode(slug: string): boolean {
+  return Boolean(media[slug]?.photoMode);
+}
+
 /**
  * Photo + print area for a product / zone / color. Zones without a dedicated photo fall back to the base photo and
  * its main print area (flagged `indicative`); products without any photo get a plain print-area frame.
  */
-export function previewFor(slug: string, placement: Placement, color?: string): Preview {
+export function previewFor(slug: string, placement: Placement, color?: string, size?: string): Preview {
   const m = media[slug];
   if (!m) return plainPreview(slug, placement);
+  // size-specific photo (phone model → case template with the matching camera island)
+  const bySize = size ? m.sizePreviews?.[normalize(size)] ?? templatePreview(slug, m, size) : undefined;
+  if (bySize) {
+    const photo = bySize[placement] ?? bySize.FRONT ?? Object.values(bySize)[0];
+    if (photo) {
+      const areas = printAreas[fileOf(photo)] ?? {};
+      const own = areas[placement];
+      return { photo, area: own ?? areas.FRONT ?? Object.values(areas)[0] ?? plainPreview(slug, placement).area, indicative: false };
+    }
+  }
   let dedicated: Photo | undefined;
   // zones without their own photo fall back to the front view (the gallery's first photo may be a side view)
   let fallback: Photo | undefined = m.previews.FRONT ?? m.gallery[0];

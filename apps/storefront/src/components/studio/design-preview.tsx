@@ -228,6 +228,7 @@ export function DesignPreview({ preview, elements, selectedId, onSelect, onChang
       ref={wrapRef}
       className={cn("relative w-full overflow-hidden bg-white", className)}
       style={{ aspectRatio: `${photo.width} / ${photo.height}` }}
+      data-template={/phone-case-([a-z-]+)\.webp/.exec(photo.src)?.[1]}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) onSelect?.(null);
       }}

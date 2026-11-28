@@ -21,6 +21,8 @@ interface Props {
   element: DesignElement;
   /** (image aspect) / (area aspect) — lets artwork switch between « Ajuster » and « Remplir ». */
   coverScale?: number | null;
+  /** Photo mode (phone cases): a LOGO image can also be switched between « Ajuster » and « Remplir ». */
+  photoMode?: boolean;
   canMoveUp: boolean;
   canMoveDown: boolean;
   onChange: (patch: Partial<DesignElement>) => void;
@@ -41,7 +43,7 @@ function Slider({ id, label, value, min, max, step, format, onChange }: { id: st
 }
 
 /** Controls for the selected element: text content + font + color, size, rotation, layer actions. */
-export function ElementEditor({ element: el, coverScale, canMoveUp, canMoveDown, onChange, onDelete, onDuplicate, onMove }: Props) {
+export function ElementEditor({ element: el, coverScale, photoMode, canMoveUp, canMoveDown, onChange, onDelete, onDuplicate, onMove }: Props) {
   const [hexDraft, setHexDraft] = React.useState(el.color ?? "#000000");
   React.useEffect(() => setHexDraft(el.color ?? "#000000"), [el.color, el.id]);
   const hexValid = HEX_RE.test(hexDraft);
@@ -188,14 +190,14 @@ export function ElementEditor({ element: el, coverScale, canMoveUp, canMoveDown,
         </>
       )}
 
-      <Slider id="el-scale" label="Taille" value={Math.min(Math.max(el.scale, SCALE_MIN), SCALE_MAX)} min={SCALE_MIN} max={el.kind === "ARTWORK" ? Math.max(2, coverScale ?? 2) : 3} step={0.01} format={(v) => `${Math.round(v * 100)} %`} onChange={(v) => onChange({ scale: v })} />
+      <Slider id="el-scale" label="Taille" value={Math.min(Math.max(el.scale, SCALE_MIN), SCALE_MAX)} min={SCALE_MIN} max={el.kind === "ARTWORK" || photoMode ? Math.max(el.kind === "ARTWORK" ? 2 : 3, coverScale ?? 2) : 3} step={0.01} format={(v) => `${Math.round(v * 100)} %`} onChange={(v) => onChange({ scale: v })} />
       <Slider id="el-rotation" label="Rotation" value={el.rotation} min={-180} max={180} step={1} format={(v) => `${Math.round(v)}°`} onChange={(v) => onChange({ rotation: v })} />
 
       <div className="flex flex-wrap gap-2">
         <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ x: 0, y: 0, rotation: 0 })}>
           <Crosshair aria-hidden="true" /> Centrer
         </Button>
-        {el.kind === "ARTWORK" && (
+        {(el.kind === "ARTWORK" || (photoMode && el.kind === "LOGO")) && (
           <>
             <Button type="button" variant="ghost" size="sm" onClick={() => onChange({ scale: 1, x: 0, y: 0 })} data-testid="artwork-contain">
               <Minimize2 aria-hidden="true" /> Ajuster
