@@ -52,7 +52,7 @@ function AccountLink() {
         <span aria-hidden="true" className="inline-flex size-8 items-center justify-center rounded-full bg-ip-teal font-heading text-sm font-bold text-white">
           {initialOf(user)}
         </span>
-        <span className="hidden max-w-28 truncate text-sm font-semibold xl:inline">{(user.fullName ?? user.email).split(" ")[0]}</span>
+        <span className="hidden max-w-28 truncate text-sm font-semibold 2xl:inline">{(user.fullName ?? user.email).split(" ")[0]}</span>
       </Link>
     );
   }
@@ -65,7 +65,7 @@ function AccountLink() {
       className="inline-flex h-10 items-center gap-1.5 rounded-xl px-2.5 hover:bg-ip-mist hover:text-ip-teal"
     >
       <User className="size-5" aria-hidden="true" />
-      <span className="hidden text-sm font-semibold xl:inline">Connexion</span>
+      <span className="hidden text-sm font-semibold 2xl:inline">Connexion</span>
     </Link>
   );
 }
@@ -190,7 +190,7 @@ export function SiteHeader() {
             <Image src="/brand/logo-impact-pro.png" alt="Impact Pro" width={1600} height={498} priority className="h-10 w-auto sm:h-11" />
           </Link>
 
-          <nav ref={navRef} aria-label="Navigation principale" className="ml-4 hidden flex-1 items-center gap-0.5 xl:flex">
+          <nav ref={navRef} aria-label="Navigation principale" className="ml-2 hidden min-w-0 flex-1 items-center gap-0 xl:flex">
             {mainNav.map((item) =>
               item.menu ? (
                 <DesktopDropdown
@@ -218,7 +218,15 @@ export function SiteHeader() {
           </nav>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
-            <SearchForm id="search-desktop" className="hidden w-56 lg:block" />
+            <SearchForm id="search-desktop" className="hidden w-52 2xl:block" />
+            {/* Laptops: the search field would not fit next to the menu, so a compact icon opens the catalog search. */}
+            <Link
+              href="/produits"
+              aria-label="Rechercher un produit"
+              className="hidden size-10 items-center justify-center rounded-xl hover:bg-ip-mist hover:text-ip-teal lg:inline-flex 2xl:hidden"
+            >
+              <Search className="size-5" aria-hidden="true" />
+            </Link>
             <AccountLink />
             <Link
               href="/panier"
