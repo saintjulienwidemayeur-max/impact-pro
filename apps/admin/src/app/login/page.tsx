@@ -30,7 +30,8 @@ export default function LoginPage() {
       const me = await login(email.trim(), password);
       router.replace(me.mustChangePassword ? "/changer-mot-de-passe" : "/");
     } catch (err) {
-      if (err instanceof ApiError && err.status === 403) setError("Accès réservé à l'équipe Impact Pro.");
+      if (err instanceof ApiError && err.status === 403)
+        setError(err.code === "ORIGIN_NOT_ALLOWED" ? "Configuration serveur : l'origine de ce site n'est pas autorisée par l'API (CORS_ORIGINS)." : "Accès réservé à l'équipe Impact Pro.");
       else if (err instanceof ApiError && err.status === 401) setError("E-mail ou mot de passe incorrect.");
       else if (err instanceof ApiError && err.status === 429) setError("Trop de tentatives. Patientez quelques minutes avant de réessayer.");
       else setError(err instanceof ApiError ? err.message : "Connexion impossible pour le moment.");

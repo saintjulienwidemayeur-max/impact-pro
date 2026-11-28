@@ -21,7 +21,7 @@ services:
       - key: COOKIE_SECRET
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://impact-pro-storefront.onrender.com   # change if Render assigns a different URL (e.g. custom domain)
+        value: https://impact-pro-storefront.onrender.com,https://impact-pro-admin.onrender.com   # change if Render assigns a different URL (e.g. custom domain)
       - key: AUTO_SEED
         value: "true"     # first deploy only: loads the catalog. Set to "false" afterwards.
       - key: ALLOW_DEMO_SEED
