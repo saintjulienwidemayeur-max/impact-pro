@@ -196,7 +196,7 @@ function Form({ initial, onSaved }: { initial: BillingSettings; onSaved: () => v
             <Field id="s-bank" label="Coordonnées bancaires" hint="Imprimées sur les factures.">
               <Textarea id="s-bank" value={s.bankDetails} onChange={set("bankDetails")} />
             </Field>
-            <Field id="s-pay" label="Instructions de paiement (MonCash, Zelle…)">
+            <Field id="s-pay" label="Instructions de paiement (carte, Zelle, virement…)">
               <Textarea id="s-pay" value={s.paymentInstructions} onChange={set("paymentInstructions")} />
             </Field>
             <Field id="s-conditions" label="Conditions par défaut">

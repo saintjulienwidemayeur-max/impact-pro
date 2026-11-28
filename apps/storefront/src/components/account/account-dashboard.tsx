@@ -23,6 +23,7 @@ import {
 } from "@/lib/account-api";
 import { resolveApiUrl } from "@/lib/api";
 import { fieldErrors, passwordChangeSchema, profileSchema, trackingSchema } from "@/lib/schemas";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { formatHTG } from "@/lib/utils";
 
 const PAGE_SIZE = 5;
@@ -132,8 +133,14 @@ function OrdersSection() {
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-sm font-bold">{formatHTG(Number(o.subtotal))}</span>
-                <span className="block text-[11px] text-ip-muted">estimé</span>
+                {SHOW_PRICES ? (
+                  <>
+                    <span className="block text-sm font-bold">{formatHTG(Number(o.subtotal))}</span>
+                    <span className="block text-[11px] text-ip-muted">estimé</span>
+                  </>
+                ) : (
+                  <span className="block text-[11px] text-ip-muted">Proforma</span>
+                )}
               </span>
               <ChevronRight className="size-5 shrink-0 text-ip-muted" aria-hidden="true" />
             </Link>

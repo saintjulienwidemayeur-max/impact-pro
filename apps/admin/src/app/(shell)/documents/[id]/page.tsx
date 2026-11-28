@@ -514,7 +514,7 @@ function SendDialog({ open, onClose, doc, onDone }: { open: boolean; onClose: ()
 
 function PaymentDialog({ open, onClose, doc, onDone }: { open: boolean; onClose: () => void; doc: BillingDocument; onDone: () => void }) {
   const [amount, setAmount] = React.useState(doc.balance);
-  const [method, setMethod] = React.useState<PaymentMethod>("MONCASH");
+  const [method, setMethod] = React.useState<PaymentMethod>("BANK_TRANSFER");
   const [paidAt, setPaidAt] = React.useState(today());
   const [reference, setReference] = React.useState("");
   const [notes, setNotes] = React.useState("");

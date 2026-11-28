@@ -9,6 +9,7 @@ import { FinalPreviewDialog } from "./studio/final-preview-dialog";
 import { Button } from "./ui/button";
 import { previewFor } from "@/config/product-media";
 import { describeOptions, describeZone, placementLabelsFr, summarizeZones } from "@/lib/design";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { formatHTG } from "@/lib/utils";
 
 export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
@@ -106,12 +107,14 @@ export function CartView() {
                   min. {l.minQty}
                 </p>
               </div>
+              {SHOW_PRICES && (
               <div className="w-32 text-right">
                 <p className="font-bold">{formatHTG(l.lineTotal)}</p>
                 <p className="text-[11px] text-ip-muted">
                   {formatHTG(l.unitPrice)} / {l.unitLabel}
                 </p>
               </div>
+              )}
               <button
                 type="button"
                 onClick={() => remove(l.id)}
@@ -127,12 +130,19 @@ export function CartView() {
       <aside className="h-fit rounded-2xl border border-ip-line bg-ip-mist p-6">
         <h2 className="text-lg font-semibold">Récapitulatif</h2>
         <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex justify-between">
-            <dt>Sous-total (estimation)</dt>
-            <dd className="font-semibold" data-testid="cart-total">
-              {formatHTG(total)}
-            </dd>
-          </div>
+          {SHOW_PRICES ? (
+            <div className="flex justify-between">
+              <dt>Sous-total (estimation)</dt>
+              <dd className="font-semibold" data-testid="cart-total">
+                {formatHTG(total)}
+              </dd>
+            </div>
+          ) : (
+            <div className="flex justify-between">
+              <dt>Prix</dt>
+              <dd className="font-semibold">Sur proforma</dd>
+            </div>
+          )}
           <div className="flex justify-between text-ip-muted">
             <dt>Livraison</dt>
             <dd>Calculée ensuite</dd>

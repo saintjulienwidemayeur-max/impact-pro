@@ -30,8 +30,6 @@ import { ProductCard } from "@/components/product-card";
 import { navCategories, navFamilies, type NavCategorySlug } from "@/config/navigation";
 import { photos } from "@/config/product-media";
 import { listProducts, type Product } from "@/lib/api";
-import { site } from "@/lib/site";
-import { formatHTG } from "@/lib/utils";
 
 export const revalidate = 60;
 
@@ -53,12 +51,12 @@ const categoryIcons: Partial<Record<NavCategorySlug, LucideIcon>> = {
 const heroBadges = [
   { icon: Medal, title: "Qualité premium", text: "Impression haute définition" },
   { icon: Truck, title: "Livraison rapide", text: "À temps, à chaque fois" },
-  { icon: BadgeCheck, title: "Meilleurs prix", text: "Tarifs dégressifs" },
+  { icon: BadgeCheck, title: "Proforma sous 24 h", text: "Envoyez votre demande" },
 ];
 
 const perks = [
   { icon: Palette, title: "Design gratuit", text: "Nos designers préparent votre maquette" },
-  { icon: Truck, title: "Livraison gratuite", text: `Dès ${formatHTG(site.freeShippingThresholdHTG)} d'achat` },
+  { icon: Truck, title: "Livraison gratuite", text: "Selon votre commande" },
   { icon: BadgeCheck, title: "Qualité 100 %", text: "Chaque pièce est contrôlée" },
   { icon: Timer, title: "Livraison à temps", text: "Nous respectons vos délais" },
 ];
@@ -73,7 +71,7 @@ const steps = [
 const reasons = [
   "Techniques modernes : sérigraphie, broderie, sublimation",
   "Matériaux de qualité supérieure",
-  "Prix compétitifs et dégressifs",
+  "Proforma claire, sans surprise",
   "Délais de production rapides",
   "Un conseiller dédié pour chaque commande",
   "Satisfaction client garantie",

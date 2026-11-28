@@ -47,7 +47,7 @@ export const DEFAULT_SETTINGS = {
   prefixProforma: 'PRO',
   prefixInvoice: 'FAC',
   bankDetails: '[Coordonnées bancaires à compléter : banque, titulaire, numéro de compte, SWIFT/ABA]',
-  paymentInstructions: 'Paiement par MonCash, NatCash, virement bancaire ou Zelle. [Coordonnées à compléter]',
+  paymentInstructions: 'Paiement par carte, Zelle ou virement bancaire. [Coordonnées à compléter]',
   defaultTerms:
     "Devis valable 30 jours. Acompte de 50 % à la commande, solde à la livraison. La production démarre après réception de l'acompte et validation de la maquette.",
   footerNote: 'Impact Pro LLC — Votre marque, partout.',

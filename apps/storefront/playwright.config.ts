@@ -36,7 +36,7 @@ export default defineConfig({
       url: `http://localhost:${PORT}`,
       reuseExistingServer: !process.env.CI,
       timeout: 300_000,
-      env: { NEXT_PUBLIC_API_URL: API, API_URL: API },
+      env: { NEXT_PUBLIC_API_URL: API, API_URL: API, NEXT_PUBLIC_SHOW_PRICES: process.env.NEXT_PUBLIC_SHOW_PRICES ?? "true" },
     },
   ],
 });

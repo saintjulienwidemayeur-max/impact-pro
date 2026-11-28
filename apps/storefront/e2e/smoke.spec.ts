@@ -276,10 +276,10 @@ test.describe("studio", () => {
     await expect(line).toContainText("Équipe Haïti 2026");
     await page.getByRole("link", { name: "Passer la commande" }).click();
 
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await expect(page.getByText("Indiquez votre nom complet.")).toBeVisible();
     await fillCheckout(page);
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
 
     await page.waitForURL(/\/commande\/confirmation\?ref=IP-\d{4}-\d{6}/, { timeout: 15_000 });
     await expect(page.getByTestId("order-ref")).toHaveText(/^IP-\d{4}-\d{6}$/);
@@ -361,7 +361,7 @@ test.describe("studio", () => {
     await expect(page.getByTestId("cart-total")).toHaveText(/10\s?080 HTG/);
     await page.getByRole("link", { name: "Passer la commande" }).click();
     await fillCheckout(page);
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await page.waitForURL(/\/commande\/confirmation/, { timeout: 15_000 });
     await expect(page.getByTestId("order-subtotal")).toHaveText(/10\s?080 HTG/);
     await expect(page.getByTestId("order-design")).toContainText("Fichier prêt à imprimer");
@@ -389,7 +389,7 @@ test.describe("studio", () => {
     await page.getByTestId("add-text").click();
     await page.getByTestId("text-input").fill("Test");
     await page.locator("#cz-quantity").fill("12");
-    await page.getByRole("button", { name: "Commander maintenant" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande" }).click();
     await page.waitForURL(/\/commande$/);
     await fillCheckout(page);
 
@@ -404,7 +404,7 @@ test.describe("studio", () => {
       await page.route(`${API}/api/v1/custom-orders`, (route) =>
         route.fulfill({ status: 422, contentType: "application/json", body: JSON.stringify({ error: { code, message: code } }) }),
       );
-      await page.getByRole("button", { name: "Confirmer la commande" }).click();
+      await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
       await expect(page.getByRole("alert").filter({ hasText: text }).first()).toBeVisible();
       await page.unroute(`${API}/api/v1/custom-orders`);
     }
@@ -415,7 +415,7 @@ test.describe("studio", () => {
         body: JSON.stringify({ error: { code: "VALIDATION_ERROR", message: "Validation failed", details: [{ field: "items.0.elements.0.text", messages: ["text must be 1..200 characters"] }] } }),
       }),
     );
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await expect(page.getByRole("alert").filter({ hasText: "text must be 1..200 characters" }).first()).toBeVisible();
     await expect(page.getByTestId("cart-count")).toHaveText("1");
   });
@@ -445,7 +445,7 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await expect(page.getByTestId("cart-line")).not.toContainText("Couleur");
     await page.getByRole("link", { name: "Passer la commande" }).click();
     await fillCheckout(page);
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await page.waitForURL(/\/commande\/confirmation/, { timeout: 30_000 });
     if (!REAL) {
       const item = (await lastOrderPayload(page)).items[0];
@@ -532,7 +532,7 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await page.getByRole("link", { name: "Passer la commande" }).click();
     await expect(page.getByTestId("cart-mockup")).toHaveCount(2); // checkout summary too
     await fillCheckout(page);
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await page.waitForURL(/\/commande\/confirmation/, { timeout: 40_000 });
     await expect(page.getByTestId("order-mockup")).toHaveCount(2);
     await expect(page.getByTestId("order-options")).toContainText("Taille : M");
@@ -552,10 +552,10 @@ test.describe("parameters per product, final preview, order mock-ups", () => {
     await page.getByTestId("add-text").click();
     await page.getByTestId("text-input").fill("Sans aperçu");
     await page.locator("#cz-quantity").fill(await minQty(page));
-    await page.getByRole("button", { name: "Commander maintenant" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande" }).click();
     await page.waitForURL(/\/commande$/);
     await fillCheckout(page);
-    await page.getByRole("button", { name: "Confirmer la commande" }).click();
+    await page.getByRole("button", { name: "Envoyer ma demande de proforma" }).click();
     await page.waitForURL(/\/commande\/confirmation/, { timeout: 40_000 });
     await expect(page.getByTestId("order-ref")).toHaveText(/^IP-/);
     await expect(page.getByTestId("order-mockup")).toHaveCount(1);

@@ -30,6 +30,7 @@ import {
 } from "@/lib/design";
 import { ensureFonts, fitTextScale, loadImage } from "@/lib/design-render";
 import { sortedTiers, toNumber } from "@/lib/pricing";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { cn, formatHTG } from "@/lib/utils";
 
 type Errors = Partial<Record<"design" | "color" | "size" | "quantity" | "dimensions", string>>;
@@ -388,6 +389,7 @@ export function Customizer({ product }: { product: Product }) {
         <h2 className="mt-1 text-3xl font-bold">{product.name}</h2>
         {product.description && <p className="mt-3 text-ip-muted">{product.description}</p>}
 
+        {SHOW_PRICES && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-ip-line">
           <table className="w-full text-sm">
             <caption className="bg-ip-mist px-4 py-2 text-left text-sm font-semibold">Prix dégressifs</caption>
@@ -411,6 +413,7 @@ export function Customizer({ product }: { product: Product }) {
             </tbody>
           </table>
         </div>
+        )}
 
         <form
           className="mt-8 space-y-8"
@@ -675,6 +678,7 @@ export function Customizer({ product }: { product: Product }) {
                   <Plus className="size-4" aria-hidden="true" />
                 </button>
               </div>
+              {SHOW_PRICES && (
               <div className="text-sm" aria-live="polite">
                 <span className="text-ip-muted">
                   {formatHTG(unit)} / {product.unitLabel}
@@ -683,6 +687,7 @@ export function Customizer({ product }: { product: Product }) {
                   {validQty && dimsValid ? formatHTG(unit * qty) : "—"}
                 </span>
               </div>
+              )}
             </div>
             <p id="cz-quantity-msg" className="mt-1 min-h-4 text-xs text-red-700" role={errors.quantity ? "alert" : undefined}>
               {errors.quantity ?? ""}
@@ -695,14 +700,14 @@ export function Customizer({ product }: { product: Product }) {
 
           <div className="rounded-2xl bg-ip-mist p-4">
             <p className="text-xs text-ip-muted">
-              Estimation hors livraison ; prix final confirmé après validation. Une maquette vous est envoyée avant production.
+              {SHOW_PRICES ? "Estimation hors livraison ; prix final confirmé après validation. " : "Pas de paiement maintenant : notre équipe vous envoie une proforma après votre demande. "}Une maquette vous est envoyée avant production.
             </p>
             <div className="mt-3 flex flex-col gap-3 sm:flex-row">
               <Button type="submit" variant="outline" size="lg" className="flex-1" data-testid="add-to-cart">
                 <ShoppingCart aria-hidden="true" /> Ajouter au panier
               </Button>
               <Button type="button" variant="sun" size="lg" className="flex-1" onClick={() => addToCart(true)} data-testid="order-now">
-                Commander maintenant <ArrowRight aria-hidden="true" />
+                Envoyer ma demande <ArrowRight aria-hidden="true" />
               </Button>
             </div>
           </div>

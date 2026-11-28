@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { PaymentLogos } from "./payment-logos";
 import Link from "next/link";
 import { Clock, Mail, MapPin, Phone } from "lucide-react";
 import { navCategories as categories } from "@/config/navigation";
@@ -24,7 +25,6 @@ const customerLinks = [
   { label: "Nous écrire", href: "/contact" },
 ];
 
-const payments = ["MonCash", "NatCash", "Visa", "Mastercard"];
 
 function FooterCol({ title, links }: { title: string; links: { label: string; href: string }[] }) {
   return (
@@ -109,11 +109,7 @@ export function SiteFooter() {
           <p>© {new Date().getFullYear()} {site.legalName}. Tous droits réservés.</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
             <span className="mr-1">Paiements acceptés :</span>
-            {payments.map((p) => (
-              <span key={p} className="rounded-md bg-white px-2.5 py-1 text-xs font-bold text-ip-ink">
-                {p}
-              </span>
-            ))}
+            <PaymentLogos className="flex flex-wrap items-center justify-center gap-2" />
           </div>
         </div>
       </div>

@@ -20,7 +20,7 @@ const STATUS_FR: Record<string, string> = {
   DRAFT: 'Brouillon', SENT: 'Envoyé', ACCEPTED: 'Accepté', REJECTED: 'Refusé', EXPIRED: 'Expiré', PARTIALLY_PAID: 'Partiellement payé', PAID: 'Payé', VOID: 'Annulé',
 };
 const METHOD_FR: Record<string, string> = {
-  CASH: 'Espèces', MONCASH: 'MonCash', NATCASH: 'NatCash', BANK_TRANSFER: 'Virement', ZELLE: 'Zelle', CARD: 'Carte', CHECK: 'Chèque', OTHER: 'Autre',
+  CASH: 'Espèces', MONCASH: 'MonCash (ancien)', NATCASH: 'NatCash (ancien)', BANK_TRANSFER: 'Virement', ZELLE: 'Zelle', CARD: 'Carte', CHECK: 'Chèque', OTHER: 'Autre',
 };
 
 /** `1250.5` → `1 250,50` (plain spaces: Helvetica/WinAnsi has no narrow no-break space). */

@@ -8,12 +8,14 @@ import { ArrowRight, Loader2, Lock, ShoppingCart, Store, Truck, UserCheck, UserR
 import { useAuth } from "./auth-provider";
 import { useCart } from "./cart-provider";
 import { CartLineSummary } from "./cart-view";
+import { PaymentLogos } from "./payment-logos";
 import { Button } from "./ui/button";
 import { Field, Input, Textarea } from "./ui/field";
 import { ApiError, createCustomOrder, detailsToFields, friendlyError, type DeliveryMethod } from "@/lib/api";
 import { toOrderElements } from "@/lib/design";
 import { uploadOrderPreviews } from "@/lib/mockup";
 import { checkoutSchema, fieldErrors } from "@/lib/schemas";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { cn, formatHTG } from "@/lib/utils";
 
 type Errors = Record<string, string>;
@@ -108,7 +110,7 @@ export function CheckoutForm() {
         notes: v.notes || undefined,
       });
       clear();
-      toast.success("Commande envoyée !", { description: `Référence ${order.reference}` });
+      toast.success("Demande envoyée !", { description: `Référence ${order.reference}` });
       router.push(`/commande/confirmation?ref=${encodeURIComponent(order.reference)}&email=${encodeURIComponent(v.email)}`);
     } catch (err) {
       const msg = friendlyError(err);
@@ -220,24 +222,26 @@ export function CheckoutForm() {
       </div>
 
       <aside className="h-fit space-y-4 rounded-2xl border border-ip-line bg-ip-mist p-5 sm:p-6 lg:sticky lg:top-28">
-        <h2 className="text-lg font-semibold">Votre commande</h2>
+        <h2 className="text-lg font-semibold">Votre demande</h2>
         <ul className="space-y-4">
           {lines.map((l) => (
             <li key={l.id} className="border-b border-ip-line pb-4 last:border-0">
               <CartLineSummary line={l} />
               <p className="mt-2 flex justify-between text-sm">
                 <span className="text-ip-muted">
-                  {l.quantity} × {formatHTG(l.unitPrice)}
+                  {SHOW_PRICES ? `${l.quantity} × ${formatHTG(l.unitPrice)}` : `Quantité : ${l.quantity}`}
                 </span>
-                <span className="font-semibold">{formatHTG(l.lineTotal)}</span>
+                {SHOW_PRICES && <span className="font-semibold">{formatHTG(l.lineTotal)}</span>}
               </p>
             </li>
           ))}
         </ul>
-        <p className="flex justify-between border-t border-ip-line pt-3 text-base">
-          <span>Total estimé</span>
-          <span className="font-bold">{formatHTG(total)}</span>
-        </p>
+        {SHOW_PRICES && (
+          <p className="flex justify-between border-t border-ip-line pt-3 text-base">
+            <span>Total estimé</span>
+            <span className="font-bold">{formatHTG(total)}</span>
+          </p>
+        )}
         {general && (
           <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">
             {general}{" "}
@@ -250,11 +254,12 @@ export function CheckoutForm() {
         )}
         <Button type="submit" variant="sun" size="lg" className="w-full" disabled={pending}>
           {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : <Lock aria-hidden="true" />}
-          {pending ? (stage === "previews" ? "Préparation de vos aperçus…" : "Envoi…") : "Confirmer la commande"}
+          {pending ? (stage === "previews" ? "Préparation de vos aperçus…" : "Envoi…") : "Envoyer ma demande de proforma"}
         </Button>
         <p className="text-xs text-ip-muted">
-          Aucun paiement maintenant : nous vous envoyons la maquette et le montant final, puis vous payez par MonCash, NatCash ou carte.
+          Aucun paiement maintenant : nous vous envoyons la maquette et une proforma, puis vous payez par carte, Zelle ou virement bancaire.
         </p>
+        <PaymentLogos className="flex flex-wrap gap-2" />
       </aside>
     </form>
   );

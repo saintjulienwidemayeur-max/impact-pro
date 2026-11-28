@@ -4,13 +4,14 @@ import { Paintbrush } from "lucide-react";
 import { showcaseFor } from "@/config/product-media";
 import type { Product } from "@/lib/api";
 import { lowestPrice, toNumber } from "@/lib/pricing";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { discountPercent, formatHTG } from "@/lib/utils";
 
 export function ProductCard({ product, priority }: { product: Product; priority?: boolean }) {
   const photo = showcaseFor(product);
   const price = toNumber(product.basePrice);
   const compare = product.compareAtPrice ? toNumber(product.compareAtPrice) : undefined;
-  const pct = discountPercent(price, compare);
+  const pct = SHOW_PRICES ? discountPercent(price, compare) : undefined;
   const from = lowestPrice(product.basePrice, product.priceTiers);
 
   return (
@@ -40,6 +41,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             {product.name}
           </Link>
         </h3>
+        {SHOW_PRICES ? (
         <div className="mt-2 flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="text-base font-bold text-ip-ink sm:text-lg">{formatHTG(price)}</span>
           {compare && compare > price && (
@@ -49,6 +51,9 @@ export function ProductCard({ product, priority }: { product: Product; priority?
             </span>
           )}
         </div>
+        ) : (
+          <p className="mt-2 text-sm font-semibold text-ip-teal">Proforma sur demande</p>
+        )}
         {product.sizes.length > 0 && product.sizes.length <= 4 && !product.customSize && (
           <p className="text-[11px] font-medium text-ip-ink/80">
             {product.sizeLabel ?? "Taille"} : {product.sizes.join(" · ")}
@@ -56,7 +61,7 @@ export function ProductCard({ product, priority }: { product: Product; priority?
         )}
         <p className="text-[11px] text-ip-muted">
           par {product.unitLabel} · min. {product.minQty}
-          {from < price && <> · dès {formatHTG(from)} en volume</>}
+          {SHOW_PRICES && from < price && <> · dès {formatHTG(from)} en volume</>}
         </p>
         <div className="mt-auto pt-3">
           <Link

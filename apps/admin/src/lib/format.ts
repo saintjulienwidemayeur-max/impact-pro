@@ -53,8 +53,6 @@ export const DOC_TYPE: Record<DocumentType, { label: string; plural: string; pat
 };
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: "MONCASH", label: "MonCash" },
-  { value: "NATCASH", label: "NatCash" },
   { value: "CASH", label: "Espèces" },
   { value: "BANK_TRANSFER", label: "Virement bancaire" },
   { value: "ZELLE", label: "Zelle" },

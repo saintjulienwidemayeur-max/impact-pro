@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, Brush, Layers, Printer, Scissors, Sparkles, Stamp, type LucideIcon } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { PageHeader } from "@/components/page-header";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { showcaseFor } from "@/config/product-media";
 import { listProducts, type Product } from "@/lib/api";
 import { lowestPrice } from "@/lib/pricing";
@@ -39,7 +40,7 @@ export default async function CustomizePage() {
     <>
       <PageHeader
         title="Personnalisez vos articles"
-        intro="1. Choisissez un article · 2. Ajoutez votre logo · 3. Choisissez la quantité · 4. Commandez."
+        intro="1. Choisissez un article · 2. Ajoutez votre logo · 3. Choisissez la quantité · 4. Envoyez votre demande, nous vous répondons avec une proforma."
         crumbs={[{ label: "Personnaliser" }]}
       />
       <div className="container-ip py-12">
@@ -70,7 +71,7 @@ export default async function CustomizePage() {
                       <span className="flex flex-1 flex-col p-3 sm:p-4">
                         <span className="font-semibold leading-tight group-hover:text-ip-teal">{p.name}</span>
                         <span className="mt-1 text-xs text-ip-muted">
-                          dès {formatHTG(lowestPrice(p.basePrice, p.priceTiers))} / {p.unitLabel}
+                          {SHOW_PRICES ? `dès ${formatHTG(lowestPrice(p.basePrice, p.priceTiers))} / ${p.unitLabel}` : "Proforma sur demande"}
                         </span>
                         <span className="mt-auto inline-flex items-center gap-1 pt-3 text-xs font-bold uppercase tracking-wide text-ip-teal">
                           Personnaliser <ArrowRight className="size-3.5" aria-hidden="true" />

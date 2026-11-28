@@ -260,7 +260,7 @@ describe('Billing API (e2e)', () => {
   describe('payments', () => {
     it('records partial then full payments, updates status and refuses overpayment', async () => {
       const inv = await sentInvoice(); // total 10372.83
-      const p1 = await as(admin(), 'post', `/admin/documents/${inv.id}/payments`).send({ amount: '372.83', method: 'MONCASH', reference: 'MC-1' });
+      const p1 = await as(admin(), 'post', `/admin/documents/${inv.id}/payments`).send({ amount: '372.83', method: 'BANK_TRANSFER', reference: 'MC-1' });
       expect(p1.status).toBe(201);
       expect(p1.body.data.status).toBe('PARTIALLY_PAID');
       expect(p1.body.data.amountPaid).toBe('372.83');

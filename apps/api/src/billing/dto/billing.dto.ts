@@ -189,7 +189,10 @@ export class RecordPaymentDto {
   @Matches(MONEY, { message: 'amount must be a positive amount with at most 2 decimals' })
   amount!: string;
 
-  @ApiProperty({ enum: PaymentMethod }) @IsEnum(PaymentMethod) method!: PaymentMethod;
+  @ApiProperty({ enum: PaymentMethod, description: 'MONCASH and NATCASH are no longer accepted (kept in the enum for history).' })
+  @IsEnum(PaymentMethod)
+  @IsIn(['CASH', 'BANK_TRANSFER', 'ZELLE', 'CARD', 'CHECK', 'OTHER'], { message: 'method must be one of CASH, BANK_TRANSFER, ZELLE, CARD, CHECK, OTHER' })
+  method!: PaymentMethod;
   @ApiPropertyOptional({ example: '2026-11-27' }) @IsOptional() @IsISO8601({ strict: true }) paidAt?: string;
   @ApiPropertyOptional() @IsOptional() @Transform(emptyToNull) @IsString() @MaxLength(120) reference?: string | null;
   @ApiPropertyOptional() @IsOptional() @Transform(emptyToNull) @IsString() @MaxLength(1000) notes?: string | null;

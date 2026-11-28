@@ -6,6 +6,7 @@ import { ArrowRight, Check, FileText, Paintbrush } from "lucide-react";
 import { ApiUnavailable } from "@/components/api-unavailable";
 import { PageHeader } from "@/components/page-header";
 import { ProductCard } from "@/components/product-card";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { showcaseGallery } from "@/config/product-media";
 import { getProduct, listProducts, placementLabels, type Product } from "@/lib/api";
 import { sortedTiers, toNumber } from "@/lib/pricing";
@@ -30,7 +31,9 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const photo = showcaseGallery(product)[0];
   return {
     title: product.name,
-    description: `${product.name} personnalisé avec votre logo. À partir de ${formatHTG(toNumber(product.basePrice))} par ${product.unitLabel}.`,
+    description: SHOW_PRICES
+      ? `${product.name} personnalisé avec votre logo. À partir de ${formatHTG(toNumber(product.basePrice))} par ${product.unitLabel}.`
+      : `${product.name} personnalisé avec votre logo. Envoyez votre demande, proforma sous 24 h.`,
     alternates: { canonical: `/produits/${product.slug}` },
     openGraph: { title: `${product.name} · ${site.name}`, description: product.description ?? undefined, images: photo ? [photo.src] : undefined },
   };
@@ -54,7 +57,7 @@ export default async function ProductPage({ params }: { params: Params }) {
   const gallery = showcaseGallery(product);
   const price = toNumber(product.basePrice);
   const compare = product.compareAtPrice ? toNumber(product.compareAtPrice) : undefined;
-  const pct = discountPercent(price, compare);
+  const pct = SHOW_PRICES ? discountPercent(price, compare) : undefined;
   const tiers = sortedTiers(product.priceTiers);
 
   let others: Product[] = [];
@@ -73,7 +76,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     description: product.description,
     image: gallery.map((g) => `${site.url}${g.src}`),
     brand: { "@type": "Brand", name: site.name },
-    offers: { "@type": "Offer", priceCurrency: "HTG", price, availability: "https://schema.org/InStock" },
+    ...(SHOW_PRICES ? { offers: { "@type": "Offer", priceCurrency: "HTG", price, availability: "https://schema.org/InStock" } } : {}),
   };
 
   return (
@@ -109,6 +112,12 @@ export default async function ProductPage({ params }: { params: Params }) {
           <p className="text-sm font-semibold uppercase tracking-wide text-ip-teal">{product.category.name}</p>
           <h2 className="mt-1 text-3xl font-bold">{product.name}</h2>
           {product.description && <p className="mt-3 text-ip-muted">{product.description}</p>}
+          {!SHOW_PRICES && (
+            <p className="mt-5 rounded-xl bg-ip-teal/10 p-3 text-sm font-semibold text-ip-teal">
+              Prix sur proforma : envoyez votre demande, nous vous répondons sous 24 h · min. {product.minQty} / {product.unitLabel}
+            </p>
+          )}
+          {SHOW_PRICES && (
           <div className="mt-5 flex flex-wrap items-baseline gap-3">
             <span className="text-3xl font-bold">{formatHTG(price)}</span>
             {compare && compare > price && (
@@ -121,8 +130,9 @@ export default async function ProductPage({ params }: { params: Params }) {
               / {product.unitLabel} · min. {product.minQty}
             </span>
           </div>
+          )}
 
-          {tiers.length > 0 && (
+          {SHOW_PRICES && tiers.length > 0 && (
             <ul className="mt-4 flex flex-wrap gap-2" aria-label="Prix dégressifs">
               {tiers.map((t) => (
                 <li key={t.minQty} className="rounded-lg border border-ip-line bg-ip-mist px-3 py-1.5 text-xs">
@@ -164,7 +174,7 @@ export default async function ProductPage({ params }: { params: Params }) {
             >
               <Paintbrush className="size-4" aria-hidden="true" /> Personnaliser ce produit <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
-            <p className="mt-3 text-xs text-ip-muted">Ajoutez votre logo, voyez l&apos;aperçu, choisissez la quantité et commandez.</p>
+            <p className="mt-3 text-xs text-ip-muted">Ajoutez votre logo, voyez l&apos;aperçu, choisissez la quantité et envoyez votre demande : nous vous adressons une proforma.</p>
             <Link href="/devis" className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-ip-teal hover:underline">
               <FileText className="size-4" aria-hidden="true" /> Besoin d&apos;un devis sur mesure ?
             </Link>

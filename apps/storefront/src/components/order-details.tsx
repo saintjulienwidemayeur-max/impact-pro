@@ -4,14 +4,15 @@ import { orderStatusLabels, placementLabels, resolveApiUrl, type CustomOrder, ty
 import { describeOptions, fontById } from "@/lib/design";
 import { OrderMockups } from "./order-mockups";
 import { toNumber } from "@/lib/pricing";
+import { SHOW_PRICES } from "@/config/pricing-display";
 import { cn, formatHTG } from "@/lib/utils";
 
 const flow: CustomOrderStatus[] = ["RECEIVED", "MOCKUP_SENT", "APPROVED", "IN_PRODUCTION", "READY", "DELIVERED"];
 
 export const nextSteps = [
-  "Nous vous envoyons la maquette sous 24 h",
+  "Nous vous envoyons la maquette et la proforma sous 24 h",
   "Vous validez",
-  "Paiement MonCash / NatCash / carte",
+  "Proforma, puis paiement par carte, Zelle ou virement",
   "Production & livraison",
 ];
 
@@ -126,8 +127,8 @@ export function OrderDetails({ order, labels = {} }: { order: CustomOrder; label
               <th scope="col" className="px-4 py-2 font-semibold">Article</th>
               <th scope="col" className="px-4 py-2 font-semibold">Design</th>
               <th scope="col" className="px-4 py-2 text-right font-semibold">Qté</th>
-              <th scope="col" className="px-4 py-2 text-right font-semibold">Prix unitaire</th>
-              <th scope="col" className="px-4 py-2 text-right font-semibold">Total</th>
+              {SHOW_PRICES && <th scope="col" className="px-4 py-2 text-right font-semibold">Prix unitaire</th>}
+              {SHOW_PRICES && <th scope="col" className="px-4 py-2 text-right font-semibold">Total</th>}
             </tr>
           </thead>
           <tbody>
@@ -146,12 +147,12 @@ export function OrderDetails({ order, labels = {} }: { order: CustomOrder; label
                   <ItemDesign item={it} />
                 </td>
                 <td className="px-4 py-3 text-right">{it.quantity}</td>
-                <td className="px-4 py-3 text-right">{formatHTG(toNumber(it.unitPrice))}</td>
-                <td className="px-4 py-3 text-right font-semibold">{formatHTG(toNumber(it.lineTotal))}</td>
+                {SHOW_PRICES && <td className="px-4 py-3 text-right">{formatHTG(toNumber(it.unitPrice))}</td>}
+                {SHOW_PRICES && <td className="px-4 py-3 text-right font-semibold">{formatHTG(toNumber(it.lineTotal))}</td>}
               </tr>
             ))}
           </tbody>
-          <tfoot>
+          {SHOW_PRICES && <tfoot>
             <tr className="border-t-2 border-ip-line">
               <th scope="row" colSpan={4} className="px-4 py-3 text-right font-semibold">
                 Sous-total
@@ -160,10 +161,10 @@ export function OrderDetails({ order, labels = {} }: { order: CustomOrder; label
                 {formatHTG(toNumber(order.subtotal))}
               </td>
             </tr>
-          </tfoot>
+          </tfoot>}
         </table>
       </div>
-      <p className="text-xs text-ip-muted">Montants en {order.currency}. Frais de livraison éventuels confirmés avec la maquette.</p>
+      <p className="text-xs text-ip-muted">{SHOW_PRICES ? `Montants en ${order.currency}. ` : "Le montant vous est communiqué dans votre proforma. "}Frais de livraison éventuels confirmés avec la maquette.</p>
     </div>
   );
 }

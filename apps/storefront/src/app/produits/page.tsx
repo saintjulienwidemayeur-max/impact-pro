@@ -152,7 +152,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Sea
                   </div>
                 </div>
               )}
-              <p className="mt-8 text-xs text-ip-muted">Prix en gourdes (HTG). Le prix final est calculé à la validation de votre commande.</p>
+              <p className="mt-8 text-xs text-ip-muted">Les prix sont communiqués sur proforma après votre demande.</p>
             </>
           )}
         </section>
