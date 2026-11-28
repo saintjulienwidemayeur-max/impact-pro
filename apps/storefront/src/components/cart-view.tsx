@@ -20,7 +20,7 @@ export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
       <div className="flex shrink-0 flex-wrap gap-2" data-testid="cart-mockups">
         {zones.slice(0, 4).map((z) => (
           <figure key={z.placement} className="w-24 overflow-hidden rounded-xl border border-ip-line bg-white sm:w-28" data-testid="cart-mockup">
-            <DesignPreview preview={previewFor(line.productSlug, z.placement, line.color)} elements={line.elements.filter((e) => e.placement === z.placement)} sizes="112px" compact />
+            <DesignPreview preview={previewFor(line.productSlug, z.placement, line.color, line.size)} elements={line.elements.filter((e) => e.placement === z.placement)} sizes="112px" compact />
             {zones.length > 1 && <figcaption className="bg-ip-mist px-1.5 py-0.5 text-center text-[10px] font-semibold text-ip-teal">{placementLabelsFr[z.placement]}</figcaption>}
           </figure>
         ))}
@@ -40,7 +40,7 @@ export function CartLineSummary({ line }: { line: ResolvedCartLine }) {
           <Eye className="size-3" aria-hidden="true" /> Voir le rendu final
         </button>
       </div>
-      {finalOpen && <FinalPreviewDialog productName={line.productName} productSlug={line.productSlug} color={line.color} elements={line.elements} onClose={() => setFinalOpen(false)} />}
+      {finalOpen && <FinalPreviewDialog productName={line.productName} productSlug={line.productSlug} color={line.color} size={line.size} elements={line.elements} onClose={() => setFinalOpen(false)} />}
     </div>
   );
 }

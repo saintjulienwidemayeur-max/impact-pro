@@ -16,8 +16,8 @@ export function zonesWithElements(elements: DesignElement[]): Placement[] {
   return order;
 }
 
-export function mockupSourceFor(slug: string, placement: Placement, color: string | undefined, elements: DesignElement[]): MockupSource & { indicative: boolean } {
-  const pv = previewFor(slug, placement, color);
+export function mockupSourceFor(slug: string, placement: Placement, color: string | undefined, elements: DesignElement[], size?: string): MockupSource & { indicative: boolean } {
+  const pv = previewFor(slug, placement, color, size);
   const zoneEls = elements.filter((e) => e.placement === placement);
   const useBlank = zoneEls.length > 0 && Boolean(pv.photo.blank);
   return {
@@ -52,7 +52,7 @@ function download(blob: Blob, filename: string) {
  * Builds one PNG « planche » with every zone of a design (2 columns), labelled, ready to share or print.
  * Returns false when the browser cannot export it (a logo served without CORS taints the canvas).
  */
-export async function downloadMockupSheet(opts: { productName: string; slug: string; color?: string; elements: DesignElement[] }): Promise<boolean> {
+export async function downloadMockupSheet(opts: { productName: string; slug: string; color?: string; size?: string; elements: DesignElement[] }): Promise<boolean> {
   const zones = zonesWithElements(opts.elements);
   if (!zones.length) return false;
   const CELL = 900;
@@ -60,7 +60,7 @@ export async function downloadMockupSheet(opts: { productName: string; slug: str
   const HEAD = 96;
   const CAP = 56;
   const FOOT = 64;
-  const results = await Promise.all(zones.map((z) => renderMockup(mockupSourceFor(opts.slug, z, opts.color, opts.elements), CELL)));
+  const results = await Promise.all(zones.map((z) => renderMockup(mockupSourceFor(opts.slug, z, opts.color, opts.elements, opts.size), CELL)));
   if (results.some((r) => !r.exportable)) return false;
   const cols = zones.length > 1 ? 2 : 1;
   const rows = Math.ceil(zones.length / cols);
@@ -106,6 +106,7 @@ export async function downloadMockupSheet(opts: { productName: string; slug: str
 export interface LineForPreviews {
   productSlug: string;
   color?: string;
+  size?: string;
   elements: DesignElement[];
 }
 
@@ -125,7 +126,7 @@ export async function uploadOrderPreviews(lines: LineForPreviews[], budgetMs = 2
       const job = jobs[next++];
       try {
         const l = lines[job.li];
-        const { canvas, exportable } = await renderMockup(mockupSourceFor(l.productSlug, job.placement, l.color, l.elements), 1200);
+        const { canvas, exportable } = await renderMockup(mockupSourceFor(l.productSlug, job.placement, l.color, l.elements, l.size), 1200);
         if (!exportable) continue;
         const blob = await canvasToPng(canvas);
         if (!blob) continue;

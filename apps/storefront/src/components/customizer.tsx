@@ -11,7 +11,7 @@ import { DesignPreview } from "./studio/design-preview";
 import { FinalPreviewDialog } from "./studio/final-preview-dialog";
 import { ElementEditor } from "./studio/element-editor";
 import { ElementUploader } from "./studio/element-uploader";
-import { previewFor, productPhotos } from "@/config/product-media";
+import { isPhotoMode, previewFor, productPhotos } from "@/config/product-media";
 import type { Placement, Product } from "@/lib/api";
 import { resolveApiUrl } from "@/lib/api";
 import {
@@ -104,7 +104,9 @@ export function Customizer({ product }: { product: Product }) {
   const zoneDef = caps.zones.find((z) => z.placement === zone) ?? caps.zones[0];
   const zoneElements = elements.filter((e) => e.placement === zone);
   const selected = zoneElements.find((e) => e.id === selectedId) ?? null;
-  const preview = previewFor(product.slug, zone, color);
+  const preview = previewFor(product.slug, zone, color, size);
+  // phone cases: the customer sends a photo that fills the whole back of the case
+  const photoMode = isPhotoMode(product.slug);
 
   const qty = Number.parseInt(qtyInput, 10);
   const validQty = Number.isInteger(qty) && qty >= product.minQty && qty <= 100_000;
@@ -128,7 +130,7 @@ export function Customizer({ product }: { product: Product }) {
   React.useEffect(() => {
     let alive = true;
     setCoverScale(null);
-    const u = selected?.kind === "ARTWORK" ? selected.upload : null;
+    const u = selected?.kind === "ARTWORK" || (photoMode && selected?.kind === "LOGO") ? selected.upload : null;
     if (!u || !u.mimeType.startsWith("image/")) return;
     loadImage(resolveApiUrl(u.url))
       .then((img) => {
@@ -141,7 +143,7 @@ export function Customizer({ product }: { product: Product }) {
     return () => {
       alive = false;
     };
-  }, [selected?.id, selected?.kind, selected?.upload, preview.area.w, preview.area.h]);
+  }, [selected?.id, selected?.kind, selected?.upload, photoMode, preview.area.w, preview.area.h]);
 
   // selection follows the zone
   React.useEffect(() => {
@@ -209,7 +211,19 @@ export function Customizer({ product }: { product: Product }) {
   }
 
   function onUploaded(kind: "LOGO" | "ARTWORK", upload: UploadRef) {
-    addElement(newUploadElement(zone, kind, upload));
+    const el = newUploadElement(zone, kind, upload);
+    if (photoMode && kind === "LOGO" && upload.mimeType.startsWith("image/")) {
+      // photo mode: the photo fills the whole print area (« Remplir »); « Ajuster » stays available in the editor
+      const areaAspect = preview.area.w / preview.area.h;
+      loadImage(resolveApiUrl(upload.url))
+        .then((img) => {
+          const a = img.naturalWidth / img.naturalHeight;
+          addElement({ ...el, scale: Math.min(4, Math.max(areaAspect / a, a / areaAspect)) });
+        })
+        .catch(() => addElement({ ...el, scale: 1 }));
+      return;
+    }
+    addElement(el);
   }
 
   function validate(): boolean {
@@ -438,7 +452,7 @@ export function Customizer({ product }: { product: Product }) {
                 </div>
               )}
               <div className="grid gap-3 sm:grid-cols-2">
-                {canAddLogo && <ElementUploader kind="LOGO" onUploaded={(u) => onUploaded("LOGO", u)} />}
+                {canAddLogo && <ElementUploader kind="LOGO" photoMode={photoMode} onUploaded={(u) => onUploaded("LOGO", u)} />}
                 {canAddText && (
                   <div>
                     <Button type="button" variant="outline" onClick={() => void addText()} data-testid="add-text">
@@ -503,6 +517,7 @@ export function Customizer({ product }: { product: Product }) {
                 <ElementEditor
                   element={selected}
                   coverScale={coverScale}
+                  photoMode={photoMode}
                   canMoveUp={zoneElements[zoneElements.length - 1]?.id !== selected.id}
                   canMoveDown={zoneElements[0]?.id !== selected.id}
                   onChange={(p) => editorChange(selected, p)}
@@ -708,7 +723,7 @@ export function Customizer({ product }: { product: Product }) {
           </div>
         </form>
       </div>
-      {finalOpen && <FinalPreviewDialog productName={product.name} productSlug={product.slug} color={color} elements={elements} onClose={() => setFinalOpen(false)} />}
+      {finalOpen && <FinalPreviewDialog productName={product.name} productSlug={product.slug} color={color} size={size} elements={elements} onClose={() => setFinalOpen(false)} />}
     </div>
   );
 }

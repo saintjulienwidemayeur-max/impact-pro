@@ -519,36 +519,163 @@
     }
   },
   "coque-telephone": {
+    "photoMode": true,
+    "note": "Generated templates; the model chosen in the studio selects the template via src/config/phone-models.ts",
     "gallery": [
       {
-        "file": "coque-telephone.webp",
-        "alt": "Coque de téléphone blanche, vue de dos, sans impression",
-        "width": 785,
-        "height": 1500,
-        "blank": "coque-telephone.webp"
+        "file": "phone-case-iphone-dual.webp",
+        "alt": "Coque de téléphone vue de dos, modèle iPhone (11 à 16, version standard) — double objectif, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-iphone-dual.webp"
+      },
+      {
+        "file": "phone-case-iphone-triple.webp",
+        "alt": "Coque de téléphone vue de dos, modèle iPhone Pro / Pro Max — triple objectif, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-iphone-triple.webp"
+      },
+      {
+        "file": "phone-case-samsung-s.webp",
+        "alt": "Coque de téléphone vue de dos, modèle Samsung Galaxy S — trois objectifs, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-samsung-s.webp"
+      },
+      {
+        "file": "phone-case-samsung-a.webp",
+        "alt": "Coque de téléphone vue de dos, modèle Samsung Galaxy A — bandeau d'objectifs, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-samsung-a.webp"
+      },
+      {
+        "file": "phone-case-android-module.webp",
+        "alt": "Coque de téléphone vue de dos, modèle Tecno / Infinix / Xiaomi — module rectangulaire, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-android-module.webp"
+      },
+      {
+        "file": "phone-case-android-round.webp",
+        "alt": "Coque de téléphone vue de dos, modèle Android — module photo rond, fenêtre d'impression pleine surface",
+        "width": 1000,
+        "height": 2000,
+        "blank": "phone-case-android-round.webp"
       }
     ],
     "previews": {
-      "FRONT": "coque-telephone.webp",
-      "FULL": "coque-telephone.webp"
+      "FRONT": "phone-case-iphone-dual.webp",
+      "FULL": "phone-case-iphone-dual.webp"
     },
     "areas": {
-      "coque-telephone.webp": {
+      "phone-case-iphone-dual.webp": {
         "FRONT": {
           "cx": 0.5,
-          "cy": 0.64,
-          "w": 0.72,
-          "h": 1.1847,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
           "rot": 0,
-          "patch": "#f3f3f3"
+          "patch": "#ffffff"
         },
         "FULL": {
           "cx": 0.5,
-          "cy": 0.64,
-          "w": 0.72,
-          "h": 1.1847,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
           "rot": 0,
-          "patch": "#f3f3f3"
+          "patch": "#ffffff"
+        }
+      },
+      "phone-case-iphone-triple.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        }
+      },
+      "phone-case-samsung-s.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        }
+      },
+      "phone-case-samsung-a.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        }
+      },
+      "phone-case-android-module.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        }
+      },
+      "phone-case-android-round.webp": {
+        "FRONT": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
+        },
+        "FULL": {
+          "cx": 0.5,
+          "cy": 0.5,
+          "w": 0.852,
+          "h": 1.852,
+          "rot": 0,
+          "patch": "#ffffff"
         }
       }
     }

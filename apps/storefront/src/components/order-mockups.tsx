@@ -30,7 +30,7 @@ export function OrderMockups({ item }: { item: CustomOrderItem }) {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={resolveApiUrl(url)} alt={`Aperçu : ${placementLabels[z] ?? z}`} className="block h-auto w-full" loading="lazy" />
               ) : (
-                <DesignPreview preview={previewFor(item.productSlug, z, item.color ?? undefined)} elements={elements.filter((e) => e.placement === z)} sizes="96px" compact />
+                <DesignPreview preview={previewFor(item.productSlug, z, item.color ?? undefined, item.size ?? undefined)} elements={elements.filter((e) => e.placement === z)} sizes="96px" compact />
               )}
               {list.length > 1 && <figcaption className="bg-ip-mist px-1 py-0.5 text-center text-[10px] font-semibold text-ip-teal">{placementLabels[z] ?? z}</figcaption>}
             </figure>
@@ -42,7 +42,7 @@ export function OrderMockups({ item }: { item: CustomOrderItem }) {
           Voir le rendu final
         </button>
       )}
-      {finalOpen && <FinalPreviewDialog productName={item.productName} productSlug={item.productSlug} color={item.color ?? undefined} elements={elements} onClose={() => setFinalOpen(false)} />}
+      {finalOpen && <FinalPreviewDialog productName={item.productName} productSlug={item.productSlug} color={item.color ?? undefined} size={item.size ?? undefined} elements={elements} onClose={() => setFinalOpen(false)} />}
     </div>
   );
 }
