@@ -60,30 +60,30 @@ model Organization {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
-  passwordHash  String? // Argon2id; null for invited users without password yet
-  firstName     String?
-  lastName      String?
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  passwordHash       String? // Argon2id; null for invited users without password yet
+  firstName          String?
+  lastName           String?
   /// Display name entered at sign-up (customer accounts); firstName/lastName stay for staff/org users.
-  fullName      String?
-  phone         String?
-  status        UserStatus    @default(ACTIVE)
-  isStaff       Boolean       @default(false)
+  fullName           String?
+  phone              String?
+  status             UserStatus         @default(ACTIVE)
+  isStaff            Boolean            @default(false)
   /// Back-office role; set only when `isStaff` is true.
-  staffRole     StaffRole?
+  staffRole          StaffRole?
   /// Staff accounts created by an admin start with a temporary password that must be changed at first login.
-  mustChangePassword Boolean   @default(false)
-  emailVerified DateTime?
-  lastLoginAt   DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  memberships   Membership[]
-  sessions      Session[]
-  auditLogs     AuditLog[]
-  customOrders  CustomOrder[]
-  customer      Customer?
-  orderEvents   CustomOrderEvent[]
+  mustChangePassword Boolean            @default(false)
+  emailVerified      DateTime?
+  lastLoginAt        DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  memberships        Membership[]
+  sessions           Session[]
+  auditLogs          AuditLog[]
+  customOrders       CustomOrder[]
+  customer           Customer?
+  orderEvents        CustomOrderEvent[]
 }
 
 model Membership {
@@ -414,6 +414,7 @@ model Upload {
   purpose       UploadPurpose            @default(LOGO)
   createdAt     DateTime                 @default(now())
   orderItems    CustomOrderItem[]
+  quoteRequests QuoteRequest[]
   elements      CustomOrderItemElement[]
   previews      CustomOrderItemPreview[]
 
@@ -439,11 +440,11 @@ enum DeliveryMethod {
 
 /// Order placed from the public storefront customizer. Prices are computed server-side and snapshotted.
 model CustomOrder {
-  id             String            @id @default(cuid())
-  reference      String            @unique // IP-YYYY-NNNNNN, from sequence custom_order_ref_seq
-  status         CustomOrderStatus @default(RECEIVED)
-  currency       String            @default("HTG") @db.Char(3)
-  subtotal       Decimal           @db.Decimal(14, 2)
+  id             String             @id @default(cuid())
+  reference      String             @unique // IP-YYYY-NNNNNN, from sequence custom_order_ref_seq
+  status         CustomOrderStatus  @default(RECEIVED)
+  currency       String             @default("HTG") @db.Char(3)
+  subtotal       Decimal            @db.Decimal(14, 2)
   customerName   String
   company        String?
   phone          String
@@ -455,12 +456,12 @@ model CustomOrder {
   ipAddress      String?
   /// Set when the order was placed (or later claimed) by a signed-in customer; null for guest orders.
   userId         String?
-  user           User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+  user           User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
   /// Entry of the back-office customer directory (matched by e-mail), set when the order is created.
   customerId     String?
-  customer       Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  customer       Customer?          @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
   items          CustomOrderItem[]
   events         CustomOrderEvent[]
 
@@ -473,24 +474,25 @@ model CustomOrder {
 /// Back-office customer directory. Created automatically from orders and account sign-ups (matched by lower-cased e-mail)
 /// or by hand by staff; also used as the billing counterpart.
 model Customer {
-  id        String        @id @default(cuid())
-  email     String        @unique // stored lower-cased
-  fullName  String
-  company   String?
-  phone     String?
-  address   String?
-  city      String?
-  country   String        @default("HT")
-  taxId     String?
-  notes     String?
+  id            String         @id @default(cuid())
+  email         String         @unique // stored lower-cased
+  fullName      String
+  company       String?
+  phone         String?
+  address       String?
+  city          String?
+  country       String         @default("HT")
+  taxId         String?
+  notes         String?
   /// Link to the customer's web account, when they have one.
-  userId    String?       @unique
-  user      User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        String?        @unique
+  user          User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   /// 'ORDER' | 'ADMIN' | 'ACCOUNT'
-  source    String        @default("ORDER")
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  orders    CustomOrder[]
+  source        String         @default("ORDER")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        CustomOrder[]
+  quoteRequests QuoteRequest[]
 
   @@index([fullName])
   @@index([createdAt])
@@ -760,4 +762,50 @@ model DocumentEvent {
   document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
 
   @@index([documentId, createdAt])
+}
+
+enum QuoteRequestService {
+  ARTICLES
+  SOURCING
+  EVENT
+  CONSULTING
+}
+
+enum QuoteRequestStatus {
+  NEW
+  IN_PROGRESS
+  PROFORMA_SENT
+  WON
+  LOST
+}
+
+/// Request for a proforma sent from the storefront form (/devis): promotional items, sourcing, event or consulting.
+/// Staff follow it up in the back-office and answer with a proforma (billing Document of type PROFORMA).
+model QuoteRequest {
+  id           String              @id @default(cuid())
+  reference    String              @unique // DMD-YYYY-NNNNNN, from sequence quote_request_ref_seq
+  service      QuoteRequestService
+  /// 'petit' (< 100) | 'moyen' (100–1 000) | 'grand' (1 000 +); null when unknown.
+  size         String?
+  status       QuoteRequestStatus  @default(NEW)
+  fullName     String
+  company      String?
+  phone        String
+  email        String // stored lower-cased
+  project      String
+  quantity     Int?
+  message      String?
+  logoUploadId String?             @db.Uuid
+  logoUpload   Upload?             @relation(fields: [logoUploadId], references: [id], onDelete: SetNull)
+  customerId   String?
+  customer     Customer?           @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  internalNote String?
+  ipAddress    String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([status, createdAt])
+  @@index([email])
+  @@index([customerId])
+  @@index([createdAt])
 }

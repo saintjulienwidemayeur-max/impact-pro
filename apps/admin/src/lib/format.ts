@@ -101,3 +101,20 @@ export const AUDIT_ACTION_LABELS: Record<string, string> = {
   "staff.update": "Utilisateur modifié",
   "staff.reset_password": "Mot de passe réinitialisé",
 };
+
+export const QUOTE_REQUEST_STATUS: Record<import("./types").QuoteRequestStatus, { label: string; tone: Tone }> = {
+  NEW: { label: "Nouvelle", tone: "sun" },
+  IN_PROGRESS: { label: "En cours", tone: "cyan" },
+  PROFORMA_SENT: { label: "Proforma envoyée", tone: "teal" },
+  WON: { label: "Gagnée", tone: "green" },
+  LOST: { label: "Perdue", tone: "gray" },
+};
+
+export const QUOTE_SERVICE: Record<import("./types").QuoteRequestService, string> = {
+  ARTICLES: "Articles promotionnels",
+  SOURCING: "Achat & sourcing",
+  EVENT: "Événement",
+  CONSULTING: "Conseil & médias",
+};
+
+export const PROJECT_SIZE: Record<string, string> = { petit: "< 100 pièces", moyen: "100 – 1 000 pièces", grand: "1 000 + pièces" };

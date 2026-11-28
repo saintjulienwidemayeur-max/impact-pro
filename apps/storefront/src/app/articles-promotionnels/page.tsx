@@ -41,9 +41,6 @@ export default function PromoItemsPage() {
             >
               <div className={`relative min-h-64 sm:min-h-80 ${i % 2 ? "lg:order-2" : ""}`}>
                 <CategoryStage slug={c.slug} />
-                {c.slug === "evenements-de-masse" && (
-                  <span className="absolute bottom-3.5 left-3.5 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold">Visuel provisoire · photos à venir</span>
-                )}
               </div>
               <div className="flex flex-col p-7 sm:p-10">
                 <span className="inline-flex items-center gap-2 text-[11.5px] font-bold uppercase tracking-[0.12em] text-ip-teal">

@@ -216,6 +216,39 @@ test.describe("billing", () => {
   });
 });
 
+test.describe("proforma requests from the website", () => {
+  test("list, filter, follow up and prepare the proforma from a request", async ({ page }) => {
+    await loginAs(page, "sales");
+    await page.getByTestId("sidebar-nav").getByRole("link", { name: "Demandes", exact: true }).click();
+    await expect(page.getByRole("heading", { name: "Demandes de proforma" })).toBeVisible();
+    await expect(page.getByText("1 nouvelle à traiter")).toBeVisible();
+    const rows = page.getByTestId("requests-rows");
+    await expect(rows.locator("tr")).toHaveCount(2);
+    await page.getByTestId("requests-status").selectOption("NEW");
+    await expect(rows.locator("tr")).toHaveCount(1);
+    await rows.getByRole("link", { name: "DMD-2026-000001" }).click();
+
+    await expect(page.getByTestId("request-project")).toContainText("2 000 bandanas");
+    await page.getByTestId("request-note").fill("Client prioritaire");
+    await page.getByTestId("request-save").click();
+    await expect(page.getByText("Demande mise à jour.")).toBeVisible();
+
+    await page.getByTestId("request-proforma").click();
+    await expect(page).toHaveURL(/\/documents\/new\?type=PROFORMA&fromRequest=/);
+    // The request text is pre-filled as the first line of the proforma.
+    await expect
+      .poll(() => page.evaluate(() => [...document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement>("input, textarea")].some((el) => el.value.includes("2 000 bandanas"))))
+      .toBe(true);
+  });
+
+  test("production has no access; accounting reads but cannot edit", async ({ page }) => {
+    await loginAs(page, "production");
+    await expect(page.getByTestId("sidebar-nav").getByRole("link", { name: "Demandes", exact: true })).toHaveCount(0);
+    await page.goto("/demandes");
+    await expect(page.getByTestId("forbidden")).toBeVisible();
+  });
+});
+
 test.describe("customers, products, reports", () => {
   test("create and edit a customer", async ({ page }) => {
     await loginAs(page, "sales");

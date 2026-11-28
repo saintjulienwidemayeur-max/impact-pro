@@ -55,6 +55,7 @@ function reset() {
     customers: [],
     orders: [],
     documents: [],
+    quoteRequests: [],
     counters: {},
     audit: [],
     settings: {
@@ -96,6 +97,10 @@ function reset() {
   const c1 = { id: id("cus"), email: "jean@example.com", fullName: "Jean Baptiste", company: "Boutique Soleil", phone: "+509 3700 0001", address: "12 rue Capois", city: "Port-au-Prince", country: "HT", taxId: null, notes: null, userId: null, source: "ORDER", createdAt: now() };
   const c2 = { id: id("cus"), email: "marie@example.com", fullName: "Marie Louis", company: null, phone: "+509 3700 0002", address: null, city: "Cap-Haïtien", country: "HT", taxId: null, notes: null, userId: null, source: "ADMIN", createdAt: now() };
   S.customers.push(c1, c2);
+  S.quoteRequests.push(
+    { id: id("qr"), reference: "DMD-2026-000001", service: "EVENT", size: "grand", status: "NEW", fullName: "Rose Kanaval", company: "Kanaval SA", phone: "+509 3700 0100", email: "rose@example.com", project: "2 000 bandanas et 500 t-shirts pour le carnaval", quantity: 2500, message: "Livraison à Jacmel", logo: null, customerId: c1.id, internalNote: null, createdAt: now(), updatedAt: now() },
+    { id: id("qr"), reference: "DMD-2026-000002", service: "SOURCING", size: null, status: "IN_PROGRESS", fullName: "Marie Louis", company: null, phone: "+509 3700 0002", email: "marie@example.com", project: "Trouver 20 chaises pliantes", quantity: 20, message: null, logo: null, customerId: c2.id, internalNote: "Rappeler", createdAt: now(), updatedAt: now() },
+  );
 
   const mkOrder = (ref, customer, status, items) => {
     const o = {
@@ -337,6 +342,31 @@ const server = http.createServer(async (req, res) => {
         if (!String(body.message ?? "").trim()) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "message", messages: ["Message requis."] }]);
         orderEvent(o, user, "NOTE", body.message);
         return ok(res, { ok: true });
+      }
+    }
+
+    // --- quote requests ---
+    if (route === "/admin/quote-requests" && method === "GET") {
+      if (!need("quotes.read")) return;
+      const term = (q.get("q") ?? "").toLowerCase();
+      const list = [...S.quoteRequests].reverse().filter((r) => (!q.get("status") || r.status === q.get("status")) && (!q.get("service") || r.service === q.get("service")) && (!term || [r.reference, r.fullName, r.company, r.email, r.project].some((v) => String(v ?? "").toLowerCase().includes(term))));
+      const [items, meta] = paginate(list, q);
+      return ok(res, items, { ...meta, newCount: S.quoteRequests.filter((r) => r.status === "NEW").length });
+    }
+    m = route.match(/^\/admin\/quote-requests\/([^/]+)$/);
+    if (m) {
+      if (!need(method === "GET" ? "quotes.read" : "quotes.write")) return;
+      const r = S.quoteRequests.find((x) => x.id === m[1]);
+      if (!r) return fail(res, 404, "QUOTE_REQUEST_NOT_FOUND", "Demande introuvable.");
+      if (method === "GET") return ok(res, r);
+      if (method === "PATCH") {
+        if (body.status && !["NEW", "IN_PROGRESS", "PROFORMA_SENT", "WON", "LOST"].includes(body.status)) return fail(res, 422, "VALIDATION_ERROR", "Validation", [{ field: "status", messages: ["Statut invalide."] }]);
+        const from = r.status;
+        if (body.status) r.status = body.status;
+        if (body.internalNote !== undefined) r.internalNote = body.internalNote || null;
+        r.updatedAt = now();
+        audit(user, from !== r.status ? "quote_request.status_change" : "quote_request.update", "QuoteRequest", r.id, { from, to: r.status });
+        return ok(res, r);
       }
     }
 

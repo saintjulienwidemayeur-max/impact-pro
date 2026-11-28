@@ -185,6 +185,7 @@ PRODUCTS.push(
 
 const uploads = new Map(); // id -> { buf, mime, name, purpose, at }
 const orders = new Map(); // ref -> order
+const quoteRequests = []; // raw proforma requests
 let orderSeq = 0;
 
 const money = (n) => (Math.round(n * 100) / 100).toFixed(2);
@@ -408,6 +409,24 @@ const server = http.createServer(async (req, res) => {
       const o = orders.get(decodeURIComponent(m[1]));
       if (!o || o._email !== (url.searchParams.get("email") || "").toLowerCase()) return fail(res, 404, "ORDER_NOT_FOUND", "Commande introuvable.");
       return ok(res, publicOrder(o));
+    }
+    // Proforma requests (storefront /devis → /api/devis → here).
+    if (req.method === "POST" && path === "/quote-requests") {
+      let body = null;
+      try {
+        body = JSON.parse((await readBody(req)).toString() || "{}");
+      } catch {
+        body = null;
+      }
+      if (!body || !["articles", "sourcing", "evenement", "conseil"].includes(body.service) || !body.email || !body.products) {
+        return fail(res, 422, "VALIDATION_ERROR", "Validation failed", [{ field: "service", messages: ["invalid"] }]);
+      }
+      quoteRequests.push(body);
+      return ok(res, { reference: `DMD-2026-${String(quoteRequests.length).padStart(6, "0")}`, status: "NEW", createdAt: new Date().toISOString() }, 201);
+    }
+    if (req.method === "GET" && path === "/__test/last-quote") {
+      const last = quoteRequests[quoteRequests.length - 1];
+      return last ? ok(res, last) : fail(res, 404, "NOT_FOUND", "no quote");
     }
     // test helper: last raw order payload received (to assert the exact contract payload)
     if (req.method === "GET" && path === "/__test/last-order") {

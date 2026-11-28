@@ -6,6 +6,7 @@ import {
   FileText,
   Files,
   History,
+  Inbox,
   LayoutDashboard,
   type LucideIcon,
   LogOut,
@@ -40,6 +41,7 @@ export const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
     title: "Activité",
     items: [
       { href: "/", label: "Tableau de bord", icon: LayoutDashboard, perm: "dashboard.read" },
+      { href: "/demandes", label: "Demandes", icon: Inbox, perm: "quotes.read" },
       { href: "/commandes", label: "Commandes", icon: ShoppingBag, perm: "orders.read" },
       { href: "/clients", label: "Clients", icon: Users, perm: "customers.read" },
     ],

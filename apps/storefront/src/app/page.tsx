@@ -358,9 +358,6 @@ export default function HomePage() {
               <article key={c.slug} className="flex flex-col overflow-hidden rounded-3xl border border-ip-line bg-white">
                 <div className="relative h-60 sm:h-[290px]">
                   <CategoryStage slug={c.slug} />
-                  {c.slug === "evenements-de-masse" && (
-                    <span className="absolute bottom-3.5 left-3.5 z-10 rounded-full bg-white/95 px-2.5 py-1 text-[11px] font-semibold">Visuel provisoire · photos à venir</span>
-                  )}
                 </div>
                 <div className="flex flex-1 flex-col p-6">
                   <span className="text-[11.5px] font-bold uppercase tracking-[0.12em] text-ip-teal">{c.kicker}</span>
@@ -474,7 +471,7 @@ export default function HomePage() {
         <div className="container-ip grid items-center gap-12 lg:grid-cols-[minmax(0,560px)_1fr] lg:gap-16">
           <div className="grid h-[380px] grid-cols-[1.25fr_1fr] grid-rows-[1.2fr_1fr] gap-3.5 sm:h-[454px]">
             <div className="relative row-span-2 overflow-hidden rounded-[20px]">
-              <Image src="/photos/photocall-evenement.jpg" alt="Photocall aux couleurs Impact Pro" fill sizes="(min-width: 1024px) 320px, 55vw" className="object-cover" />
+              <Image src="/photos/carnaval-defile.webp" alt="Défilé de carnaval en Haïti" fill sizes="(min-width: 1024px) 320px, 55vw" className="object-cover" />
             </div>
             <div className="relative overflow-hidden rounded-[20px] bg-ip-sun">
               <Cutout src="/photos/drapeaux-plume.webp" box={[6, 6, 88, 88]} sizes="240px" />

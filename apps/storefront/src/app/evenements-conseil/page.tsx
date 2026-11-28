@@ -25,7 +25,7 @@ export default function EventsPage() {
         crumbs={[{ label: "Événements & conseil" }]}
         aside={
           <div className="relative hidden h-[340px] overflow-hidden rounded-3xl lg:block">
-            <Image src="/photos/photocall-evenement.jpg" alt="Photocall aux couleurs Impact Pro" fill priority sizes="600px" className="object-cover" />
+            <Image src="/photos/carnaval-defile.webp" alt="Défilé de carnaval en Haïti" fill priority sizes="600px" className="object-cover object-[center_60%]" />
           </div>
         }
       >

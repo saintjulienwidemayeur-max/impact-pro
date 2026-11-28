@@ -321,3 +321,28 @@ export interface AgingRow {
   d61_plus: string;
   total: string;
 }
+
+export type QuoteRequestStatus = "NEW" | "IN_PROGRESS" | "PROFORMA_SENT" | "WON" | "LOST";
+export type QuoteRequestService = "ARTICLES" | "SOURCING" | "EVENT" | "CONSULTING";
+export const QUOTE_REQUEST_STATUSES: QuoteRequestStatus[] = ["NEW", "IN_PROGRESS", "PROFORMA_SENT", "WON", "LOST"];
+
+/** Proforma request sent from the storefront form (/devis). */
+export interface QuoteRequest {
+  id: string;
+  reference: string;
+  service: QuoteRequestService;
+  size: "petit" | "moyen" | "grand" | null;
+  status: QuoteRequestStatus;
+  fullName: string;
+  company: string | null;
+  phone: string;
+  email: string;
+  project: string;
+  quantity: number | null;
+  message: string | null;
+  logo: { id: string; originalName: string; mimeType: string; url: string } | null;
+  customerId: string | null;
+  internalNote: string | null;
+  createdAt: string;
+  updatedAt: string;
+}

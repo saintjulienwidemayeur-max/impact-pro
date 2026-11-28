@@ -115,8 +115,15 @@ test.describe("storefront", () => {
     await page.getByLabel(/Courriel/).fill("marie@example.com");
     await page.getByLabel(/Votre projet/).fill("50 polos brodés");
     await page.getByLabel(/Quantité totale/).fill("50");
+    await page.getByLabel(/Service souhaité/).selectOption("sourcing");
     await page.getByRole("button", { name: "Envoyer ma demande" }).click();
     await expect(page.getByText("Merci, votre demande est bien reçue !")).toBeVisible();
+    await expect(page.getByRole("status").getByText(/^DMD-\d{4}-\d{6}$/)).toBeVisible();
+    if (!process.env.E2E_REAL_API) {
+      // The request reached the API (stored there and followed up in the back-office).
+      const sent = (await (await page.request.get(`${API}/api/v1/__test/last-quote`)).json()).data;
+      expect(sent).toMatchObject({ service: "sourcing", name: "Marie Joseph", products: "50 polos brodés", quantity: 50 });
+    }
   });
 
   test("quote API rejects invalid payloads", async ({ request }) => {

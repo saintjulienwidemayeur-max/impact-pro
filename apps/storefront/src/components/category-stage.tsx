@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Sparkle } from "lucide-react";
 import { Cutout } from "./cutout";
 import type { PromoCategorySlug } from "@/config/offer";
@@ -18,20 +19,16 @@ const stages: Record<PromoCategorySlug, React.ReactNode> = {
     </div>
   ),
   "evenements-de-masse": (
-    <div className="relative h-full overflow-hidden bg-ip-sun" aria-hidden="true">
-      {[
-        { top: "16%", cls: "bg-ip-teal text-white", words: ["BANDANAS", "MOUCHOIRS", "BRACELETS", "BANDANAS"] },
-        { top: "48%", cls: "bg-ip-ink text-ip-sun", words: ["CARNAVAL", "FESTIVALS", "CONCERTS", "CARNAVAL"] },
-        { top: "80%", cls: "bg-ip-cyan text-ip-ink", words: ["T-SHIRTS", "CASQUETTES", "DRAPEAUX", "T-SHIRTS"] },
-      ].map((b) => (
-        <div key={b.top} className={`absolute -inset-x-1/3 flex h-11 -translate-y-1/2 -rotate-12 items-center gap-5 whitespace-nowrap pl-5 font-heading text-lg font-semibold ${b.cls}`} style={{ top: b.top }}>
-          {b.words.map((w, i) => (
-            <span key={w + i} className="flex items-center gap-5">
-              {w} <Sparkle className="size-3.5 fill-current" />
-            </span>
-          ))}
-        </div>
-      ))}
+    <div className="relative h-full overflow-hidden bg-ip-sun">
+      <Image src="/photos/carnaval-defile.webp" alt="Défilé de carnaval en Haïti" fill sizes="(min-width: 1024px) 600px, 100vw" className="object-cover object-[center_60%]" />
+      <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-ip-ink/60 to-transparent" />
+      <div aria-hidden="true" className="absolute -inset-x-6 bottom-5 flex h-9 -rotate-3 items-center gap-4 whitespace-nowrap bg-ip-sun pl-6 font-heading text-[15px] font-semibold text-ip-ink shadow-lg">
+        {["BANDANAS", "MOUCHOIRS", "BRACELETS", "T-SHIRTS", "CASQUETTES", "DRAPEAUX"].map((w) => (
+          <span key={w} className="flex items-center gap-4">
+            {w} <Sparkle className="size-3 fill-current text-ip-teal" />
+          </span>
+        ))}
+      </div>
     </div>
   ),
 };

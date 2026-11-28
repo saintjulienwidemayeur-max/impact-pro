@@ -13,6 +13,7 @@ import { CustomOrdersModule } from './custom-orders/custom-orders.module';
 import { HealthModule } from './health/health.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { QuoteRequestsModule } from './quote-requests/quote-requests.module';
 import { StorageModule } from './storage/storage.module';
 import { UploadsModule } from './uploads/uploads.module';
 
@@ -35,6 +36,7 @@ import { UploadsModule } from './uploads/uploads.module';
     UploadsModule,
     CustomOrdersModule,
     BillingModule,
+    QuoteRequestsModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

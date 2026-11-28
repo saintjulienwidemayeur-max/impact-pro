@@ -16,7 +16,7 @@ import { DOC_TYPE, money, today } from "@/lib/format";
 import { useDebounced, useFetch } from "@/lib/hooks";
 import { documentWritePerm } from "@/lib/permissions";
 import { computeTotals } from "@/lib/totals";
-import type { AdminProduct, BillingDocument, BillingSettings, Customer, DocumentType, OrderDetail } from "@/lib/types";
+import type { AdminProduct, BillingDocument, BillingSettings, Customer, DocumentType, OrderDetail, QuoteRequest } from "@/lib/types";
 
 interface LineForm {
   key: string;
@@ -63,12 +63,15 @@ function Inner({ type, doc }: { type: DocumentType; doc: BillingDocument | null 
   const { can } = useAuth();
   const orderId = sp.get("orderId");
   const customerIdParam = sp.get("customerId");
+  const fromRequest = sp.get("fromRequest");
   const locked = doc ? doc.status !== "DRAFT" : false;
   const fullyLocked = locked && doc?.type === "INVOICE";
 
   // Create-from-order: the server prefills the lines from the order snapshot, so we only confirm and create the draft.
   const order = useFetch<OrderDetail>(!doc && orderId ? `/admin/orders/${orderId}` : null);
   const preCustomer = useFetch<Customer>(!doc && customerIdParam ? `/admin/customers/${customerIdParam}` : null);
+  // Create-from-request (storefront « Demander une proforma »): the request text becomes the first line and a note.
+  const request = useFetch<QuoteRequest>(!doc && fromRequest ? `/admin/quote-requests/${fromRequest}` : null);
   const settings = useFetch<BillingSettings>(can("billing.settings") && !doc ? "/admin/billing/settings" : null);
 
   const [cust, setCust] = React.useState({ id: doc?.customerId ?? "", name: doc?.customer.name ?? "", company: doc?.customer.company ?? "", email: doc?.customer.email ?? "", phone: doc?.customer.phone ?? "", address: doc?.customer.address ?? "", city: doc?.customer.city ?? "", country: doc?.customer.country ?? "HT", taxId: doc?.customer.taxId ?? "" });
@@ -113,6 +116,17 @@ function Inner({ type, doc }: { type: DocumentType; doc: BillingDocument | null 
       setCust({ id: c.id, name: c.fullName, company: c.company ?? "", email: c.email, phone: c.phone ?? "", address: c.address ?? "", city: c.city ?? "", country: c.country ?? "HT", taxId: c.taxId ?? "" });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preCustomer.data]);
+
+  const requestApplied = React.useRef(false);
+  React.useEffect(() => {
+    const r = request.data;
+    if (!r || doc || requestApplied.current) return;
+    requestApplied.current = true;
+    setLines([{ ...newLine(), description: r.project.slice(0, 500), quantity: String(r.quantity ?? 1) }]);
+    setInternalNotes(`Demande ${r.reference}${r.message ? ` — ${r.message}` : ""}`.slice(0, 2000));
+    if (!cust.id && !r.customerId) setCust((c) => ({ ...c, name: r.fullName, company: r.company ?? "", email: r.email, phone: r.phone }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [request.data]);
 
   const totals = React.useMemo(
     () => computeTotals({ lines: lines.map((l) => ({ quantity: l.quantity, unitPrice: l.unitPrice, discountPercent: l.discountPercent })), discountAmount, shippingAmount, taxRate, payments: doc?.payments.filter((p) => !p.voidedAt).map((p) => p.amount) }),
@@ -183,6 +197,10 @@ function Inner({ type, doc }: { type: DocumentType; doc: BillingDocument | null 
           };
       const saved = doc ? await patch<BillingDocument>(`/admin/documents/${doc.id}`, body) : await post<BillingDocument>("/admin/documents", body);
       toast.success(doc ? "Document enregistré." : `${saved.number} créé (brouillon).`);
+      // The request is now being handled: NEW → IN_PROGRESS (best effort, never blocks the document).
+      if (!doc && request.data?.status === "NEW") {
+        await patch(`/admin/quote-requests/${request.data.id}`, { status: "IN_PROGRESS", internalNote: `${request.data.internalNote ? `${request.data.internalNote}\n` : ""}Proforma ${saved.number} préparée.` }).catch(() => undefined);
+      }
       router.push(`/documents/${saved.id}`);
     } catch (e) {
       if (e instanceof ApiError && e.status === 422) {
